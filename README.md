@@ -17,6 +17,14 @@
 ### Server
 
 - [Fresh](https://github.com/gravityblast/fresh)
+  
+  - Install via: `go install github.com/pilu/fresh@latest`. Ensure `~/go/bin` is in your `$PATH` environment variables
+
+- A MongoDB server
+
+### Optional
+
+- MongoDB Compass: allows viewing the contents MDB database in a friendly GUI
 
 # Running The Code
 
