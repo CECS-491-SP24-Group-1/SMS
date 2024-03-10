@@ -1,0 +1,4 @@
+• Group created with 2+ people.
+• Everyone performs mutual kex using pubkeys. Each person has a session with every other person. Shared secrets are only shared between 2 parties. 
+• A message is encrypted using a random symmetric key and the key is encrypted and sent as a message to each party. The encrypted message is pulled down by each member. 
+• The encrypted key is decrypted by each party using the shared secrets and the actual message is decrypted using the symmetric key. The linked message is only purged once each party reads it.

@@ -1,0 +1,31 @@
+function wasmExec(wasm, go, obj){
+			//Run the WASM instance
+			wasm = obj.instance;
+			go.run(wasm);
+
+			keypair = ed25519Keygen();
+
+			//JS -> Golang
+
+			//Generate an ED255219 keypair
+			//let kp = JSON.parse(ed25519Keygen());
+			let kp = ed25519Keygen();
+
+			console.log("Obj: ", kp);
+			console.log("Self-equality: ", ed25519Equal(kp, kp))
+
+			console.log("From bytes: ", ed25519FromBytes(kp.sk, kp.pk));
+			console.log("From JSON: ", ed25519FromJSON(kp));
+			console.log("From SK: ", ed25519FromSK(kp.sk));
+
+
+
+			console.log("O2JSON: ", ed25519JSON(kp));
+			console.log("O2Str: ", ed25519String(kp));
+
+			//console.log(rsa2048Rand());
+			//document.getElementById("result").innerHTML = `1 + 2 = ${add(1, 2)}<br>`;
+			//document.getElementById("result").innerHTML += `${ed25519Rand()}<br>`;
+			//document.getElementById("result").innerHTML += `${rsa2048Rand()}<br>`;
+		}
+

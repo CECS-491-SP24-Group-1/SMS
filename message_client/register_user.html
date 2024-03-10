@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Register New User</title>
+	<script type="application/javascript" src="./static/js/consts.js"></script>
+	<script type="application/javascript" src="./static/js/wasm_exec2.min.js"></script>
+	<!-- <script type="application/javascript" src="./static/js/wasm_exec_tgo.min.js"></script> -->
+	<!-- <script type="application/javascript" src="./static/js/cons_mirror.js"></script> -->
+	<script type="application/javascript" src="./static/js/wasm_loader.js"></script>
+	<style>
+		label + input {
+			margin-left: 10px;
+		}
+		.keySpan {
+			font-weight: bold;
+			visibility: hidden;
+		}
+		#privkey {
+			color: red;
+		}
+		#pubkey {
+			color: green;
+		}
+		#privkey, #pubkey {
+			display: inline-block;
+			margin: 0;
+		}
+		#output {
+			overflow: scroll;
+		}
+		#validationWarn {
+			margin-left: 5px;
+			color: red;
+			visibility: hidden;
+		}
+		#clearBtn {
+			margin-left: 3px;
+		}
+	</style>
+</head>
+<body>
+	<form id="registerUserForm" action="#" method="post" enctype="application/json">
+		<label for="username">Username:</label><input type="text" id="username" name="username" required>
+		<br>
+		<label for="email">Email:</label><input type="email" id="email" name="email" required pattern="^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+		<br>
+		<input type="submit" value="Submit"><button type="button" id="clearBtn" onclick="handleFOutputClear()">Clear</button><span id="validationWarn">One or more fields are invalid. Please check your inputs and try again.</span>
+	</form>
+	<br>
+	<div><span id="privkeySpan" class="keySpan">Your private key: </span><pre id="privkey"></pre></div>
+	<div><span id="pubkeySpan" class="keySpan">Your public key:  </span><pre id="pubkey"></pre></div>
+	<pre id="output"></pre>
+
+	<!-- Scripts -->
+	<script type="application/javascript">
+		loadWasm(WASM_URL, true);
+		//loadWasm(WASM_PROD_URL, true);
+	</script>
+	<script type="application/javascript">
+		//Utility function to get base64 strings from arrays
+		//getB64Str(arr: Array) -> string
+		function getB64Str(arr){
+			return btoa(String.fromCharCode.apply(null, new Uint8Array(arr)));
+		}
+
+		//validate(data: JSONObject) -> boolean
+		function validate(data){
+			//Step 1: Ensure the data actually contains the correct fields and they are non-empty
+			if(!data.username || !data.email) return false;
+			if(data.username.trim() === "" || data.email.trim() === "") return false;
+
+			//Step 2: Check if the username and email are valid
+			let unameLower = data.username.toLowerCase();
+			let uvalid = unameLower.match(/^([a-z0-9_]){4,16}$/) !== null;
+			let evalid = data.email.toLowerCase().match(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/) !== null;
+
+			//Step 3: Ensure both the username and email are valid
+			if(!uvalid || !evalid) return false;
+
+			//No errors, so return true
+			return true;
+		}
+
+		//handleFOutputClear() -> void
+		function handleFOutputClear(){
+			document.getElementById("output").innerHTML = "";
+			document.getElementById("privkey").innerHTML = "";
+			document.getElementById("pubkey").innerHTML = "";
+		}
+	</script>
+	<script type="application/javascript">
+		//Get the form from the DOM
+		const form = document.getElementById("registerUserForm");
+		
+		//Listen for submissions
+		form.addEventListener("submit", async function(event){
+			//Prevent premature submission
+			event.preventDefault();
+
+			//Get the form data; the values should be strings
+			const formData = new FormData(form);
+			let data = {
+				username: formData.get("username"),
+				email: formData.get("email")
+			};
+
+			//Validate the form data
+			let validationWarn = document.getElementById("validationWarn");
+			if(!validate(data)){
+				validationWarn.style.setProperty("visibility", "visible", "important");
+				return;
+			}
+			else {
+				validationWarn.style.setProperty("visibility", "hidden", "important");
+			}
+
+			//Get an Ed25519 keypair from the crypto library
+			//TODO: maybe transmit as BASE64 to save on bandwidth
+			let keypair = ed25519Keygen();
+
+			//Add the keypair to the submission form
+			document.getElementById("privkey").innerHTML = getB64Str(keypair.sk);
+			document.getElementById("pubkey").innerHTML = getB64Str(keypair.pk);
+			for(const span of document.querySelectorAll(".keySpan")) span.style.setProperty("visibility", "visible", "important");
+
+			//Add the public key to the form data
+			//data.pubkey = getB64Str(keypair.pk);
+			data.pubkey = keypair.pk;
+
+			//Send the form to the server
+			const endpoint = LOCAL_EP_BASE + "/users/register";
+			fetch(endpoint, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify(data)
+			})
+
+			//Display the data back to the webpage
+			.then(async response => {
+				//Check for errors
+				if(!response.ok){
+					rtext = await response.text();
+					throw new Error(`Network response was not ok; response: '${!rtext ? "<none>" : rtext.trim()}'`);
+				}
+ 
+				//Parse the response
+				return response.text();
+			})
+			.then(resp => log(resp))
+			.catch(error => log(`${error}\n`));
+		});
+
+		function log(msg){
+			const output = document.getElementById("output");
+			output.prepend(`${new Date()}\n${msg}\n`);
+			//console.log(msg);
+		}
+	</script>
+</body>
+</html>

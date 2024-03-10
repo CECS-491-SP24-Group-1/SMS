@@ -1,0 +1,53 @@
+/**
+ * Compiles a given WASM file and instantiates the environment. After this
+ * function is called, the exported WASM functions from Golang will become
+ * available to any JS code block needing to use it. Simply call the target
+ * function as normal and it'll run the Go code in the fetched WASM binary.
+ * This function MUST be called AFTER `wasm_exec.js` is loaded. Otherwise,
+ * it will fail, since the Golang bindings will be unavailable.
+ * See: https://stackoverflow.com/a/76082718
+ * See: https://github.com/golang/go/blob/b2fcfc1a50fbd46556f7075f7f1fbf600b5c9e5d/misc/wasm/wasm_exec.html
+ * 
+ * @param wasmURL The URL from which to load the WASM binary
+ */
+function loadWasm(wasmURL){
+	//Create a new Golang WASM handler
+	const go = new Go(); //Defined in `wasm_exec.js`
+
+	//Choose the appropriate method to instantiate the WebAssembly module
+	const instantiateMethod = "instantiateStreaming" in WebAssembly ?
+		WebAssembly.instantiateStreaming : (bytes) => WebAssembly.instantiate(bytes, go.importObject);
+
+	//Fetch the WASM file and instantiate it
+	fetch(wasmURL)
+	.then(resp => {
+		if("instantiateStreaming" in WebAssembly){
+			//If WebAssembly.instantiateStreaming is available, pass the Response object directly
+			return instantiateMethod(resp, go.importObject);
+		} 
+		else {
+			//If not available, convert the Response to an ArrayBuffer first
+			return resp.arrayBuffer().then(bytes => instantiateMethod(bytes, go.importObject));
+		}
+	})
+
+	//Run the WASMed code
+	.then(obj => {
+		try {
+			//Run the WASMed code; this makes the exported functions available
+			go.run(obj.instance);
+		}
+		catch (error) {
+			//If there's an error, report it
+			console.error(error);
+		}
+	});
+
+	/*
+	//Fetch the WASM file and instantiate it
+	WebAssembly.instantiateStreaming(fetch(wasmURL), go.importObject).then(results => {
+		wasm = results.instance;
+		go.run(wasm);
+	});
+	*/
+}

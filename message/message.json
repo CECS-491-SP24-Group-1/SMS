@@ -1,0 +1,32 @@
+{
+	"$schema": "https://json-schema.org/draft/2019-09/schema",
+	"title": "Message",
+	"description": "Describes a message that can be exchanged between 2+ parties.",
+	"type": "object",
+	"properties": {
+		"id": {
+			"description": "The ID of the message, represented by a version 7 UUID.",
+			"type": "string",
+			"format": "uuid"
+		},
+		"type": {
+			"description": "Signals what the type of the message is. Defines how to interpret the payload.",
+			"type": "string",
+			"enum": ["text", "multimedia"]
+		},
+		"expiry": {
+			"description": "Defines when the message will be automatically burned. Represented by a Unix timestamp.",
+			"type": "integer"
+		},
+		"payload_size": {
+			"description": "The size of the payload in bytes.",
+			"type": "integer",
+			"minimum": 0
+		},
+		"payload_bytes": {
+			"description": "Contains the entire encrypted payload or a JSON object that links to a multimedia message.",
+			"type": "string"
+		}
+	},
+	"required": ["id", "type", "payload_size", "payload_bytes"]
+}

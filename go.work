@@ -1,0 +1,8 @@
+go 1.21.0
+
+toolchain go1.21.1
+
+use ./message
+
+use ./message_server
+use ./message_client/go

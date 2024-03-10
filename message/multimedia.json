@@ -1,0 +1,23 @@
+{
+	"$schema": "https://json-schema.org/draft/2019-09/schema",
+	"title": "Multimedia",
+	"description": "Describes a link to a multimedia message attachment. This object is only a pointer and doesn't contain the actual bytes of the attachment.",
+	"type": "object",
+	"properties": {
+		"id": {
+			"description": "Contains the ID of the multimedia attachment, represented by a version 7 UUID.",
+			"type": "string",
+			"format": "uuid"
+		},
+		"expiry": {
+			"description": "Defines when the multimedia attachment will be automatically burned. Represented by a Unix timestamp.",
+			"type": "integer"
+		},
+		"key": {
+			"description": "Contains the symmetric key used to decrypt the multimedia attachment.",
+			"type": "string",
+			"contentEncoding": "base64"
+		}
+	},
+	"required": ["id", "key"]
+}
