@@ -34,7 +34,7 @@ func (iu intermediateUser) validate(strictEmail bool) (bool, []error) {
 
 	//Step 1: Check the validity of the username
 	//Username should be 4-16 characters in length and only consist of alphanumeric characters and underscores
-	//This function should never throw an error
+	//This function should never throw an error since the regexp is hard-coded
 	validUname, _ := regexp.MatchString(`^([a-z0-9_]){4,16}$`, strings.ToLower(iu.Username))
 	if !validUname {
 		errors = append(errors, fmt.Errorf("username '%s' is invalid. It must be 4-16 characters in length and only consist of alphanumeric characters and underscores", strings.ToLower(iu.Username)))

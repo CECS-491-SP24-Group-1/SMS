@@ -23,7 +23,7 @@ type User struct {
 
 	/*
 		The username of the user. Can be changed at any time, but mustn't
-		match that of another user. This field is case insensitive and must
+		match that of another user. This field is case insensitive, and must
 		be 4-16 characters in length and only consist of alphanumeric characters
 		and underscores.
 	*/
