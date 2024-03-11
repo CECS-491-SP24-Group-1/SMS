@@ -4,6 +4,7 @@
 		"hediet.vscode-drawio",
 		"fabiospampinato.vscode-todo-plus",
 		"bungcip.better-toml",
-		"jeff-hykin.better-dockerfile-syntax"
+		"jeff-hykin.better-dockerfile-syntax",
+		"streetsidesoftware.code-spell-checker"
 	]
 }
