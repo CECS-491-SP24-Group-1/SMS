@@ -2,6 +2,7 @@ package obj
 
 import (
 	"crypto/ed25519"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -35,7 +36,7 @@ type User struct {
 	Email string `json:"email"`
 
 	//The user's public key. This must correspond to a private key held by the user.
-	Pubkey [PUBKEY_SIZE]byte `json:"pubkey"`
+	Pubkey PubkeyBytes `json:"pubkey"`
 
 	//The last time that the user logged in.
 	LastLogin time.Time `json:"last_login"`
@@ -45,6 +46,43 @@ type User struct {
 
 	//The user's global options, henceforth termed "user flags".
 	Flags UserFlags `json:"flags"`
+}
+
+type PubkeyBytes [PUBKEY_SIZE]byte
+
+// Converts a `PubkeyBytes` object to a string.
+func (pkb PubkeyBytes) String() string {
+	return base64.StdEncoding.EncodeToString(pkb[:])
+}
+
+// Marshals a `PubkeyBytes` object to JSON.
+func (pkb PubkeyBytes) MarshalJSON() ([]byte, error) {
+	return json.Marshal(pkb.String())
+}
+
+// Unmarshals a `PubkeyBytes` object from JSON.
+func (pkb *PubkeyBytes) UnmarshalJSON(b []byte) error {
+	//Unmarshal to a string
+	var s string
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return err
+	}
+
+	//Decode to a byte array
+	bytes, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return err
+	}
+
+	//Ensure the byte array length is correct
+	if len(bytes) != PUBKEY_SIZE {
+		return fmt.Errorf("mismatched byte array size (%d); expected: %d", len(bytes), PUBKEY_SIZE)
+	}
+
+	//Copy bytes and return no error
+	copy(pkb[:], bytes[:])
+	return nil
 }
 
 // Represents user options.
@@ -106,7 +144,7 @@ func (rr ReadReceiptsScope) MarshalJSON() ([]byte, error) {
 	return json.Marshal(rr.String())
 }
 
-// Unmarshals a read receipt flag to JSON.
+// Unmarshals a read receipt flag from JSON.
 func (rr *ReadReceiptsScope) UnmarshalJSON(b []byte) error {
 	var s string
 	err := json.Unmarshal(b, &s)

@@ -124,8 +124,7 @@
 			for(const span of document.querySelectorAll(".keySpan")) span.style.setProperty("visibility", "visible", "important");
 
 			//Add the public key to the form data
-			//data.pubkey = getB64Str(keypair.pk);
-			data.pubkey = keypair.pk;
+			data.pubkey = getB64Str(keypair.pk);
 
 			//Send the form to the server
 			const endpoint = LOCAL_EP_BASE + "/users/register";

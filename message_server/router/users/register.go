@@ -1,6 +1,7 @@
 package users
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -23,8 +24,7 @@ as a base64 string to save on transport size.
 type intermediateUser struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
-	//Pubkey   string `json:"pubkey"`
-	Pubkey [obj.PUBKEY_SIZE]byte `json:"pubkey"`
+	Pubkey   string `json:"pubkey"`
 }
 
 // Validates an `intermediateUser` object using `tanqiangyes/govalidator`.
@@ -53,8 +53,18 @@ func (iu intermediateUser) validate(strictEmail bool) (bool, []error) {
 		errors = append(errors, fmt.Errorf("email '%s' is invalid; it must be of the form 'foo@example.com'", strings.ToLower(iu.Email)))
 	}
 
+	//Step 3: Check the validity of the base64'ed public key by attempting to convert to a byte array
+	dbytes, err := base64.StdEncoding.DecodeString(iu.Pubkey)
+	if err != nil {
+		errors = append(errors, err)
+	}
+	validPubkey := len(dbytes) == obj.PUBKEY_SIZE
+	if !validPubkey {
+		errors = append(errors, fmt.Errorf("mismatched public key size (%d); expected: %d", len(dbytes), obj.PUBKEY_SIZE))
+	}
+
 	//Return the validity status and any errors that occurred
-	return validUname && validEmail, errors
+	return validUname && validEmail && validPubkey, errors
 }
 
 // Handles incoming requests made to `POST /users/register`.
@@ -77,13 +87,11 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Decode the base64 public key to a byte array
-	/*
-		decodedPK, err := base64.StdEncoding.DecodeString(iuser.Pubkey)
-		if err != nil {
-			util.HttpErrorAsJson(w, err, http.StatusBadRequest)
-			return
-		}
-	*/
+	decodedPK, err := base64.StdEncoding.DecodeString(iuser.Pubkey)
+	if err != nil {
+		util.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		return
+	}
 
 	//Fill in the rest of the details
 	uuid, _ := mongoutil.NewUUID7()
@@ -96,8 +104,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 		LastIP:      util.HttpIP2NetIP(r.RemoteAddr),
 		Flags:       obj.DefaultUserFlags(),
 	}
-	//copy(user.Pubkey[:], decodedPK[:])
-	copy(user.Pubkey[:], iuser.Pubkey[:])
+	copy(user.Pubkey[:], decodedPK[:])
 
 	//Do something with the object
 	userStr := fmt.Sprintf("User: %+v", user)
