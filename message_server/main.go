@@ -36,11 +36,11 @@ func main() {
 	mcfg := db.DefaultMConfig()
 	//mcfg.Username = ""
 	//mcfg.Password = ""
-	mclient, err := db.GetClient().Connect(mcfg)
+	mclient, err := db.GetInstance().Connect(mcfg)
 	if err != nil {
 		panic(err)
 	}
-	defer db.GetClient().Disconnect()
+	defer db.GetInstance().Disconnect()
 
 	//Test listing
 	names, _ := mclient.ListDatabaseNames(context.TODO(), bson.M{})

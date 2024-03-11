@@ -11,7 +11,7 @@ import (
 
 func Heartbeat(w http.ResponseWriter, r *http.Request) {
 	//Perform a heartbeat for the database
-	dbPing, err := db.GetClient().Heartbeat()
+	dbPing, err := db.GetInstance().Heartbeat()
 
 	//Create the JSON response
 	var payload []byte

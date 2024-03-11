@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,13 +24,18 @@ type MClient struct {
 /* Holds the instance object for the database client. */
 var instance *MClient
 
+// Guard mutex to ensure that only one singleton object is created
+var once sync.Once
+
 //-- Acquirance function
 
 /* Gets the currently active MongoDB client instance. */
-func GetClient() *MClient {
-	if instance == nil {
-		instance = &MClient{}
-	}
+func GetInstance() *MClient {
+	once.Do(func() {
+		if instance == nil {
+			instance = &MClient{}
+		}
+	})
 	return instance
 }
 
@@ -40,7 +46,7 @@ Gets the underlying client instance that's used to interact with the
 MongoDB database. If the client is not currently connected, then this
 object will be `nil`.
 */
-func (m *MClient) GetInstance() *mongo.Client {
+func (m MClient) GetClient() *mongo.Client {
 	return m.client
 }
 
@@ -48,7 +54,7 @@ func (m *MClient) GetInstance() *mongo.Client {
 Gets the configuration used when the database connection was established.
 If the client is not currently connected, then this object will be `nil`.
 */
-func (m *MClient) GetConfig() *MConfig {
+func (m MClient) GetConfig() *MConfig {
 	return m.config
 }
 
@@ -86,7 +92,7 @@ func (m *MClient) Disconnect() error {
 Pings the MongoDB server to ensure the connection is ok. Returns the
 ping time in microseconds.
 */
-func (m *MClient) Heartbeat() (int64, error) {
+func (m MClient) Heartbeat() (int64, error) {
 	//Ensure a connection actually exists
 	if m.client == nil {
 		return -1, fmt.Errorf("cannot perform a heartbeat; client is not currently connected to a server")

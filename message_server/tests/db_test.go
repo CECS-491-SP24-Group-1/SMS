@@ -45,11 +45,11 @@ func TestInit(t *testing.T) {
 	mcfg := db.DefaultMConfig()
 	//mcfg.Username = ""
 	//mcfg.Password = ""
-	client, err := db.GetClient().Connect(mcfg)
+	client, err := db.GetInstance().Connect(mcfg)
 	if err != nil {
 		panic(err)
 	}
-	defer db.GetClient().Disconnect()
+	defer db.GetInstance().Disconnect()
 
 	//Test listing
 	names, _ := client.ListDatabaseNames(context.TODO(), bson.M{})
