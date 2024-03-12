@@ -16,10 +16,14 @@ const (
 	PUBKEY_SIZE = ed25519.PublicKeySize
 )
 
+//
+//-- CLASS: User
+//
+
 // Represents a user in the system.
 type User struct {
 	//The ID of the user.
-	ID mongoutil.UUID `json:"id"`
+	ID mongoutil.UUID `json:"id" bson:"_id"`
 
 	/*
 		The username of the user. Can be changed at any time, but mustn't
@@ -27,38 +31,90 @@ type User struct {
 		be 4-16 characters in length and only consist of alphanumeric characters
 		and underscores.
 	*/
-	Username string `json:"username"`
+	Username string `json:"username" bson:"username"`
 
 	//The display name of the user. This must be 32 characters or less and is the username by default.
-	DisplayName string `json:"display_name"`
+	DisplayName string `json:"display_name" bson:"display_name"`
 
 	//The email of the user.
-	Email string `json:"email"`
+	Email string `json:"email" bson:"email"`
 
 	//The user's public key. This must correspond to a private key held by the user.
-	Pubkey PubkeyBytes `json:"pubkey"`
+	Pubkey PubkeyBytes `json:"pubkey" bson:"pubkey"`
 
 	//The last time that the user logged in.
-	LastLogin time.Time `json:"last_login"`
+	LastLogin time.Time `json:"last_login" bson:"last_login"`
 
 	//The last IP address that the user logged in from.
-	LastIP net.IP `json:"last_ip"`
+	LastIP net.IP `json:"last_ip" bson:"last_ip"`
 
 	//The user's global options, henceforth termed "user flags".
-	Flags UserFlags `json:"flags"`
+	Flags UserFlags `json:"flags" bson:"flags"`
 }
 
+//
+//-- CLASS: PubkeyBytes
+//
+
+// Represents the bytes of the user's public key.
 type PubkeyBytes [PUBKEY_SIZE]byte
+
+/*
+// MarshalBSONValue implements the bson.ValueMarshaler interface for a `PubkeyBytes` object.
+func (pk PubkeyBytes) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.TypeString, bsoncore.AppendBinary(nil, bson.TypeBinaryUUID, id.UUID[:]), nil
+
+}
+*/
+
+// Marshals a `PubkeyBytes` object to JSON.
+func (pkb PubkeyBytes) MarshalJSON() ([]byte, error) {
+	return json.Marshal(pkb.String())
+}
+
+// Parses a `PubkeyBytes` object from a string.
+func ParsePubkeyBytes(str string) (*PubkeyBytes, error) {
+	//Derive a byte array from the string
+	ba, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return nil, err
+	}
+
+	//Ensure the byte array length is correct
+	if len(ba) != PUBKEY_SIZE {
+		return nil, fmt.Errorf("mismatched byte array size (%d); expected: %d", len(ba), PUBKEY_SIZE)
+	}
+
+	//Copy the bytes to a new object and return it
+	obj := &PubkeyBytes{}
+	copy(obj[:], ba)
+	return obj, nil
+}
 
 // Converts a `PubkeyBytes` object to a string.
 func (pkb PubkeyBytes) String() string {
 	return base64.StdEncoding.EncodeToString(pkb[:])
 }
 
-// Marshals a `PubkeyBytes` object to JSON.
-func (pkb PubkeyBytes) MarshalJSON() ([]byte, error) {
-	return json.Marshal(pkb.String())
+/*
+// UnmarshalBSONValue implements the bson.ValueUnmarshaler interface for a `PubkeyBytes` object.
+func (pk *PubkeyBytes) UnmarshalBSONValue(t bsontype.Type, raw []byte) error {
+	//Ensure the incoming type is correct
+	if t != bson.TypeBinary {
+		return fmt.Errorf("invalid format on unmarshalled bson value")
+	}
+
+	//Read the data from the BSON item
+	_, data, _, ok := bsoncore.ReadBinary(raw)
+	if !ok {
+		return fmt.Errorf("not enough bytes to unmarshal bson value")
+	}
+	copy(id.UUID[:], data)
+
+	//No errors, so return nil
+	return nil
 }
+*/
 
 // Unmarshals a `PubkeyBytes` object from JSON.
 func (pkb *PubkeyBytes) UnmarshalJSON(b []byte) error {
@@ -69,36 +125,44 @@ func (pkb *PubkeyBytes) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	//Decode to a byte array
-	bytes, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return err
-	}
-
-	//Ensure the byte array length is correct
-	if len(bytes) != PUBKEY_SIZE {
-		return fmt.Errorf("mismatched byte array size (%d); expected: %d", len(bytes), PUBKEY_SIZE)
-	}
-
-	//Copy bytes and return no error
-	copy(pkb[:], bytes[:])
-	return nil
+	//Derive a valid object from the string and reassign
+	obj, err := ParsePubkeyBytes(s)
+	*pkb = *obj
+	return err
 }
+
+//
+//-- CLASS: UserFlags
+//
 
 // Represents user options.
 type UserFlags struct {
 	//Whether the user's email has been verified.
-	EmailVerified bool `json:"email_verified"`
+	EmailVerified bool `json:"email_verified" bson:"email_verified"`
 
 	//Whether the user should be discoverable by their username.
-	FindByUName bool `json:"find_by_uname"`
+	FindByUName bool `json:"find_by_uname" bson:"find_by_uname"`
 
 	//Controls who read receipts are sent to.
-	ReadReceipts ReadReceiptsScope `json:"read_receipts"`
+	ReadReceipts ReadReceiptsScope `json:"read_receipts" bson:"read_receipts"`
 
 	//Whether the user can receive message from non-friended users.
-	UnsolicitedMessages bool `json:"unsolicited_messages"`
+	UnsolicitedMessages bool `json:"unsolicited_messages" bson:"unsolicited_messages"`
 }
+
+// Controls the default flag options for new users.
+func DefaultUserFlags() UserFlags {
+	return UserFlags{
+		EmailVerified:       false,   //Emails should be verified before user can do anything.
+		FindByUName:         true,    //Users should be discoverable by their username by default.
+		ReadReceipts:        FRIENDS, //Users should send read receipts only to their friends by default.
+		UnsolicitedMessages: false,   //Users should not be able to be messaged without their consent by random, non-friends.
+	}
+}
+
+//
+//-- CLASS: ReadReceiptsScope
+//
 
 // Controls who read receipts are sent to.
 type ReadReceiptsScope int
@@ -155,14 +219,4 @@ func (rr *ReadReceiptsScope) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	return nil
-}
-
-// Controls the default flag options for new users.
-func DefaultUserFlags() UserFlags {
-	return UserFlags{
-		EmailVerified:       false,   //Emails should be verified before user can do anything.
-		FindByUName:         true,    //Users should be discoverable by their username by default.
-		ReadReceipts:        FRIENDS, //Users should send read receipts only to their friends by default.
-		UnsolicitedMessages: false,   //Users should not be able to be messaged without their consent by random, non-friends.
-	}
 }

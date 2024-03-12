@@ -57,17 +57,19 @@ func (id UUID) MarshalBSONValue() (bsontype.Type, []byte, error) {
 
 // UnmarshalBSONValue implements the bson.ValueUnmarshaler interface.
 func (id *UUID) UnmarshalBSONValue(t bsontype.Type, raw []byte) error {
+	//Ensure the incoming type is correct
 	if t != bson.TypeBinary {
-		return fmt.Errorf("invalid format on unmarshal bson value")
+		return fmt.Errorf("invalid format on unmarshalled bson value")
 	}
 
+	//Read the data from the BSON item
 	_, data, _, ok := bsoncore.ReadBinary(raw)
 	if !ok {
 		return fmt.Errorf("not enough bytes to unmarshal bson value")
 	}
-
 	copy(id.UUID[:], data)
 
+	//No errors, so return nil
 	return nil
 }
 

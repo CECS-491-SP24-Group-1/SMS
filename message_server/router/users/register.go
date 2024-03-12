@@ -1,6 +1,7 @@
 package users
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,9 @@ import (
 	"time"
 
 	"github.com/tanqiangyes/govalidator"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"wraith.me/message_server/db"
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
 	"wraith.me/message_server/util"
@@ -25,6 +29,56 @@ type intermediateUser struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Pubkey   string `json:"pubkey"`
+}
+
+/*
+Ensures that a user doesn't already exist in the database based on what
+was given by the user. A `nil` error indicates that no matching records
+were found. Checking collections for existant objects is expensive, so
+not all records are checked if one fails.
+*/
+func ensureNonexistantUser(coll *mongo.Collection, usr intermediateUser, ctx context.Context) error {
+	//Parse out the public key of the incoming user
+	pubkey, _ := obj.ParsePubkeyBytes(usr.Pubkey) //Errors should not occur here; data is already pre-validated
+
+	//Construct a Mongo aggregation pipeline to run the request; avoids making multiple round-trips to the database
+	//This aggregation was exported from MongoDB; do not edit if you don't know what you are doing!
+	agg := bson.A{
+		bson.D{
+			//Match any documents that have the same username, email, or public key
+			{Key: "$match",
+				Value: bson.D{
+					{Key: "$or",
+						Value: bson.A{
+							bson.D{{Key: "username", Value: usr.Username}},
+							bson.D{{Key: "email", Value: usr.Email}},
+							bson.D{{Key: "pubkey", Value: pubkey}},
+						},
+					},
+				},
+			},
+		},
+		//Reduce the size of the incoming BSON documents to improve performance
+		bson.D{
+			{Key: "$project",
+				Value: bson.D{
+					{Key: "_id", Value: 1},
+				},
+			},
+		},
+	}
+
+	//Run the request and collect all hits; critical errors may be reported from this function so handle appropriately
+	hits, err := mongoutil.Aggregate(coll, agg, ctx)
+	if err != nil {
+		return err
+	}
+
+	//Check if there were any hits
+	if len(hits) > 0 {
+		return fmt.Errorf("one or more provided fields already map to an existing user in the database")
+	}
+	return nil
 }
 
 // Validates an `intermediateUser` object using `tanqiangyes/govalidator`.
@@ -93,6 +147,16 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//Get the users collection from the database and ensure a record doesn't already exist
+	dbc := db.GetInstance().GetClient()
+	userCollection := dbc.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
+
+	//Ensure the user doesn't already exist in the database
+	if err := ensureNonexistantUser(userCollection, iuser, r.Context()); err != nil {
+		util.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		return
+	}
+
 	//Fill in the rest of the details
 	uuid, _ := mongoutil.NewUUID7()
 	user := obj.User{
@@ -105,6 +169,20 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 		Flags:       obj.DefaultUserFlags(),
 	}
 	copy(user.Pubkey[:], decodedPK[:])
+
+	//Add the object to the database
+	userBson, jerr := bson.Marshal(user)
+	_, ierr := userCollection.InsertOne(r.Context(), userBson)
+	if jerr != nil {
+		fmt.Printf("JERR: %s\n", jerr.Error())
+		util.HttpErrorAsJson(w, jerr, http.StatusInternalServerError)
+		return
+	}
+	if ierr != nil {
+		fmt.Printf("IERR: %s\n", ierr.Error())
+		util.HttpErrorAsJson(w, ierr, http.StatusInternalServerError)
+		return
+	}
 
 	//Do something with the object
 	userStr := fmt.Sprintf("User: %+v", user)
