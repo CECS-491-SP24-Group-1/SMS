@@ -24,7 +24,7 @@ type MClient struct {
 /* Holds the instance object for the database client. */
 var instance *MClient
 
-// Guard mutex to ensure that only one singleton object is created
+// Guard mutex to ensure that only one singleton object is created.
 var once sync.Once
 
 //-- Acquirance function
@@ -32,9 +32,7 @@ var once sync.Once
 /* Gets the currently active MongoDB client instance. */
 func GetInstance() *MClient {
 	once.Do(func() {
-		if instance == nil {
-			instance = &MClient{}
-		}
+		instance = &MClient{}
 	})
 	return instance
 }
