@@ -59,14 +59,6 @@ type User struct {
 // Represents the bytes of the user's public key.
 type PubkeyBytes [PUBKEY_SIZE]byte
 
-/*
-// MarshalBSONValue implements the bson.ValueMarshaler interface for a `PubkeyBytes` object.
-func (pk PubkeyBytes) MarshalBSONValue() (bsontype.Type, []byte, error) {
-	return bson.TypeString, bsoncore.AppendBinary(nil, bson.TypeBinaryUUID, id.UUID[:]), nil
-
-}
-*/
-
 // Marshals a `PubkeyBytes` object to JSON.
 func (pkb PubkeyBytes) MarshalJSON() ([]byte, error) {
 	return json.Marshal(pkb.String())
@@ -95,26 +87,6 @@ func ParsePubkeyBytes(str string) (*PubkeyBytes, error) {
 func (pkb PubkeyBytes) String() string {
 	return base64.StdEncoding.EncodeToString(pkb[:])
 }
-
-/*
-// UnmarshalBSONValue implements the bson.ValueUnmarshaler interface for a `PubkeyBytes` object.
-func (pk *PubkeyBytes) UnmarshalBSONValue(t bsontype.Type, raw []byte) error {
-	//Ensure the incoming type is correct
-	if t != bson.TypeBinary {
-		return fmt.Errorf("invalid format on unmarshalled bson value")
-	}
-
-	//Read the data from the BSON item
-	_, data, _, ok := bsoncore.ReadBinary(raw)
-	if !ok {
-		return fmt.Errorf("not enough bytes to unmarshal bson value")
-	}
-	copy(id.UUID[:], data)
-
-	//No errors, so return nil
-	return nil
-}
-*/
 
 // Unmarshals a `PubkeyBytes` object from JSON.
 func (pkb *PubkeyBytes) UnmarshalJSON(b []byte) error {
