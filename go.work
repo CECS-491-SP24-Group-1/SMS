@@ -3,6 +3,6 @@ go 1.21.1
 toolchain go1.21.1
 
 use ./message
-
 use ./message_server
 use ./message_client/go
+use ./testing/rsa-vs-curve25519/
