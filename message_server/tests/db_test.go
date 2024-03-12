@@ -65,7 +65,7 @@ func TestInit(t *testing.T) {
 	}
 
 	//Push the data to the database
-	collection := client.Database("test").Collection("tests")
+	collection := client.Database(db.ROOT_DB).Collection(db.TESTS_COLLECTION)
 	insertResult, err := collection.InsertOne(context.TODO(), sample1)
 	if err != nil {
 		panic(err)
