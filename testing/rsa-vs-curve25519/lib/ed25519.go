@@ -1,0 +1,1 @@
+../../../message_client/go/lib/ed25519.go

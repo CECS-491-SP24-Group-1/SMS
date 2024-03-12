@@ -1,0 +1,1 @@
+../../message_client/static/js/wasm_loader.js

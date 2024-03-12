@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>RSA vs Curve25519</title>
+	<script type="application/javascript" src="./wasm_exec2.min.js"></script>
+	<script type="application/javascript" src="./wasm_loader.js"></script>
+</head>
+<body>
+	<h1>Results:</h1>
+	<pre id="results"></pre>
+	<!-- Scripts -->
+	<script type="application/javascript">
+		async function run(){
+			//Set parameters
+			const warmups = 5;
+			const runs = 5;
+			const rsaKeySize = 3072; //This is what NIST recommends as of 2024
+
+			//Get the results pane
+			let resultsPane = document.getElementById("results");
+
+			//Load WASM
+			await loadWasm("./benchmark.wasm", true);
+
+			//Do benchmarks
+			let edResult = await benchEd25519(warmups, runs);
+			resultsPane.innerHTML += `Ed25519: ${JSON.stringify(edResult)}\n`;
+			///let rsaResult = await benchRSA(warmups, runs, rsaKeySize);
+			//resultsPane.innerHTML += `RSA: ${JSON.stringify(rsaResult)}\n`;
+		}
+		run();
+	</script>
+</body>
+</html>
