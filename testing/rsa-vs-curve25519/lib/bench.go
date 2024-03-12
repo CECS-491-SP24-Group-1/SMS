@@ -43,7 +43,7 @@ func (b *Bench) Run() {
 
 	//Calculate the average of the splits, but only starting from the non-warmup splits
 	var avg int64 = 0
-	for _, split := range b.splits[b.Runs:] {
+	for _, split := range b.splits[b.Warmups:] {
 		avg += split.Nanoseconds()
 	}
 

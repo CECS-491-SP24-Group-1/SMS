@@ -61,6 +61,7 @@ func benchEd25519(_ js.Value, args []js.Value) interface{} {
 	//Do the benchmark
 	bench := lib.NewBench(warmups, runs, func() any {
 		lib.Ed25519Keygen()
+		time.Sleep(1 * time.Nanosecond) //To prevent discards
 		return nil
 	})
 	bench.Run()
@@ -79,6 +80,7 @@ func benchRSA(_ js.Value, args []js.Value) interface{} {
 	//Do the benchmark
 	bench := lib.NewBench(warmups, runs, func() any {
 		lib.RSAKeygen(keySize)
+		time.Sleep(1 * time.Nanosecond) //To prevent discards
 		return nil
 	})
 	bench.Run()

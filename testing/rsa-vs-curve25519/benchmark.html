@@ -10,10 +10,11 @@
 	<pre id="results"></pre>
 	<!-- Scripts -->
 	<script type="application/javascript">
+		const delay = ms => new Promise(res => setTimeout(res, ms));
 		async function run(){
 			//Set parameters
 			const warmups = 5;
-			const runs = 5;
+			const runs = 10;
 			const rsaKeySize = 3072; //This is what NIST recommends as of 2024
 
 			//Get the results pane
@@ -24,9 +25,9 @@
 
 			//Do benchmarks
 			let edResult = await benchEd25519(warmups, runs);
-			resultsPane.innerHTML += `Ed25519: ${JSON.stringify(edResult)}\n`;
-			///let rsaResult = await benchRSA(warmups, runs, rsaKeySize);
-			//resultsPane.innerHTML += `RSA: ${JSON.stringify(rsaResult)}\n`;
+			resultsPane.innerHTML += await `Ed25519: ${JSON.stringify(edResult)}\n`;
+			let rsaResult = await benchRSA(warmups, runs, rsaKeySize);
+			resultsPane.innerHTML += await`RSA: ${JSON.stringify(rsaResult)}\n`;
 		}
 		run();
 	</script>
