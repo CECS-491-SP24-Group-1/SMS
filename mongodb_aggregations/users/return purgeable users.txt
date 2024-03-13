@@ -1,0 +1,15 @@
+[
+  {
+    $match: {
+      "flags.should_purge": true,
+      "flags.purge_by": {
+        $lt: new Date(),
+      },
+    },
+  },
+  {
+    $project: {
+      purge_by: "$flags.purge_by",
+    },
+  },
+]
