@@ -16,7 +16,7 @@ type Response struct {
 	//The status indicator that is to be sent with the message.
 	Status string `json:"status"`
 
-	//The description of the status that is to be sent.
+	//The description message of the status that is to be sent.
 	Desc string `json:"desc"`
 }
 
@@ -37,22 +37,6 @@ type MultiResponse struct {
 	//The status indicator that is to be sent with the message.
 	Status string `json:"status"`
 
-	//The description messages of the status that is to be sent.
-	Descs []string `json:"descs"`
-}
-
-// Represents an object that's returned to a client when an error occurs.
-// TODO: deprecate in favor of `Response`.
-type ErrorResp struct {
-	Status string `json:"status"`
-	Code   int    `json:"code"`
-	Error  string `json:"error"`
-}
-
-// Represents an object that's returned to a client when multiple errors occur.
-// TODO: deprecate in favor of `MultiResponse`.
-type MultiErrorResp struct {
-	Status string   `json:"status"`
-	Code   int      `json:"code"`
-	Errors []string `json:"errors"`
+	//The description messages of the statuses that are to be sent.
+	Desc []string `json:"desc"`
 }

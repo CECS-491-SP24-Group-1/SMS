@@ -33,10 +33,10 @@ func HttpOkJson(w http.ResponseWriter, json string) {
 // Issues an HTTP error response as JSON.
 func HttpErrorAsJson(w http.ResponseWriter, err error, code int) {
 	//Construct an error response object
-	resp := obj.ErrorResp{
+	resp := obj.Response{
 		Code:   code,
 		Status: "error",
-		Error:  err.Error(),
+		Desc:   err.Error(),
 	}
 
 	//Write the object to the response writer
@@ -56,10 +56,10 @@ func HttpMultipleErrorsAsJson(w http.ResponseWriter, errs []error, code int) {
 	}
 
 	//Construct an error response object
-	resp := obj.MultiErrorResp{
+	resp := obj.MultiResponse{
 		Code:   code,
 		Status: "multiple_errors",
-		Errors: stringErrs,
+		Desc:   stringErrs,
 	}
 
 	//Write the object to the response writer
