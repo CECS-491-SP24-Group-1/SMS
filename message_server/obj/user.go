@@ -48,8 +48,11 @@ type User struct {
 	//The last IP address that the user logged in from.
 	LastIP net.IP `json:"last_ip" bson:"last_ip"`
 
-	//The user's global options, henceforth termed "user flags".
+	//The user's flags. These mark items such as verification status, deletion, etc.
 	Flags UserFlags `json:"flags" bson:"flags"`
+
+	//The user's global options.
+	Options UserOptions `json:"options" bson:"options"`
 }
 
 //
@@ -107,11 +110,38 @@ func (pkb *PubkeyBytes) UnmarshalJSON(b []byte) error {
 //-- CLASS: UserFlags
 //
 
-// Represents user options.
+// Represents user flags.
 type UserFlags struct {
 	//Whether the user's email has been verified.
 	EmailVerified bool `json:"email_verified" bson:"email_verified"`
 
+	//Whether the user's public key has been verified to correspond to a private key.
+	PubkeyVerified bool `json:"pubkey_verified" bson:"pubkey_verified"`
+
+	//Whether the user's account has been marked for deletion. This flag is set to true by default, and is lifted when the 2 above flags are false.
+	ShouldPurge bool `json:"should_purge" bson:"should_purge"`
+
+	//The UTC time at which the account should be purged from the database. This field is ignored if `ShouldPurge` is false.
+	PurgeBy time.Time `json:"purge_by" bson:"purge_by"`
+}
+
+// Controls the default flag options for new users.
+func DefaultUserFlags() UserFlags {
+	return UserFlags{
+		EmailVerified:  false, //Emails should be verified before user can do anything.
+		PubkeyVerified: false, //Public keys should be verified before user can do anything.
+		ShouldPurge:    true,  //Accounts should be purged automatically by default due to missing verification of email and pubkey.
+		//PurgeBy:        time.Now().UTC().Add(24 * time.Hour), //New accounts are purged after 24 hours by default if verification is not done.
+		PurgeBy: time.Now().UTC(), //New accounts are purged after 24 hours by default if verification is not done.
+	}
+}
+
+//
+//-- CLASS: UserOptions
+//
+
+// Represents user options.
+type UserOptions struct {
 	//Whether the user should be discoverable by their username.
 	FindByUName bool `json:"find_by_uname" bson:"find_by_uname"`
 
@@ -123,9 +153,8 @@ type UserFlags struct {
 }
 
 // Controls the default flag options for new users.
-func DefaultUserFlags() UserFlags {
-	return UserFlags{
-		EmailVerified:       false,   //Emails should be verified before user can do anything.
+func DefaultUserOptions() UserOptions {
+	return UserOptions{
 		FindByUName:         true,    //Users should be discoverable by their username by default.
 		ReadReceipts:        FRIENDS, //Users should send read receipts only to their friends by default.
 		UnsolicitedMessages: false,   //Users should not be able to be messaged without their consent by random, non-friends.

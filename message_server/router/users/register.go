@@ -32,6 +32,27 @@ type intermediateUser struct {
 }
 
 /*
+Represents a user object that is passed to the client once registration
+is completed.
+*/
+type postsignupUser struct {
+	//The ID of the user.
+	ID mongoutil.UUID `json:"id"`
+
+	//The email of the user, but redacted.
+	RedactedEmail string `json:"redacted_email"`
+
+	/*
+		A JWT token used to verify the possession of the user's public key. This token
+		is encrypted with the user's public key and sent back to the user for decryption.
+		The successful decryption and re-offer of this token back to the server is
+		sufficient to prove ownership of the user's private key without them revealing
+		it to the server.
+	*/
+	PubkeyChallenge []byte `json:"pubkey_challenge"`
+}
+
+/*
 Ensures that a user doesn't already exist in the database based on what
 was given by the user. A `nil` error indicates that no matching records
 were found. Checking collections for existant objects is expensive, so
