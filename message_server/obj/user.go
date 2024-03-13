@@ -1,8 +1,6 @@
 package obj
 
 import (
-	"crypto/ed25519"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -12,18 +10,14 @@ import (
 	"wraith.me/message_server/db/mongoutil"
 )
 
-const (
-	PUBKEY_SIZE = ed25519.PublicKeySize
-)
-
 //
 //-- CLASS: User
 //
 
 // Represents a user in the system.
 type User struct {
-	//The ID of the user.
-	ID mongoutil.UUID `json:"id" bson:"_id"`
+	//User extends the entity type.
+	Entity
 
 	/*
 		The username of the user. Can be changed at any time, but mustn't
@@ -39,9 +33,6 @@ type User struct {
 	//The email of the user.
 	Email string `json:"email" bson:"email"`
 
-	//The user's public key. This must correspond to a private key held by the user.
-	Pubkey PubkeyBytes `json:"pubkey" bson:"pubkey"`
-
 	//The last time that the user logged in.
 	LastLogin time.Time `json:"last_login" bson:"last_login"`
 
@@ -55,55 +46,32 @@ type User struct {
 	Options UserOptions `json:"options" bson:"options"`
 }
 
-//
-//-- CLASS: PubkeyBytes
-//
-
-// Represents the bytes of the user's public key.
-type PubkeyBytes [PUBKEY_SIZE]byte
-
-// Marshals a `PubkeyBytes` object to JSON.
-func (pkb PubkeyBytes) MarshalJSON() ([]byte, error) {
-	return json.Marshal(pkb.String())
-}
-
-// Parses a `PubkeyBytes` object from a string.
-func ParsePubkeyBytes(str string) (*PubkeyBytes, error) {
-	//Derive a byte array from the string
-	ba, err := base64.StdEncoding.DecodeString(str)
-	if err != nil {
-		return nil, err
+// Creates a new user object.
+func NewUser(
+	id mongoutil.UUID,
+	pubkey PubkeyBytes,
+	username string,
+	displayName string,
+	email string,
+	lastLogin time.Time,
+	lastIP net.IP,
+	flags UserFlags,
+	options UserOptions,
+) User {
+	return User{
+		Entity: Entity{
+			ID:     id,
+			Type:   USER,
+			Pubkey: pubkey,
+		},
+		Username:    username,
+		DisplayName: displayName,
+		Email:       email,
+		LastLogin:   lastLogin,
+		LastIP:      lastIP,
+		Flags:       flags,
+		Options:     options,
 	}
-
-	//Ensure the byte array length is correct
-	if len(ba) != PUBKEY_SIZE {
-		return nil, fmt.Errorf("mismatched byte array size (%d); expected: %d", len(ba), PUBKEY_SIZE)
-	}
-
-	//Copy the bytes to a new object and return it
-	obj := &PubkeyBytes{}
-	copy(obj[:], ba)
-	return obj, nil
-}
-
-// Converts a `PubkeyBytes` object to a string.
-func (pkb PubkeyBytes) String() string {
-	return base64.StdEncoding.EncodeToString(pkb[:])
-}
-
-// Unmarshals a `PubkeyBytes` object from JSON.
-func (pkb *PubkeyBytes) UnmarshalJSON(b []byte) error {
-	//Unmarshal to a string
-	var s string
-	err := json.Unmarshal(b, &s)
-	if err != nil {
-		return err
-	}
-
-	//Derive a valid object from the string and reassign
-	obj, err := ParsePubkeyBytes(s)
-	*pkb = *obj
-	return err
 }
 
 //

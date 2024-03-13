@@ -183,15 +183,17 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Fill in the rest of the details
 	uuid, _ := mongoutil.NewUUID7()
-	user := obj.User{
-		ID:          *uuid,
-		Username:    strings.ToLower(iuser.Username),
-		DisplayName: iuser.Username,
-		Email:       strings.ToLower(iuser.Email),
-		LastLogin:   time.Now(),
-		LastIP:      util.HttpIP2NetIP(r.RemoteAddr),
-		Flags:       obj.DefaultUserFlags(),
-	}
+	user := obj.NewUser(
+		*uuid,
+		obj.NilPubkey(),
+		strings.ToLower(iuser.Username),
+		iuser.Username,
+		strings.ToLower(iuser.Email),
+		time.Now(),
+		util.HttpIP2NetIP(r.RemoteAddr),
+		obj.DefaultUserFlags(),
+		obj.DefaultUserOptions(),
+	)
 	copy(user.Pubkey[:], decodedPK[:])
 
 	//Add the object to the database
