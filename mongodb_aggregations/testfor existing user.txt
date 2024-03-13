@@ -1,0 +1,29 @@
+[
+  {
+    $match: {
+      $or: [
+        {
+          username: "rod573",
+        },
+        {
+          email: "thea_predovic87@gmail.com",
+        },
+        {
+          pubkey: "foo",
+        },
+      ],
+    },
+  },
+  {
+    $project: {
+      _id: 1,
+    },
+  },
+  // {
+  //   $count:
+  //     /**
+  //      * Provide the field name for the count.
+  //      */
+  //     "number",
+  // }
+]
