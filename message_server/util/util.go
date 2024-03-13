@@ -1,6 +1,8 @@
 package util
 
 import (
+	crand "crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"math/rand"
 )
@@ -52,6 +54,36 @@ func FormatBytes(size uint64, sp bool) string {
 	return fmt.Sprintf("%.2f%s%s", value, ws, unit)
 }
 
+/*
+GenerateRandomBytes returns securely generated random bytes. It will
+return an error if the system's secure random number generator fails
+to function correctly, in which case the caller should not continue.
+Function is sourced from the following website:
+https://blog.questionable.services/article/generating-secure-random-numbers-crypto-rand/
+*/
+func GenRandBytes(n int) ([]byte, error) {
+	b := make([]byte, n)
+	_, err := crand.Read(b)
+	// Note that err == nil only if we read len(b) bytes.
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+/*
+GenRandString returns a URL-safe, base64 encoded securely generated
+random string. It will return an error if the system's secure random
+number generator fails to function correctly, in which case the caller
+should not continue. Function is sourced from the following website:
+https://blog.questionable.services/article/generating-secure-random-numbers-crypto-rand/
+*/
+func GenRandString(s int) (string, error) {
+	b, err := GenRandBytes(s)
+	return base64.URLEncoding.EncodeToString(b), err
+}
+
 // Checks if an integer is inside of a specified range.
 func InRange(num int64, min int64, max int64) bool {
 	return num >= min && num <= max
@@ -59,7 +91,9 @@ func InRange(num int64, min int64, max int64) bool {
 
 /*
 Generates a random string of size n, given a character set. By default,
-this will be all alphanumeric characters.
+this will be all alphanumeric characters. Keep in mind that this function
+is NOT cryptographically secure, and should not be used for generating
+sensitive data.
 */
 func RandomString(size int, charset string) string {
 	//Check if the charset is empty
