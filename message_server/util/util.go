@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math/rand"
+	"strings"
 )
 
 // Checks if any item in a given list is equal to one singular given item.
@@ -111,4 +112,83 @@ func RandomString(size int, charset string) string {
 
 	//Return the resultant string
 	return string(str)
+}
+
+/*
+Replaces n characters on either side of a string with asterisks,
+effectively redacting the contents of the string.
+*/
+func Redact(str string, n int) string {
+	//Convert the string to a slice of runes
+	runes := []rune(str)
+
+	//Replace the nth characters from both ends with asterisks
+	for i := 0; i < n; i++ {
+		if len(runes) > i {
+			runes[i] = '*'
+		}
+		if len(runes) > len(runes)-i-1 {
+			runes[len(runes)-i-1] = '*'
+		}
+	}
+
+	//Convert the slice of runes back to a string
+	return string(runes)
+}
+
+/*
+Redacts an email address, leaving only one character on either side of both
+the email account and the domain name. Example: `johndoe@example.com` becomes
+`j*****e@e*****e.com`. See the following StackExchange article for justification
+of the format used: https://security.stackexchange.com/a/213700
+*/
+func RedactEmail(email string) string {
+	//Split the email at the last occurrence of the `@` rune
+	name, domain := SplitAtLastRune(email, '@')
+
+	//Split the domain at the last occurrence of the `.` rune
+	dname, tld := SplitAtLastRune(domain, '.')
+
+	//Redact the email and domain names
+	name = RedactCenter(name, 1)
+	dname = RedactCenter(dname, 1)
+
+	//Recombine the redacted name and domain
+	return name + "@" + dname + "." + tld
+}
+
+/*
+Replaces n characters from the center of a string with asterisks,
+effectively redacting the contents of the string.
+*/
+func RedactCenter(str string, n int) string {
+	if len(str) <= n*2 {
+		return strings.Repeat("*", len(str))
+	} else {
+		return str[0:n] + strings.Repeat("*", len(str)-(n*2)) + str[len(str)-n:]
+	}
+}
+
+// Splits a string into two pieces at the first position of a given rune.
+func SplitAtFirstRune(s string, r rune) (string, string) {
+	//Find the first index of the rune
+	firstIndex := strings.Index(s, string(r))
+	if firstIndex == -1 {
+		//Rune not found, return the original string and an empty string
+		return s, ""
+	}
+	//Split the string into two parts at the position of the rune
+	return s[:firstIndex], s[firstIndex+1:]
+}
+
+// Splits a string into two pieces at the last position of a given rune.
+func SplitAtLastRune(s string, r rune) (string, string) {
+	//Find the last index of the rune
+	lastIndex := strings.LastIndex(s, string(r))
+	if lastIndex == -1 {
+		//Rune not found, return the original string and an empty string
+		return s, ""
+	}
+	//Split the string into two parts at the position of the rune
+	return s[:lastIndex], s[lastIndex+1:]
 }

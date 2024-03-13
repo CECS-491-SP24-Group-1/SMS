@@ -50,6 +50,9 @@ type postsignupUser struct {
 		it to the server.
 	*/
 	PubkeyChallenge []byte `json:"pubkey_challenge"`
+
+	//The time at which the user account will be deleted if verification is not performed.
+	Expiry time.Time
 }
 
 /*
@@ -195,12 +198,10 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	userBson, jerr := bson.Marshal(user)
 	_, ierr := userCollection.InsertOne(r.Context(), userBson)
 	if jerr != nil {
-		fmt.Printf("JERR: %s\n", jerr.Error())
 		util.HttpErrorAsJson(w, jerr, http.StatusInternalServerError)
 		return
 	}
 	if ierr != nil {
-		fmt.Printf("IERR: %s\n", ierr.Error())
 		util.HttpErrorAsJson(w, ierr, http.StatusInternalServerError)
 		return
 	}
