@@ -10,13 +10,16 @@ import (
 	"wraith.me/message_server/db/mongoutil"
 )
 
+//TODO: test to see if a user can be successfully unmarshaled from JSON & BSON
+//TODO: add an equal function
+
 //
 //-- CLASS: User
 //
 
-// Represents a user in the system.
+// Represents a user in the system. A user is a type of entity.
 type User struct {
-	//User extends the entity type.
+	//User extends the abstract entity type.
 	Entity
 
 	/*
