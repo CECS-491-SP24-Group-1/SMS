@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"time"
 )
 
 // Checks if any item in a given list is equal to one singular given item.
@@ -88,6 +89,11 @@ func GenRandString(s int) (string, error) {
 // Checks if an integer is inside of a specified range.
 func InRange(num int64, min int64, max int64) bool {
 	return num >= min && num <= max
+}
+
+// Shorthand for `time.Now().Truncate(time.Millisecond).UTC()`.
+func NowMillis() time.Time {
+	return time.Now().Truncate(time.Millisecond).UTC()
 }
 
 /*
@@ -192,4 +198,9 @@ func SplitAtLastRune(s string, r rune) (string, string) {
 	}
 	//Split the string into two parts at the position of the rune
 	return s[:lastIndex], s[lastIndex+1:]
+}
+
+// Truncates a time to milliseconds, chopping off any micro or nano seconds.
+func Strip2Millis(t time.Time) time.Time {
+	return t.Truncate(time.Millisecond)
 }

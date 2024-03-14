@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"wraith.me/message_server/db"
-	"wraith.me/message_server/util"
+	"wraith.me/message_server/util/httpu"
 )
 
 func Heartbeat(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +30,7 @@ func Heartbeat(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else {
-		util.HttpErrorAsJson(w, err, http.StatusInternalServerError)
+		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
 		return
 	}
 

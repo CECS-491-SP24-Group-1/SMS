@@ -1,4 +1,4 @@
-package util
+package httpu
 
 import (
 	"encoding/json"
@@ -83,6 +83,7 @@ func TextualResponse(w http.ResponseWriter, payload []byte, code int, mime strin
 	w.Write(payload)
 }
 
+// Converts a string IP from `http.Request` to a `net.IP` object.
 func HttpIP2NetIP(ip string) net.IP {
 	rawIP := ip[0:strings.LastIndex(ip, ":")] //Get just the IP; last colon indicates the port
 	return net.ParseIP(rawIP)

@@ -2,32 +2,33 @@ package tests
 
 import (
 	"fmt"
-	"net"
 	"testing"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
 )
 
-func TestUser2BSON(t *testing.T) {
-	uuid, _ := mongoutil.NewUUID7()
-	user := obj.User{
-		ID:          *uuid,
-		Username:    "john.doe",
-		DisplayName: "John Doe",
-		Email:       "jdoe.example.com",
-		Pubkey:      [obj.PUBKEY_SIZE]byte{},
-		LastLogin:   time.Now(),
-		LastIP:      net.ParseIP("127.0.0.1"),
-		Flags:       obj.DefaultUserFlags(),
-	}
+var user, _ = obj.NewUserSimple(
+	"johndoe123",
+	"johndoeismyname@example.com",
+)
 
-	bson, berr := bson.Marshal(user)
-	if berr != nil {
-		t.Error(berr)
+func TestUser2BSON(t *testing.T) {
+	//Marshal to BSON
+	bb, err := bson.Marshal(user)
+	if err != nil {
+		t.Error(err)
 		t.FailNow()
 	}
-	fmt.Printf("BSON: %s\n", string(bson))
+
+	//Unmarshal the BSON back to an object
+	var out obj.User
+	if err := bson.Unmarshal(bb, &out); err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	//Print the input and output objects
+	fmt.Printf("IN:  %v\n", *user)
+	fmt.Printf("OUT: %v\n", out)
 }

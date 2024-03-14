@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/util"
 )
 
 //TODO: test to see if a user can be successfully unmarshaled from JSON & BSON
@@ -60,8 +61,8 @@ func NewUser(
 	lastIP net.IP,
 	flags UserFlags,
 	options UserOptions,
-) User {
-	return User{
+) *User {
+	return &User{
 		Entity: Entity{
 			ID:     id,
 			Type:   USER,
@@ -75,6 +76,32 @@ func NewUser(
 		Flags:       flags,
 		Options:     options,
 	}
+}
+
+// Creates a user from only a username and string. This should be used only for mocking.
+func NewUserSimple(username string, email string) (*User, error) {
+	//Precompute complex fields
+	uuid, err := mongoutil.NewUUID7()
+	if err != nil {
+		return nil, err
+	}
+	randBytes, err := util.GenRandBytes(PUBKEY_SIZE)
+	if err != nil {
+		return nil, err
+	}
+
+	//Create the object
+	return NewUser(
+		*uuid,
+		PubkeyBytes(randBytes),
+		username,
+		username,
+		email,
+		util.NowMillis(),
+		net.ParseIP("127.0.0.1"),
+		DefaultUserFlags(),
+		DefaultUserOptions(),
+	), nil
 }
 
 //
@@ -99,11 +126,10 @@ type UserFlags struct {
 // Controls the default flag options for new users.
 func DefaultUserFlags() UserFlags {
 	return UserFlags{
-		EmailVerified:  false, //Emails should be verified before user can do anything.
-		PubkeyVerified: false, //Public keys should be verified before user can do anything.
-		ShouldPurge:    true,  //Accounts should be purged automatically by default due to missing verification of email and pubkey.
-		//PurgeBy:        time.Now().UTC().Add(24 * time.Hour), //New accounts are purged after 24 hours by default if verification is not done.
-		PurgeBy: time.Now().UTC(), //New accounts are purged after 24 hours by default if verification is not done.
+		EmailVerified:  false,                                //Emails should be verified before user can do anything.
+		PubkeyVerified: false,                                //Public keys should be verified before user can do anything.
+		ShouldPurge:    true,                                 //Accounts should be purged automatically by default due to missing verification of email and pubkey.
+		PurgeBy:        util.NowMillis().Add(24 * time.Hour), //New accounts are purged after 24 hours by default if verification is not done.
 	}
 }
 

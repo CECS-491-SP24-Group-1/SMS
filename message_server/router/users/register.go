@@ -17,6 +17,7 @@ import (
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
 	"wraith.me/message_server/util"
+	"wraith.me/message_server/util/httpu"
 )
 
 /*
@@ -152,7 +153,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Get the request body and attempt to parse to JSON
 	if err := json.NewDecoder(r.Body).Decode(&iuser); err != nil {
-		util.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -160,14 +161,14 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	//At this point, the incoming JSON was accepted, but fields may be missing or invalid
 	valid, verrs := iuser.validate(false)
 	if !valid {
-		util.HttpMultipleErrorsAsJson(w, verrs, http.StatusBadRequest)
+		httpu.HttpMultipleErrorsAsJson(w, verrs, http.StatusBadRequest)
 		return
 	}
 
 	//Decode the base64 public key to a byte array
 	decodedPK, err := base64.StdEncoding.DecodeString(iuser.Pubkey)
 	if err != nil {
-		util.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -177,7 +178,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Ensure the user doesn't already exist in the database
 	if err := ensureNonexistantUser(userCollection, iuser, r.Context()); err != nil {
-		util.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -189,8 +190,8 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 		strings.ToLower(iuser.Username),
 		iuser.Username,
 		strings.ToLower(iuser.Email),
-		time.Now(),
-		util.HttpIP2NetIP(r.RemoteAddr),
+		util.NowMillis(),
+		httpu.HttpIP2NetIP(r.RemoteAddr),
 		obj.DefaultUserFlags(),
 		obj.DefaultUserOptions(),
 	)
@@ -200,11 +201,11 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	userBson, jerr := bson.Marshal(user)
 	_, ierr := userCollection.InsertOne(r.Context(), userBson)
 	if jerr != nil {
-		util.HttpErrorAsJson(w, jerr, http.StatusInternalServerError)
+		httpu.HttpErrorAsJson(w, jerr, http.StatusInternalServerError)
 		return
 	}
 	if ierr != nil {
-		util.HttpErrorAsJson(w, ierr, http.StatusInternalServerError)
+		httpu.HttpErrorAsJson(w, ierr, http.StatusInternalServerError)
 		return
 	}
 
@@ -214,6 +215,6 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Respond back with the UUID of the new user
 	if err := json.NewEncoder(w).Encode(user); err != nil {
-		util.HttpErrorAsJson(w, err, http.StatusInternalServerError)
+		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
 	}
 }
