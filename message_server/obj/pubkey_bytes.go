@@ -15,7 +15,7 @@ const (
 //-- ALIAS: PubkeyBytes
 //
 
-// Represents the bytes of the user's public key.
+// Represents the bytes of an entity's public key.
 type PubkeyBytes [PUBKEY_SIZE]byte
 
 // Marshals a `PubkeyBytes` object to JSON.

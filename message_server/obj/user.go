@@ -17,7 +17,7 @@ import (
 //-- CLASS: User
 //
 
-// Represents a user in the system. A user is a type of entity.
+// Represents a user of the system. A user is a type of entity.
 type User struct {
 	//User extends the abstract entity type.
 	Entity
