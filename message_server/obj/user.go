@@ -170,7 +170,7 @@ const (
 	NOBODY                            //Nobody is sent a read receipt
 )
 
-// Converts a read receipt flag to a string.
+// Converts a read receipt enum to a string.
 func (rr ReadReceiptsScope) String() string {
 	rrs := ""
 	switch rr {
@@ -184,7 +184,7 @@ func (rr ReadReceiptsScope) String() string {
 	return rrs
 }
 
-// Converts a read receipt flag string to an object.
+// Converts a read receipt enum string to an object.
 func ParseReadReceiptsScope(s string) (ReadReceiptsScope, error) {
 	rri := -1
 	switch strings.ToUpper(s) {
@@ -200,12 +200,12 @@ func ParseReadReceiptsScope(s string) (ReadReceiptsScope, error) {
 	return ReadReceiptsScope(rri), nil
 }
 
-// Marshals a read receipt flag to JSON.
+// Marshals a read receipt enum to JSON.
 func (rr ReadReceiptsScope) MarshalJSON() ([]byte, error) {
 	return json.Marshal(rr.String())
 }
 
-// Unmarshals a read receipt flag from JSON.
+// Unmarshals a read receipt enum from JSON.
 func (rr *ReadReceiptsScope) UnmarshalJSON(b []byte) error {
 	var s string
 	err := json.Unmarshal(b, &s)
