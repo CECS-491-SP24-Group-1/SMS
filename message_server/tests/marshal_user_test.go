@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -24,6 +25,26 @@ func TestUser2BSON(t *testing.T) {
 	//Unmarshal the BSON back to an object
 	var out obj.User
 	if err := bson.Unmarshal(bb, &out); err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	//Print the input and output objects
+	fmt.Printf("IN:  %v\n", *user)
+	fmt.Printf("OUT: %v\n", out)
+}
+
+func TestUser2JSON(t *testing.T) {
+	//Marshal to JSON
+	jb, err := json.Marshal(user)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	//Unmarshal the JSON back to an object
+	var out obj.User
+	if err := json.Unmarshal(jb, &out); err != nil {
 		t.Error(err)
 		t.FailNow()
 	}

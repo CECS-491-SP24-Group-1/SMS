@@ -12,7 +12,7 @@ const (
 )
 
 //
-//-- CLASS: PubkeyBytes
+//-- ALIAS: PubkeyBytes
 //
 
 // Represents the bytes of the user's public key.

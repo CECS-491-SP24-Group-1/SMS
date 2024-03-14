@@ -9,7 +9,7 @@ import (
 )
 
 //
-//-- CLASS: Entity
+//-- ABSTRACT CLASS: Entity
 //
 
 /*
@@ -28,7 +28,7 @@ type Entity struct {
 }
 
 //
-//-- CLASS: EntityType
+//-- ENUM: EntityType
 //
 
 // Denotes whether an entity is a user or a server.

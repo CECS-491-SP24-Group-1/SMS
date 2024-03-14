@@ -11,7 +11,6 @@ import (
 	"wraith.me/message_server/util"
 )
 
-//TODO: test to see if a user can be successfully unmarshaled from JSON & BSON
 //TODO: add an equal function
 
 //
@@ -159,7 +158,7 @@ func DefaultUserOptions() UserOptions {
 }
 
 //
-//-- CLASS: ReadReceiptsScope
+//-- ENUM: ReadReceiptsScope
 //
 
 // Controls who read receipts are sent to.
