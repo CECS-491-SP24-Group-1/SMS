@@ -63,8 +63,10 @@ func NewUser(
 ) *User {
 	return &User{
 		Entity: Entity{
-			ID:     id,
-			Type:   USER,
+			Identifiable: Identifiable{
+				ID:   id,
+				Type: USER,
+			},
 			Pubkey: pubkey,
 		},
 		Username:    username,
