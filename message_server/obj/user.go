@@ -62,7 +62,7 @@ func NewUser(
 		Entity: Entity{
 			Identifiable: Identifiable{
 				ID:   id,
-				Type: USER,
+				Type: IdTypeUSER,
 			},
 			Pubkey: pubkey,
 		},
@@ -155,66 +155,3 @@ func DefaultUserOptions() UserOptions {
 		UnsolicitedMessages: false,                    //Users should not be able to be messaged without their consent by random, non-friends.
 	}
 }
-
-/*
-//
-//-- ENUM: ReadReceiptsScope
-//
-
-// Controls who read receipts are sent to.
-type ReadReceiptsScope int
-
-const (
-	EVERYONE ReadReceiptsScope = iota //Everyone is sent a read receipt.
-	FRIENDS                           //Only friends are sent read receipts.
-	NOBODY                            //Nobody is sent a read receipt
-)
-
-// Converts a read receipt enum to a string.
-func (rr ReadReceiptsScope) String() string {
-	rrs := ""
-	switch rr {
-	case EVERYONE:
-		rrs = "EVERYONE"
-	case FRIENDS:
-		rrs = "FRIENDS"
-	case NOBODY:
-		rrs = "NOBODY"
-	}
-	return rrs
-}
-
-// Converts a read receipt enum string to an object.
-func ParseReadReceiptsScope(s string) (ReadReceiptsScope, error) {
-	rri := -1
-	switch strings.ToUpper(s) {
-	case "EVERYONE":
-		rri = int(EVERYONE)
-	case "FRIENDS":
-		rri = int(FRIENDS)
-	case "NOBODY":
-		rri = int(NOBODY)
-	default:
-		return -1, fmt.Errorf("ReadReceiptsScope: invalid enum name '%s'", s)
-	}
-	return ReadReceiptsScope(rri), nil
-}
-
-// Marshals a read receipt enum to JSON.
-func (rr ReadReceiptsScope) MarshalJSON() ([]byte, error) {
-	return json.Marshal(rr.String())
-}
-
-// Unmarshals a read receipt enum from JSON.
-func (rr *ReadReceiptsScope) UnmarshalJSON(b []byte) error {
-	var s string
-	err := json.Unmarshal(b, &s)
-	if err != nil {
-		return err
-	}
-	if *rr, err = ParseReadReceiptsScope(s); err != nil {
-		return err
-	}
-	return nil
-}
-*/
