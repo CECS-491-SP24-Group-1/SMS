@@ -53,18 +53,3 @@ func TestUser2JSON(t *testing.T) {
 	fmt.Printf("IN:  %v\n", *user)
 	fmt.Printf("OUT: %v\n", out)
 }
-
-func TestRand(t *testing.T) {
-	type Test struct {
-		Status obj.ChallengeStatus
-	}
-	status := Test{Status: obj.ChallengeStatusPENDING}
-
-	jb, err := bson.Marshal(status)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	fmt.Printf("Status: `%v`\n", jb)
-}
