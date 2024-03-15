@@ -20,6 +20,10 @@
   
   - Install via: `go install github.com/pilu/fresh@latest`. Ensure `~/go/bin` is in your `$PATH` environment variable
 
+- [go-enum](https://github.com/abice/go-enum)
+  
+  - Install via: `go install github.com/abice/go-enum@latest`. Ensure `~/go/bin` is in your `$PATH` environment variable
+
 - A MongoDB server
 
 ### Optional
