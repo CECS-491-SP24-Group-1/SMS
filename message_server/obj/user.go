@@ -1,10 +1,7 @@
 package obj
 
 import (
-	"encoding/json"
-	"fmt"
 	"net"
-	"strings"
 	"time"
 
 	"wraith.me/message_server/db/mongoutil"
@@ -20,7 +17,7 @@ import (
 // Represents a user of the system. A user is a type of entity.
 type User struct {
 	//User extends the abstract entity type.
-	Entity
+	Entity `bson:",inline"`
 
 	/*
 		The username of the user. Can be changed at any time, but mustn't
@@ -153,12 +150,13 @@ type UserOptions struct {
 // Controls the default flag options for new users.
 func DefaultUserOptions() UserOptions {
 	return UserOptions{
-		FindByUName:         true,    //Users should be discoverable by their username by default.
-		ReadReceipts:        FRIENDS, //Users should send read receipts only to their friends by default.
-		UnsolicitedMessages: false,   //Users should not be able to be messaged without their consent by random, non-friends.
+		FindByUName:         true,                     //Users should be discoverable by their username by default.
+		ReadReceipts:        ReadReceiptsScopeFRIENDS, //Users should send read receipts only to their friends by default.
+		UnsolicitedMessages: false,                    //Users should not be able to be messaged without their consent by random, non-friends.
 	}
 }
 
+/*
 //
 //-- ENUM: ReadReceiptsScope
 //
@@ -219,3 +217,4 @@ func (rr *ReadReceiptsScope) UnmarshalJSON(b []byte) error {
 	}
 	return nil
 }
+*/
