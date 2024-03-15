@@ -7,6 +7,7 @@
 	<!-- <script type="application/javascript" src="./static/js/wasm_exec_tgo.min.js"></script> -->
 	<!-- <script type="application/javascript" src="./static/js/cons_mirror.js"></script> -->
 	<script type="application/javascript" src="./static/js/wasm_loader.js"></script>
+	<script type="application/javascript" src="./static/js/faker_3.0.1.min.js"></script>
 	<style>
 		label + input {
 			margin-left: 10px;
@@ -33,7 +34,7 @@
 			color: red;
 			visibility: hidden;
 		}
-		#clearBtn {
+		.formBtn + .formBtn {
 			margin-left: 3px;
 		}
 	</style>
@@ -44,7 +45,10 @@
 		<br>
 		<label for="email">Email:</label><input type="email" id="email" name="email" required pattern="^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
 		<br>
-		<input type="submit" value="Submit"><button type="button" id="clearBtn" onclick="handleFOutputClear()">Clear</button><span id="validationWarn">One or more fields are invalid. Please check your inputs and try again.</span>
+		<input type="submit" id="submitBtn" class="formBtn" value="Submit">
+		<button type="button" id="clearBtn" class="formBtn" onclick="handleFClear()">Clear</button>
+		<button type="button" id="randBtn" class="formBtn" onclick="handleRandForm()">Randomize & Submit</button>
+		<span id="validationWarn">One or more fields are invalid. Please check your inputs and try again.</span>
 	</form>
 	<br>
 	<div><span id="privkeySpan" class="keySpan">Your private key: </span><pre id="privkey"></pre></div>
@@ -81,11 +85,20 @@
 			return true;
 		}
 
-		//handleFOutputClear() -> void
-		function handleFOutputClear(){
+		//handleFClear() -> void
+		function handleFClear(){
 			document.getElementById("output").innerHTML = "";
 			document.getElementById("privkey").innerHTML = "";
 			document.getElementById("pubkey").innerHTML = "";
+			document.getElementById("username").value = ""
+			document.getElementById("email").value = ""
+		}
+
+		//handleRandForm() -> void
+		function handleRandForm(){
+			document.getElementById("username").value = faker.internet.userName().toLowerCase().replaceAll(".", "")
+			document.getElementById("email").value = faker.internet.email().toLowerCase();
+			document.getElementById("submitBtn").click();
 		}
 	</script>
 	<script type="application/javascript">
