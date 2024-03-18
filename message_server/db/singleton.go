@@ -10,7 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-//-- Structs and singletons
+//
+//-- SINGLETON: MClient
+//
 
 /*
 Represents a MongoDB client. This struct acts as a singleton wrapper on a
@@ -19,25 +21,24 @@ MongoDB client.
 type MClient struct {
 	client *mongo.Client
 	config *MConfig
+	// Guard mutex to ensure atomicity during connect/disconnect operations.
+	mutex *sync.Mutex
 }
 
-/* Holds the instance object for the database client. */
+// Holds the instance object for the global database client.
 var instance *MClient
 
 // Guard mutex to ensure that only one singleton object is created.
 var once sync.Once
 
-//-- Acquirance function
-
-/* Gets the currently active MongoDB client instance. */
+// Gets the currently active MongoDB client instance.
 func GetInstance() *MClient {
 	once.Do(func() {
 		instance = &MClient{}
+		instance.mutex = &sync.Mutex{}
 	})
 	return instance
 }
-
-//-- Methods
 
 /*
 Gets the underlying client instance that's used to interact with the
@@ -58,6 +59,10 @@ func (m MClient) GetConfig() *MConfig {
 
 // Connects to the MongoDB server specified in the given config object.
 func (m *MClient) Connect(cfg *MConfig) (*mongo.Client, error) {
+	//Lock the mutex and defer its unlock
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	//Ensure there isn't already a connection open
 	if m.client != nil {
 		return m.client, fmt.Errorf("cannot establish a connection that is already open")
@@ -76,8 +81,13 @@ func (m *MClient) Connect(cfg *MConfig) (*mongo.Client, error) {
 	return m.client, err
 }
 
-/* Disconnects the client from the database and nullifies the instance. */
+// Disconnects the client from the database and nullifies the instance.
 func (m *MClient) Disconnect() error {
+	//Lock the mutex and defer its unlock
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	//Disconnect from the db
 	if m.client != nil {
 		err := m.client.Disconnect(context.Background())
 		m.client, m.config = nil, nil

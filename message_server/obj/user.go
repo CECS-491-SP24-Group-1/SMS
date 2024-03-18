@@ -44,6 +44,12 @@ type User struct {
 
 	//The user's global options.
 	Options UserOptions `json:"options" bson:"options"`
+
+	/*
+		The user's tokens along with the IP address that created it. This should
+		NOT be outputted if a JSON representation is requested.
+	*/
+	Tokens []UserToken `json:"-" bson:"tokens"`
 }
 
 // Creates a new user object.
@@ -73,6 +79,7 @@ func NewUser(
 		LastIP:      lastIP,
 		Flags:       flags,
 		Options:     options,
+		Tokens:      make([]UserToken, 0),
 	}
 }
 
@@ -154,4 +161,23 @@ func DefaultUserOptions() UserOptions {
 		ReadReceipts:        ReadReceiptsScopeFRIENDS, //Users should send read receipts only to their friends by default.
 		UnsolicitedMessages: false,                    //Users should not be able to be messaged without their consent by random, non-friends.
 	}
+}
+
+//
+//-- CLASS: UserToken
+//
+
+// Holds a pairing of a JWT token and various metrics about it.
+type UserToken struct {
+	//The IP address that created the token.
+	CreationIP net.IP `json:"creation_ip" bson:"creation_ip"` //Might make sense to move to the token itself to prevent modification
+
+	//The user agent of the device that created the token.
+	CreationUA string `json:"creation_ua" bson:"creation_ua"` //Might make sense to move to the token itself to prevent modification
+
+	//The last time that the token was used successfully by a user.
+	LastUsage time.Time `json:"last_usage" bson:"last_usage"`
+
+	//The contents of the token itself.
+	Token string `json:"token" bson:"token"`
 }

@@ -91,6 +91,19 @@ func InRange(num int64, min int64, max int64) bool {
 	return num >= min && num <= max
 }
 
+/*
+Swallows an `error` return on a function, running `panic()` if one occurs.
+This function should be used on functions that are known by the programmer
+to no return errors on runtime, such as for `regexp.Compile()` on hardcoded
+regexps. Adapted from: https://stackoverflow.com/a/73584801
+*/
+func Must[T any](obj T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
 // Shorthand for `time.Now().Truncate(time.Millisecond).UTC()`.
 func NowMillis() time.Time {
 	return time.Now().Truncate(time.Millisecond).UTC()

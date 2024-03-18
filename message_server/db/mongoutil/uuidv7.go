@@ -25,6 +25,15 @@ func NewUUID4() (*UUID, error) {
 	return &UUID{UUID: id}, nil
 }
 
+// Generates a new version 4 UUID. Panics if an error occurs.
+func MustNewUUID4() *UUID {
+	uuid, err := NewUUID4()
+	if err != nil {
+		panic(err)
+	}
+	return uuid
+}
+
 // NewUUID generates a new MongoDB compatible UUID.
 func NewUUID7() (*UUID, error) {
 	id, err := uuid.NewV7()
@@ -32,6 +41,15 @@ func NewUUID7() (*UUID, error) {
 		return nil, err
 	}
 	return &UUID{UUID: id}, nil
+}
+
+// Generates a new version 7 UUID. Panics if an error occurs.
+func MustNewUUID7() *UUID {
+	uuid, err := NewUUID7()
+	if err != nil {
+		panic(err)
+	}
+	return uuid
 }
 
 // UUIDFromStringOrNil returns a UUID parsed from the input string.

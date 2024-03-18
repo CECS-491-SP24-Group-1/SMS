@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/tanqiangyes/govalidator"
 	"go.mongodb.org/mongo-driver/bson"
@@ -43,17 +42,14 @@ type postsignupUser struct {
 	//The email of the user, but redacted.
 	RedactedEmail string `json:"redacted_email"`
 
-	/*
-		A JWT token used to verify the possession of the user's public key. This token
-		is encrypted with the user's public key and sent back to the user for decryption.
-		The successful decryption and re-offer of this token back to the server is
-		sufficient to prove ownership of the user's private key without them revealing
-		it to the server.
-	*/
-	PubkeyChallenge []byte `json:"pubkey_challenge"`
+	//The IDs of the challenges that the user must fulfil for registration to be completed.
+	Challenges []mongoutil.UUID `json:"challenges"`
 
-	//The time at which the user account will be deleted if verification is not performed.
-	Expiry time.Time
+	/*
+		A JWT token used to allow temporary API access to solve challenges. This key is
+		only valid for that endpoint.
+	*/
+	TempAccessToken []byte
 }
 
 /*
@@ -209,12 +205,22 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//Do something with the object
-	userStr := fmt.Sprintf("User: %+v", user)
-	fmt.Printf("%s\n", userStr)
-
-	//Respond back with the UUID of the new user
-	if err := json.NewEncoder(w).Encode(user); err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
+	//Complete the post-signup steps, including challenge generation and issuance of a temporary token
+	if err := postSignup(w, r.Context(), user, dbc); err != nil {
+		httpu.HttpErrorAsJson(w, ierr, http.StatusInternalServerError)
+		return
 	}
+}
+
+func postSignup(w http.ResponseWriter, ctx context.Context, user *obj.User, dbc *mongo.Client) error {
+	//Step 1: Issue a JWT token that's good for the duration of the challenge window; otherwise the routes won't be allowed
+
+	//Step 2: Create challenges for email and public key verification
+
+	//Step 3: Push the challenges to the database for later retrieval
+
+	//Step 4: Write the response back to the user
+
+	//No errors so return nil
+	return nil
 }
