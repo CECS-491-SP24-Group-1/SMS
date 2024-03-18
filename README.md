@@ -24,14 +24,15 @@
   
   - Install via: `go install github.com/abice/go-enum@latest`. Ensure `~/go/bin` is in your `$PATH` environment variable
 
-- A MongoDB server
+- A MongoDB server for storing data
+
+- A Redis server for caching
 
 ### Optional
 
-- MongoDB Compass: allows viewing the contents of the MDB database in a friendly GUI
+- MongoDB Compass: allows viewing the contents of the MDB database in a friendly GUI. It can be downloaded from [this link](https://www.mongodb.com/try/download/compasshttps://www.mongodb.com/try/download/compass).
+- RedisInsight: allows viewing the contents of the Redis database in a friendly GUI. It can be downloaded from [this link](https://redis.com/redis-enterprise/redis-insight/).
 
 # Running The Code
 
 (TODO)
-
-

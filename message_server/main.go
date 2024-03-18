@@ -10,6 +10,7 @@ import (
 	"wraith.me/message_server/config"
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/mw"
+	credis "wraith.me/message_server/redis"
 	"wraith.me/message_server/router"
 	"wraith.me/message_server/router/users"
 
@@ -36,11 +37,18 @@ func main() {
 	mcfg := db.DefaultMConfig()
 	//mcfg.Username = ""
 	//mcfg.Password = ""
-	mclient, err := db.GetInstance().Connect(mcfg)
-	if err != nil {
-		panic(err)
+	mclient, merr := db.GetInstance().Connect(mcfg)
+	if merr != nil {
+		panic(merr)
 	}
 	defer db.GetInstance().Disconnect()
+
+	//Connect to Redis
+	rcfg := credis.DefaultRConfig()
+	_, rerr := credis.GetInstance().Connect(rcfg)
+	if rerr != nil {
+		panic(rerr)
+	}
 
 	//Test listing
 	names, _ := mclient.ListDatabaseNames(context.TODO(), bson.M{})
