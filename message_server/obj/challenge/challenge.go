@@ -1,9 +1,10 @@
-package obj
+package challenge
 
 import (
 	"time"
 
 	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/obj"
 )
 
 const (
@@ -25,16 +26,16 @@ implementation at this time.
 */
 type Challenge struct {
 	//Challenge extends the abstract identifiable type.
-	Identifiable `bson:",inline"`
+	obj.Identifiable `bson:",inline"`
 
 	//The scope of the challenge
 	Scope ChallengeScope `json:"scope" bson:"scope"`
 
 	//The entity that initiated the challenge. This field may be abridged to save space.
-	Initiator Identifiable `json:"initiator" bson:"initiator"`
+	Initiator obj.Identifiable `json:"initiator" bson:"initiator"`
 
 	//The entity that will respond to the challenge. This field may be abridged to save space.
-	Responder Identifiable `json:"responder" bson:"responder"`
+	Responder obj.Identifiable `json:"responder" bson:"responder"`
 
 	//The time at which the challenge will expire, irregardless of the status. This should be short to maximize security.
 	Expiry time.Time `json:"expiry" bson:"expiry"`
@@ -45,13 +46,13 @@ type Challenge struct {
 
 func NewChallenge(
 	scope ChallengeScope,
-	initiator Identifiable,
-	responder Identifiable,
+	initiator obj.Identifiable,
+	responder obj.Identifiable,
 ) *Challenge {
 	return &Challenge{
-		Identifiable: Identifiable{
+		Identifiable: obj.Identifiable{
 			ID:   *mongoutil.MustNewUUID7(),
-			Type: IdTypeCHALLENGE,
+			Type: obj.IdTypeCHALLENGE,
 		},
 		Scope:     scope,
 		Initiator: initiator,
