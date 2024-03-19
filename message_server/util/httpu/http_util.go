@@ -3,9 +3,7 @@ package httpu
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
-	"strings"
 
 	"wraith.me/message_server/obj"
 )
@@ -81,10 +79,4 @@ func TextualResponse(w http.ResponseWriter, payload []byte, code int, mime strin
 	w.Header().Set("Content-Type", fmt.Sprintf("%s; charset=%s", mime, encoding))
 	w.WriteHeader(code)
 	w.Write(payload)
-}
-
-// Converts a string IP from `http.Request` to a `net.IP` object.
-func HttpIP2NetIP(ip string) net.IP {
-	rawIP := ip[0:strings.LastIndex(ip, ":")] //Get just the IP; last colon indicates the port
-	return net.ParseIP(rawIP)
 }

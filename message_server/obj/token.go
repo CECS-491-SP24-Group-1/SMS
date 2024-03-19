@@ -1,13 +1,12 @@
 package obj
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/gob"
-	"net"
 	"time"
+	"unsafe" //The implications of using this package are understood.
 
 	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/obj/ip_addr"
 )
 
 //
@@ -22,14 +21,14 @@ type Token struct {
 	//UserToken extends the abstract identifiable type.
 	Identifiable `bson:",inline"`
 
+	//The IP address that created the token.
+	CreationIP ip_addr.IPAddr `json:"creation_ip" bson:"creation_ip"`
+
 	//The user that this token is for by ID.
 	Subject mongoutil.UUID `json:"subject" bson:"subject"`
 
 	//Defines the scope for which the token is allowed
 	Scope TokenScope `json:"token_scope" bson:"token_scope"`
-
-	//The IP address that created the token.
-	CreationIP net.IP `json:"creation_ip" bson:"creation_ip"`
 
 	//Denotes whether the token should expire
 	Expire bool `json:"expire" bson:"expire"`
@@ -41,7 +40,8 @@ type Token struct {
 	//Rand [RAND_TOKEN_LEN]byte `json:"rand" bson:"token"`
 }
 
-func NewToken(subject mongoutil.UUID, creationIP net.IP, scope TokenScope, expiry time.Time) *Token {
+// Creates a new token object.
+func NewToken(subject mongoutil.UUID, creationIP ip_addr.IPAddr, scope TokenScope, expiry time.Time) *Token {
 	return &Token{
 		Identifiable: Identifiable{
 			ID:   *mongoutil.MustNewUUID7(),
@@ -56,36 +56,41 @@ func NewToken(subject mongoutil.UUID, creationIP net.IP, scope TokenScope, expir
 	}
 }
 
-func (ut *Token) FromB64(b64 string) error {
-	//Decode to a byte array
+// Creates a token from a base64 string.
+func TokenFromB64(b64 string) (*Token, error) {
 	buf, err := base64.StdEncoding.DecodeString(b64)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	//Decode from the byte array
-	return ut.FromBytes(bytes.NewBuffer(buf))
+	return TokenFromBytes(buf), nil
 }
 
-func (ut *Token) FromBytes(buf *bytes.Buffer) error {
-	denc := gob.NewDecoder(buf)
-	return denc.Decode(ut)
+// Creates a token from a byte array. Thanks ChatGPT.
+func TokenFromBytes(data []byte) *Token {
+	var token Token
+	sz := int(unsafe.Sizeof(token))
+	if len(data) < sz {
+		// Handle the case where the byte slice is smaller than the struct size
+		// This could be due to an incomplete read or other issues
+		// For simplicity, we'll return an empty struct
+		return &token
+	}
+	// Interpret the byte slice as a pointer to the struct type
+	return (*Token)(unsafe.Pointer(&data[0]))
 }
 
+// Gets the expiry time of the token.
 func (ut Token) GetExpiry() time.Time {
 	return time.Unix(ut.Expiry, 0)
 }
 
+// Converts the token into a base64 string.
 func (ut Token) ToB64() string {
-	buf, err := ut.ToBytes()
-	if err != nil {
-		return ""
-	}
-	return base64.StdEncoding.EncodeToString(buf.Bytes())
+	return base64.StdEncoding.EncodeToString(ut.ToBytes())
 }
 
-func (ut Token) ToBytes() (buf bytes.Buffer, err error) {
-	enc := gob.NewEncoder(&buf)
-	err = enc.Encode(ut)
-	return
+// Converts a token into a byte array. See: https://stackoverflow.com/a/56272984
+func (ut Token) ToBytes() []byte {
+	const sz = int(unsafe.Sizeof(Token{}))
+	return (*(*[sz]byte)(unsafe.Pointer(&ut)))[:]
 }

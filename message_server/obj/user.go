@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/obj/ip_addr"
 	"wraith.me/message_server/util"
 )
 
@@ -37,7 +38,7 @@ type User struct {
 	LastLogin time.Time `json:"last_login" bson:"last_login"`
 
 	//The last IP address that the user logged in from.
-	LastIP net.IP `json:"last_ip" bson:"last_ip"`
+	LastIP ip_addr.IPAddr `json:"last_ip" bson:"last_ip"`
 
 	//The user's flags. These mark items such as verification status, deletion, etc.
 	Flags UserFlags `json:"flags" bson:"flags"`
@@ -60,7 +61,7 @@ func NewUser(
 	displayName string,
 	email string,
 	lastLogin time.Time,
-	lastIP net.IP,
+	lastIP ip_addr.IPAddr,
 	flags UserFlags,
 	options UserOptions,
 ) *User {
@@ -103,7 +104,7 @@ func NewUserSimple(username string, email string) (*User, error) {
 		username,
 		email,
 		util.NowMillis(),
-		net.ParseIP("127.0.0.1"),
+		ip_addr.FromNetIP(net.ParseIP("127.0.0.1")),
 		DefaultUserFlags(),
 		DefaultUserOptions(),
 	), nil
