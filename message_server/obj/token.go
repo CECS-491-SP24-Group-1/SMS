@@ -79,9 +79,25 @@ func TokenFromBytes(data []byte) *Token {
 	return (*Token)(unsafe.Pointer(&data[0]))
 }
 
+// Checks if 2 tokens are equal.
+func (ut Token) Equal(other Token) bool {
+	return ut.ID == other.ID &&
+		ut.Type == other.Type &&
+		ut.Subject == other.Subject &&
+		ut.Scope == other.Scope &&
+		ut.CreationIP == other.CreationIP &&
+		ut.Expire == other.Expire &&
+		ut.Expiry == other.Expiry
+}
+
 // Gets the expiry time of the token.
 func (ut Token) GetExpiry() time.Time {
 	return time.Unix(ut.Expiry, 0)
+}
+
+// Converts a token into a string.
+func (ut Token) String() string {
+	return ut.ToB64()
 }
 
 // Converts the token into a base64 string.

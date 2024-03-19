@@ -48,6 +48,19 @@ func FromNetIP(ip net.IP) IPAddr {
 	return obj
 }
 
+// Converts a string IP to an `IPAddr` object.
+func FromString(ip string) IPAddr {
+	//Derive a net.IP object
+	nip := net.ParseIP(ip)
+
+	//Create the object and return
+	obj := IPAddr{
+		Type: TypeOf(nip),
+	}
+	copy(obj.Bytes[:], []byte(nip)[:IP6_SIZE])
+	return obj
+}
+
 // Converts an `IPAddr` object to a string.
 func (ip IPAddr) String() string {
 	return ip.ToNetIP().String()
