@@ -104,6 +104,26 @@ func Must[T any](obj T, err error) T {
 	return obj
 }
 
+/*
+Swallows an `error` return on a function, running `panic()` if one occurs.
+This function should be used on functions that are known by the programmer
+to not return errors on runtime, such as for `regexp.Compile()` on hardcoded
+regexps. Adapted from: https://stackoverflow.com/a/73584801
+*/
+func MustUnit(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+/*
+GenerateRandomBytes returns securely generated random bytes. This function
+is an alias of `util.Must(util.GenRandBytes(int))`.
+*/
+func MustGenRandBytes(n int) []byte {
+	return Must(GenRandBytes(n))
+}
+
 // Shorthand for `time.Now().Truncate(time.Millisecond).UTC()`.
 func NowMillis() time.Time {
 	return time.Now().Truncate(time.Millisecond).UTC()
