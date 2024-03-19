@@ -162,22 +162,3 @@ func DefaultUserOptions() UserOptions {
 		UnsolicitedMessages: false,                    //Users should not be able to be messaged without their consent by random, non-friends.
 	}
 }
-
-//
-//-- CLASS: UserToken
-//
-
-// Holds a pairing of a JWT token and various metrics about it.
-type UserToken struct {
-	//The IP address that created the token.
-	CreationIP net.IP `json:"creation_ip" bson:"creation_ip"` //Might make sense to move to the token itself to prevent modification
-
-	//The user agent of the device that created the token.
-	CreationUA string `json:"creation_ua" bson:"creation_ua"` //Might make sense to move to the token itself to prevent modification
-
-	//The last time that the token was used successfully by a user.
-	LastUsage time.Time `json:"last_usage" bson:"last_usage"`
-
-	//The contents of the token itself.
-	Token string `json:"token" bson:"token"`
-}
