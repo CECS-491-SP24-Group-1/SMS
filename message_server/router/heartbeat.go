@@ -6,31 +6,39 @@ import (
 	"net/http"
 
 	"wraith.me/message_server/db"
+	credis "wraith.me/message_server/redis"
 	"wraith.me/message_server/util/httpu"
 )
 
 func Heartbeat(w http.ResponseWriter, r *http.Request) {
-	//Perform a heartbeat for the database
-	dbPing, err := db.GetInstance().Heartbeat()
+	//Perform a heartbeat for the database and Redis. Then add them together
+	dbPing, merr := db.GetInstance().Heartbeat()
+	redisPing, rerr := credis.GetInstance().Heartbeat()
+	totPing := dbPing + redisPing
 
 	//Create the JSON response
 	var payload []byte
 	code := http.StatusOK
-	if err == nil {
+	if merr == nil && rerr == nil {
 		//Construct the response using a map
 		resp := map[string]interface{}{
 			"status":  "ok",
-			"db_ping": dbPing,
+			"db_ping": totPing,
 		}
 
 		//Marshal the map to JSON
-		payload, err = json.Marshal(resp)
-		if err != nil {
-			log.Fatalf("couldn't create heartbeat response; %s", err)
+		var jerr error
+		payload, jerr = json.Marshal(resp)
+		if jerr != nil {
+			log.Fatalf("couldn't create heartbeat response; %s", jerr)
 		}
 
 	} else {
-		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
+		if merr != nil {
+			httpu.HttpErrorAsJson(w, merr, http.StatusInternalServerError)
+		} else {
+			httpu.HttpErrorAsJson(w, rerr, http.StatusInternalServerError)
+		}
 		return
 	}
 
