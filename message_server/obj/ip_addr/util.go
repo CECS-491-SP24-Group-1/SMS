@@ -14,7 +14,7 @@ func HttpIP2NetIP(ip string) IPAddr {
 // Determines the type of a `net.IP` address.
 func TypeOf(ip net.IP) IPType {
 	/*
-		IPv6 addresses cannot be represented as IPv4 strings; so `net.To16()`
+		IPv6 addresses cannot be represented as IPv4 strings, so `net.To16()`
 		returns `nil` if the IP is an IPv4. We are exploiting this behavior.
 	*/
 	if ip.To4() != nil {
