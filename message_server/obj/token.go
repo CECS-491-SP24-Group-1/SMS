@@ -72,15 +72,12 @@ func TokenFromB64(b64 string) (*Token, error) {
 
 // Creates a token from a byte array. Thanks ChatGPT.
 func TokenFromBytes(data []byte) *Token {
-	var token Token
-	sz := int(unsafe.Sizeof(token))
-	if len(data) < sz {
-		// Handle the case where the byte slice is smaller than the struct size
-		// This could be due to an incomplete read or other issues
-		// For simplicity, we'll return an empty struct
-		return &token
+	//Check if the data length is not the same as the expected size of a token
+	if len(data) != TOKEN_SIZE_BYTES {
+		//Return nil instead of a struct object
+		return nil
 	}
-	// Interpret the byte slice as a pointer to the struct type
+	//Interpret the byte slice as a pointer to the struct type and cast it to a token
 	return (*Token)(unsafe.Pointer(&data[0]))
 }
 
