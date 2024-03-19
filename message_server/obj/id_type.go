@@ -16,7 +16,7 @@ ENUM(
 	SERVER,
 	MESSAGE,
 	CHALLENGE,
-	VAULT
+	TOKEN
 )
 */
-type IdType int
+type IdType int8

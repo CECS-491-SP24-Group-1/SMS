@@ -16,12 +16,12 @@ const (
 	IdTypeSERVER
 	IdTypeMESSAGE
 	IdTypeCHALLENGE
-	IdTypeVAULT
+	IdTypeTOKEN
 )
 
 var ErrInvalidIdType = fmt.Errorf("not a valid IdType, try [%s]", strings.Join(_IdTypeNames, ", "))
 
-const _IdTypeName = "USERSERVERMESSAGECHALLENGEVAULT"
+const _IdTypeName = "USERSERVERMESSAGECHALLENGETOKEN"
 
 var _IdTypeNames = []string{
 	_IdTypeName[0:4],
@@ -45,7 +45,7 @@ func IdTypeValues() []IdType {
 		IdTypeSERVER,
 		IdTypeMESSAGE,
 		IdTypeCHALLENGE,
-		IdTypeVAULT,
+		IdTypeTOKEN,
 	}
 }
 
@@ -54,7 +54,7 @@ var _IdTypeMap = map[IdType]string{
 	IdTypeSERVER:    _IdTypeName[4:10],
 	IdTypeMESSAGE:   _IdTypeName[10:17],
 	IdTypeCHALLENGE: _IdTypeName[17:26],
-	IdTypeVAULT:     _IdTypeName[26:31],
+	IdTypeTOKEN:     _IdTypeName[26:31],
 }
 
 // String implements the Stringer interface.
@@ -77,7 +77,7 @@ var _IdTypeValue = map[string]IdType{
 	_IdTypeName[4:10]:  IdTypeSERVER,
 	_IdTypeName[10:17]: IdTypeMESSAGE,
 	_IdTypeName[17:26]: IdTypeCHALLENGE,
-	_IdTypeName[26:31]: IdTypeVAULT,
+	_IdTypeName[26:31]: IdTypeTOKEN,
 }
 
 // ParseIdType attempts to convert a string to a IdType.

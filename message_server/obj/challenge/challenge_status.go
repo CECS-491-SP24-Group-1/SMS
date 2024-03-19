@@ -18,4 +18,4 @@ ENUM(
 	PASSED //A challenge that was successfully completed.
 )
 */
-type ChallengeStatus int
+type ChallengeStatus int8

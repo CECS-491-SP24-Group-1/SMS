@@ -1,5 +1,5 @@
 //go:generate go-enum --marshal --forceupper --mustparse --nocomments --names --values
-package utoken
+package obj
 
 //
 //-- ENUM: TokenScope
@@ -12,4 +12,4 @@ ENUM(
 	USER //The token is allowed to be used everywhere that a normal user can access.
 )
 */
-type TokenScope int
+type TokenScope int8

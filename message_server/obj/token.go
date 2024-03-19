@@ -1,4 +1,4 @@
-package utoken
+package obj
 
 import (
 	"bytes"
@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"wraith.me/message_server/db/mongoutil"
-	"wraith.me/message_server/obj"
-	"wraith.me/message_server/util"
 )
 
 //
@@ -22,7 +20,7 @@ const RAND_TOKEN_LEN = 8
 // Represents an opaque user login token.
 type Token struct {
 	//UserToken extends the abstract identifiable type.
-	obj.Identifiable `bson:",inline"`
+	Identifiable `bson:",inline"`
 
 	//The user that this token is for by ID.
 	Subject mongoutil.UUID `json:"subject" bson:"subject"`
@@ -40,21 +38,21 @@ type Token struct {
 	Expiry int64 `json:"expiry" bson:"expiry"`
 
 	//A array of random bytes. This field has no meaning on its own.
-	Rand [RAND_TOKEN_LEN]byte `json:"rand" bson:"token"`
+	//Rand [RAND_TOKEN_LEN]byte `json:"rand" bson:"token"`
 }
 
 func NewToken(subject mongoutil.UUID, creationIP net.IP, scope TokenScope, expiry time.Time) *Token {
 	return &Token{
-		Identifiable: obj.Identifiable{
+		Identifiable: Identifiable{
 			ID:   *mongoutil.MustNewUUID7(),
-			Type: obj.IdTypeTOKEN,
+			Type: IdTypeTOKEN,
 		},
 		Subject:    subject,
 		Scope:      scope,
 		CreationIP: creationIP,
 		Expire:     true,
 		Expiry:     expiry.Unix(),
-		Rand:       [8]byte(util.MustGenRandBytes(RAND_TOKEN_LEN)),
+		//Rand:       [8]byte(util.MustGenRandBytes(RAND_TOKEN_LEN)),
 	}
 }
 

@@ -12,4 +12,4 @@ ENUM(
 	PUBKEY //This type of challenge is issued to verify a user owns a private key corresponding to the given public key.
 )
 */
-type ChallengeScope int
+type ChallengeScope int8

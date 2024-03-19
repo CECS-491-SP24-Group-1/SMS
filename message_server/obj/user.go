@@ -49,7 +49,7 @@ type User struct {
 		The user's tokens along with the IP address that created it. This should
 		NOT be outputted if a JSON representation is requested.
 	*/
-	Tokens []UserToken `json:"-" bson:"tokens"`
+	Tokens []Token `json:"-" bson:"tokens"`
 }
 
 // Creates a new user object.
@@ -79,7 +79,7 @@ func NewUser(
 		LastIP:      lastIP,
 		Flags:       flags,
 		Options:     options,
-		Tokens:      make([]UserToken, 0),
+		Tokens:      make([]Token, 0),
 	}
 }
 

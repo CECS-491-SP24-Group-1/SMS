@@ -2,6 +2,10 @@
 
 package obj
 
+//
+//-- ENUM: ReadReceiptsScope
+//
+
 // Controls who read receipts are sent to.
 /*
 ENUM(
@@ -10,4 +14,4 @@ ENUM(
 	NOBODY //Nobody is sent a read receipt
 )
 */
-type ReadReceiptsScope int
+type ReadReceiptsScope int8
