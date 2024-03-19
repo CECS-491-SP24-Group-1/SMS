@@ -13,8 +13,13 @@ import (
 //-- CLASS: UserToken
 //
 
-// Defines the length of the token's random bytes portion.
-const RAND_TOKEN_LEN = 8
+const (
+	// Defines the length of the token's random bytes portion.
+	RAND_TOKEN_LEN = 8
+
+	//Defines the size of the token in bytes
+	TOKEN_SIZE_BYTES = int(unsafe.Sizeof(Token{}))
+)
 
 // Represents an opaque user login token.
 type Token struct {
@@ -107,6 +112,5 @@ func (ut Token) ToB64() string {
 
 // Converts a token into a byte array. See: https://stackoverflow.com/a/56272984
 func (ut Token) ToBytes() []byte {
-	const sz = int(unsafe.Sizeof(Token{}))
-	return (*(*[sz]byte)(unsafe.Pointer(&ut)))[:]
+	return (*(*[TOKEN_SIZE_BYTES]byte)(unsafe.Pointer(&ut)))[:]
 }
