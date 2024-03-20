@@ -1,6 +1,13 @@
 package ip_addr
 
-import "net"
+import (
+	"fmt"
+	"net"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
+	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
+)
 
 const (
 	//The size of an IPv4 address in bytes.
@@ -69,4 +76,44 @@ func (ip IPAddr) String() string {
 // Converts a `net.IP` object to an `IPAddr` object.
 func (ip IPAddr) ToNetIP() net.IP {
 	return net.IP(ip.Bytes[:])
+}
+
+// MarshalBSONValue implements the bson.ValueMarshaler interface.
+func (ip IPAddr) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	//Create a super array containing the contents of the struct
+	bytes := [IP6_SIZE + 1]byte{}
+	copy(bytes[:], ip.Bytes[0:16])
+	bytes[16] = byte(ip.Type)
+
+	//Marshal to BSON
+	return bson.TypeBinary, bsoncore.AppendBinary(nil, bson.TypeBinaryGeneric, bytes[:]), nil
+}
+
+// Marshals an IP to text. Used downstream by JSON and BSON marshalling.
+func (ip IPAddr) MarshalText() (text []byte, err error) {
+	return []byte(ip.String()), nil
+}
+
+// UnmarshalBSONValue implements the bson.ValueUnmarshaler interface.
+func (ip *IPAddr) UnmarshalBSONValue(t bsontype.Type, raw []byte) error {
+	//Ensure the incoming type is correct
+	if t != bson.TypeBinary {
+		return fmt.Errorf("(IPAddr) invalid format on unmarshalled bson value")
+	}
+
+	//Read the data from the BSON item
+	_, data, _, ok := bsoncore.ReadBinary(raw)
+	if !ok {
+		return fmt.Errorf("(IPAddr) not enough bytes to unmarshal bson value")
+	}
+	copy(ip.Bytes[:], data)
+
+	//No errors, so return nil
+	return nil
+}
+
+// Unmarshals an IP from a string. Used downstream by JSON and BSON marshalling.
+func (ip *IPAddr) UnmarshalText(text []byte) error {
+	*ip = FromString(string(text)[:])
+	return nil
 }

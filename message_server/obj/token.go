@@ -97,6 +97,11 @@ func (ut Token) GetExpiry() time.Time {
 	return time.Unix(ut.Expiry, 0)
 }
 
+// Marshals a token to text. Used downstream by JSON and BSON marshalling.
+func (ut Token) MarshalText() (text []byte, err error) {
+	return []byte(ut.ToB64()), nil
+}
+
 // Converts a token into a string.
 func (ut Token) String() string {
 	return ut.ToB64()
@@ -110,4 +115,11 @@ func (ut Token) ToB64() string {
 // Converts a token into a byte array. See: https://stackoverflow.com/a/56272984
 func (ut Token) ToBytes() []byte {
 	return (*(*[TOKEN_SIZE_BYTES]byte)(unsafe.Pointer(&ut)))[:]
+}
+
+// Unmarshals a token from a string. Used downstream by JSON and BSON marshalling.
+func (ut *Token) UnmarshalText(text []byte) error {
+	tok, err := TokenFromB64(string(text[:]))
+	*ut = *tok
+	return err
 }

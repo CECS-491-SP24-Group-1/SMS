@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
+	"wraith.me/message_server/obj/ip_addr"
 )
 
 var user, _ = obj.NewUserSimple(
@@ -15,6 +18,13 @@ var user, _ = obj.NewUserSimple(
 )
 
 func TestUser2BSON(t *testing.T) {
+	//Add a test token
+	tok := obj.NewToken(
+		*mongoutil.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
+		obj.TokenScopeUSER, time.Now().Add(5*time.Minute),
+	)
+	user.Tokens = append(user.Tokens, *tok)
+
 	//Marshal to BSON
 	bb, err := bson.Marshal(user)
 	if err != nil {
@@ -35,12 +45,21 @@ func TestUser2BSON(t *testing.T) {
 }
 
 func TestUser2JSON(t *testing.T) {
+	//Add a test token
+	tok := obj.NewToken(
+		*mongoutil.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
+		obj.TokenScopeUSER, time.Now().Add(5*time.Minute),
+	)
+	user.Tokens = append(user.Tokens, *tok)
+
 	//Marshal to JSON
 	jb, err := json.Marshal(user)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
+
+	fmt.Printf("JSON: %s\n", jb) //Tokens are not marshaled with the JSON
 
 	//Unmarshal the JSON back to an object
 	var out obj.User
