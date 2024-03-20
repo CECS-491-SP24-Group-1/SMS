@@ -1,0 +1,15 @@
+[
+  {
+    $match: {
+      _id: UUID(
+        "018e595a-a859-7a3c-91d8-bbdb5a70a924"
+      ),
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      tokens: 1,
+    },
+  },
+]
