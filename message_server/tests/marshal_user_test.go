@@ -12,7 +12,7 @@ import (
 	"wraith.me/message_server/obj/ip_addr"
 )
 
-var user, _ = obj.NewUserSimple(
+var user = obj.NewUserSimple(
 	"johndoe123",
 	"johndoeismyname@example.com",
 )

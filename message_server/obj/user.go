@@ -85,7 +85,7 @@ func NewUser(
 }
 
 // Creates a user from only a username and string. This should be used only for mocking.
-func NewUserSimple(username string, email string) (*User, error) {
+func NewUserSimple(username string, email string) *User {
 	return NewUser(
 		*mongoutil.MustNewUUID7(),
 		PubkeyBytes(util.Must(util.GenRandBytes(PUBKEY_SIZE))),
@@ -96,7 +96,7 @@ func NewUserSimple(username string, email string) (*User, error) {
 		ip_addr.FromNetIP(net.ParseIP("127.0.0.1")),
 		DefaultUserFlags(),
 		DefaultUserOptions(),
-	), nil
+	)
 }
 
 //
