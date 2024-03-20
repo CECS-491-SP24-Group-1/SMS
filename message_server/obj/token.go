@@ -2,9 +2,13 @@ package obj
 
 import (
 	"encoding/base64"
+	"fmt"
 	"time"
 	"unsafe" //The implications of using this package are understood.
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
+	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj/ip_addr"
 )
@@ -97,6 +101,12 @@ func (ut Token) GetExpiry() time.Time {
 	return time.Unix(ut.Expiry, 0)
 }
 
+// MarshalBSONValue implements the bson.ValueMarshaler interface.
+func (ut Token) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(ut.ToB64())
+	//return bson.TypeString, []byte(ut.ToB64()), nil
+}
+
 // Marshals a token to text. Used downstream by JSON and BSON marshalling.
 func (ut Token) MarshalText() (text []byte, err error) {
 	return []byte(ut.ToB64()), nil
@@ -115,6 +125,26 @@ func (ut Token) ToB64() string {
 // Converts a token into a byte array. See: https://stackoverflow.com/a/56272984
 func (ut Token) ToBytes() []byte {
 	return (*(*[TOKEN_SIZE_BYTES]byte)(unsafe.Pointer(&ut)))[:]
+}
+
+// UnmarshalBSONValue implements the bson.ValueUnmarshaler interface.
+func (ut *Token) UnmarshalBSONValue(t bsontype.Type, raw []byte) error {
+	//Ensure the incoming type is correct
+	if t != bson.TypeString {
+		return fmt.Errorf("invalid format on unmarshalled bson value")
+	}
+
+	//Read the data from the BSON item
+	_, data, _, ok := bsoncore.ReadBinary(raw)
+	if !ok {
+		return fmt.Errorf("not enough bytes to unmarshal bson value")
+	}
+
+	//Deserialize the bytes into a struct
+	*ut = *TokenFromBytes(data)
+
+	//No errors, so return nil
+	return nil
 }
 
 // Unmarshals a token from a string. Used downstream by JSON and BSON marshalling.
