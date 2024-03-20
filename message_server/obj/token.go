@@ -8,7 +8,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
-	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj/ip_addr"
 )
@@ -131,20 +130,19 @@ func (ut Token) ToBytes() []byte {
 func (ut *Token) UnmarshalBSONValue(t bsontype.Type, raw []byte) error {
 	//Ensure the incoming type is correct
 	if t != bson.TypeString {
-		return fmt.Errorf("invalid format on unmarshalled bson value")
+		return fmt.Errorf("(Token) invalid format on unmarshalled bson value")
 	}
 
 	//Read the data from the BSON item
-	_, data, _, ok := bsoncore.ReadBinary(raw)
-	if !ok {
-		return fmt.Errorf("not enough bytes to unmarshal bson value")
+	var str string
+	if err := bson.UnmarshalValue(bson.TypeString, raw, &str); err != nil {
+		return err
 	}
 
 	//Deserialize the bytes into a struct
-	*ut = *TokenFromBytes(data)
-
-	//No errors, so return nil
-	return nil
+	obj, err := TokenFromB64(str)
+	*ut = *obj
+	return err
 }
 
 // Unmarshals a token from a string. Used downstream by JSON and BSON marshalling.

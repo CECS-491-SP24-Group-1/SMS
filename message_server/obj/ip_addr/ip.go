@@ -73,6 +73,14 @@ func (ip IPAddr) String() string {
 	return ip.ToNetIP().String()
 }
 
+// Converts an `IPAddr` object to a byte array (17 bytes).
+func (ip IPAddr) ToBytes() []byte {
+	bytes := [IP6_SIZE + 1]byte{}
+	copy(bytes[:], ip.Bytes[0:16])
+	bytes[16] = byte(ip.Type)
+	return bytes[:]
+}
+
 // Converts a `net.IP` object to an `IPAddr` object.
 func (ip IPAddr) ToNetIP() net.IP {
 	return net.IP(ip.Bytes[:])
@@ -80,13 +88,7 @@ func (ip IPAddr) ToNetIP() net.IP {
 
 // MarshalBSONValue implements the bson.ValueMarshaler interface.
 func (ip IPAddr) MarshalBSONValue() (bsontype.Type, []byte, error) {
-	//Create a super array containing the contents of the struct
-	bytes := [IP6_SIZE + 1]byte{}
-	copy(bytes[:], ip.Bytes[0:16])
-	bytes[16] = byte(ip.Type)
-
-	//Marshal to BSON
-	return bson.TypeBinary, bsoncore.AppendBinary(nil, bson.TypeBinaryGeneric, bytes[:]), nil
+	return bson.TypeBinary, bsoncore.AppendBinary(nil, bson.TypeBinaryGeneric, ip.ToBytes()), nil
 }
 
 // Marshals an IP to text. Used downstream by JSON and BSON marshalling.
