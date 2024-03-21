@@ -15,6 +15,7 @@ import (
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
+	"wraith.me/message_server/obj/ip_addr"
 	"wraith.me/message_server/util"
 	"wraith.me/message_server/util/httpu"
 )
@@ -45,17 +46,14 @@ type postsignupUser struct {
 	//The IDs of the challenges that the user must fulfil for registration to be completed.
 	Challenges []mongoutil.UUID `json:"challenges"`
 
-	/*
-		A JWT token used to allow temporary API access to solve challenges. This key is
-		only valid for that endpoint.
-	*/
-	TempAccessToken []byte
+	//A token used to allow temporary API access to solve challenges. This key is only valid for that endpoint.
+	TempAccessToken string `json:"temp_access_token"`
 }
 
 /*
 Ensures that a user doesn't already exist in the database based on what
 was given by the user. A `nil` error indicates that no matching records
-were found. Checking collections for existant objects is expensive, so
+were found. Checking collections for existent objects is expensive, so
 not all records are checked if one fails.
 */
 func ensureNonexistantUser(coll *mongo.Collection, usr intermediateUser, ctx context.Context) error {
@@ -187,39 +185,49 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 		iuser.Username,
 		strings.ToLower(iuser.Email),
 		util.NowMillis(),
-		httpu.HttpIP2NetIP(r.RemoteAddr),
+		ip_addr.HttpIP2NetIP(r.RemoteAddr),
 		obj.DefaultUserFlags(),
 		obj.DefaultUserOptions(),
 	)
 	copy(user.Pubkey[:], decodedPK[:])
 
-	//Add the object to the database
-	userBson, jerr := bson.Marshal(user)
-	_, ierr := userCollection.InsertOne(r.Context(), userBson)
-	if jerr != nil {
-		httpu.HttpErrorAsJson(w, jerr, http.StatusInternalServerError)
-		return
-	}
-	if ierr != nil {
-		httpu.HttpErrorAsJson(w, ierr, http.StatusInternalServerError)
-		return
-	}
-
 	//Complete the post-signup steps, including challenge generation and issuance of a temporary token
-	if err := postSignup(w, r.Context(), user, dbc); err != nil {
-		httpu.HttpErrorAsJson(w, ierr, http.StatusInternalServerError)
+	if err := postSignup(w, r, user, userCollection); err != nil {
+		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
 		return
 	}
 }
 
-func postSignup(w http.ResponseWriter, ctx context.Context, user *obj.User, dbc *mongo.Client) error {
-	//Step 1: Issue a JWT token that's good for the duration of the challenge window; otherwise the routes won't be allowed
+func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *mongo.Collection) error {
+	//Step 1: Issue a token that's good for the duration of the challenge window; otherwise the routes won't be allowed
+	tempToken := obj.NewToken(user.ID, ip_addr.HttpIP2NetIP(r.RemoteAddr), obj.TokenScopePOSTSIGNUP, user.Flags.PurgeBy)
+	fmt.Printf("TOK: '%s'\n", tempToken.ToB64())
 
-	//Step 2: Create challenges for email and public key verification
+	//Step 2: Push the token to the user's list of tokens and add the user to the database
+	user.Tokens = append(user.Tokens, *tempToken)
+	userBson, jerr := bson.Marshal(user)
+	_, ierr := ucoll.InsertOne(r.Context(), userBson)
+	if jerr != nil {
+		return jerr
+	}
+	if ierr != nil {
+		return ierr
+	}
 
-	//Step 3: Push the challenges to the database for later retrieval
+	//Step 3: Create challenges for email and public key verification
 
-	//Step 4: Write the response back to the user
+	//Step 4: Push the challenges to the database for later retrieval
+
+	//Step 5: Write the response back to the user
+	psu := postsignupUser{
+		ID:              user.ID,
+		RedactedEmail:   util.RedactEmail(user.Email),
+		Challenges:      make([]mongoutil.UUID, 0),
+		TempAccessToken: tempToken.ToB64(),
+	}
+	if jerr := json.NewEncoder(w).Encode(&psu); jerr != nil {
+		http.Error(w, jerr.Error(), http.StatusInternalServerError)
+	}
 
 	//No errors so return nil
 	return nil
