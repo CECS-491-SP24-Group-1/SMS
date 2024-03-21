@@ -22,6 +22,9 @@ type RConfig struct {
 
 	//The password to connect to the database with.
 	Password string `toml:"password" default:""`
+
+	//The default expiration time of entries inserted into the database.
+	Expiry int64 `toml:"expiry" default:"0"`
 }
 
 func DefaultRConfig() *RConfig {

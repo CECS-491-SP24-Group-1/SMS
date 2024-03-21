@@ -7,23 +7,29 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Returns an array of matched documents from the database, given an aggregation pipline.
+// Returns an array of matched documents from the database, given an aggregation pipeline.
 func Aggregate(coll *mongo.Collection, filter bson.A, ctx context.Context) ([]bson.M, error) {
-	//Execute the aggregation against the database
-	cursor, err := coll.Aggregate(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
+	var docs []bson.M
+	err := AggregateT(&docs, coll, filter, ctx)
+	return docs, err
 
-	//Collect all the results into a slice
-	var results []bson.M
-	if err := cursor.All(context.TODO(), &results); err != nil {
-		return nil, err
-	}
+	/*
+		//Execute the aggregation against the database
+		cursor, err := coll.Aggregate(ctx, filter)
+		if err != nil {
+			return nil, err
+		}
+		defer cursor.Close(ctx)
 
-	//Return the slice
-	return results, nil
+		//Collect all the results into a slice
+		var results []bson.M
+		if err := cursor.All(context.TODO(), &results); err != nil {
+			return nil, err
+		}
+
+		//Return the slice
+		return results, nil
+	*/
 }
 
 // Returns an array of matched documents from the database, given a string aggregation pipline.
@@ -36,6 +42,26 @@ func AggregateS(coll *mongo.Collection, filter string, ctx context.Context) ([]b
 
 	//Perform the aggregation
 	return Aggregate(coll, agg, ctx)
+}
+
+/*
+Returns an array of matched documents from the database, given an aggregation
+pipeline. Additionally, this function outputs the response in a format specified
+by `T`.
+*/
+func AggregateT[T any](ret *T, coll *mongo.Collection, filter bson.A, ctx context.Context) error {
+	//Execute the aggregation against the database
+	cursor, err := coll.Aggregate(ctx, filter)
+	if err != nil {
+		return err
+	}
+	defer cursor.Close(ctx)
+
+	//Collect all the results into a slice
+	if err := cursor.All(context.TODO(), ret); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Checks if a field exists in the database.
