@@ -7,9 +7,11 @@ import (
 	"net/http"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/config"
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/mw"
+	"wraith.me/message_server/obj"
 	credis "wraith.me/message_server/redis"
 	"wraith.me/message_server/router"
 	"wraith.me/message_server/router/users"
@@ -17,6 +19,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/redis/go-redis/v9"
 )
 
 const RQS_PER_MIN = 3
@@ -45,7 +48,7 @@ func main() {
 
 	//Connect to Redis
 	rcfg := credis.DefaultRConfig()
-	_, rerr := credis.GetInstance().Connect(rcfg)
+	rclient, rerr := credis.GetInstance().Connect(rcfg)
 	if rerr != nil {
 		panic(rerr)
 	}
@@ -57,7 +60,7 @@ func main() {
 	}
 
 	//Setup Chi and start listening for connections
-	r := setupServer(cfg)
+	r := setupServer(cfg, mclient, rclient)
 	connStr := fmt.Sprintf("%s:%d", cfg.Server.BindAddr, cfg.Server.ListenPort)
 	log.Printf("Listening on %s\n", connStr)
 	http := http.Server{
@@ -70,7 +73,7 @@ func main() {
 }
 
 // TODO: Maybe add https://github.com/goware/firewall
-func setupServer(cfg *config.Config) chi.Router {
+func setupServer(cfg *config.Config, mclient *mongo.Client, rclient *redis.Client) chi.Router {
 	//Setup Chi router
 	r := chi.NewRouter()
 
@@ -116,6 +119,14 @@ func setupServer(cfg *config.Config) chi.Router {
 
 	//User routes
 	r.Mount("/users", users.UserRoutes())
+
+	//AUTH TEST START
+	scopes := []obj.TokenScope{obj.TokenScopePOSTSIGNUP, obj.TokenScopeUSER}
+	r.Group(func(r chi.Router) {
+		r.Use(mw.NewAuthMiddleware(scopes, mclient, rclient))
+		r.Get("/auth_test", router.AuthTest)
+	})
+	//AUTH TEST END
 
 	//Return the built router for requests
 	return r
