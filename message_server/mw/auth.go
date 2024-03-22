@@ -139,7 +139,7 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		tokSubject := tokObj.Subject
 
 		//Query the database and get the tokens of the subject; Redis is used here to cache the results
-		subjectTokens := make([]string, 0)
+		var subjectTokens []string
 		redisTokens, err := amw.rclient.LRange(r.Context(), tokSubject.String(), 0, -1).Result()
 		if err == redis.Nil || len(redisTokens) == 0 {
 			//Cache miss; query MongoDB for the tokens of the subject and add them to Redis for later
@@ -180,17 +180,22 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			//Copy the tokens to the subject tokens array
 			subjectTokens = results[0].Tokens
 
-			//Add the subject ID and corresponding tokens array to Redis.
-			//Further requests with the same token subject will be honored by Redis instead.
-			//If any errors occur, silently fail. Authentication can still be done, but caching won't work.
+			/*
+				Add the subject ID and corresponding tokens array to Redis. Further
+				requests with the same token subject will be honored by Redis instead
+				of MongoDB (cache hit). If any errors occur, silently fail and do not
+				alert the client. Authentication can still be done, but caching won't
+				work.
+			*/
 			cacheSetResult := amw.rclient.RPush(r.Context(), tokSubject.String(), results[0].Tokens)
 			if err := cacheSetResult.Err(); err != nil {
 				fmt.Printf("[AUTH; REDIS CACHE RPUSH ERROR]: %s\n", err)
 			}
 		} else if err != nil {
-			//If there is a cache error, deny the client by default for safety; do not report the error
+			//If there is a cache retrieval error, deny the client by default for safety; do not report the error
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthGeneric), http.StatusUnauthorized)
 			fmt.Printf("[AUTH; REDIS ERROR]: %s\n", err)
+			return
 		} else {
 			//Cache hit; copy the token list from Redis
 			subjectTokens = redisTokens
