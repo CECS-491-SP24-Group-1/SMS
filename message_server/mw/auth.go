@@ -130,9 +130,6 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		//Get the subject of the token
-		tokSubject := tokObj.Subject
-
 		//Ensure the provided token isn't expired or invalid
 		//It's faster to pre-check validity than to query an invalid token
 		if tokExp := tokObj.GetExpiry(); tokObj.Expire && time.Now().After(tokExp) {
@@ -145,6 +142,9 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
 			return
 		}
+
+		//Get the subject of the token
+		tokSubject := tokObj.Subject
 
 		//Query the database and get the tokens of the subject; Redis is used here to cache the results
 		subjectTokens := make([]string, 0)
