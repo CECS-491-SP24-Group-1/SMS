@@ -29,7 +29,7 @@ var (
 // Holds the error messages.
 var (
 	ErrAuthUnauthorized   = errors.New("token is unauthorized")
-	ErrAuthExpiredToken   = errors.New("token is expired")
+	ErrAuthExpiredToken   = errors.New("token has expired")
 	ErrAuthNoTokenFound   = errors.New("no token found")
 	ErrAuthBadTokenFormat = errors.New("token format is incorrect")
 	ErrAuthGeneric        = errors.New("authentication error")
@@ -140,6 +140,12 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		//It's faster to pre-check validity than to query for an invalid token
 		if !tokObj.Validate(false) {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
+			return
+		}
+
+		//Ensure the token's scope is among those that are authorized
+		if !slices.Contains(amw.allowedScopes, tokObj.Scope) {
+			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthUnauthorized), http.StatusUnauthorized)
 			return
 		}
 
