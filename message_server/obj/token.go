@@ -154,7 +154,7 @@ func (ut *Token) UnmarshalText(text []byte) error {
 	return err
 }
 
-// Determines if a token is valid
+// Determines if a token is valid.
 func (ut Token) Validate() bool {
 	//Determine if the token expired
 	if ut.Expire && time.Now().After(ut.GetExpiry()) {

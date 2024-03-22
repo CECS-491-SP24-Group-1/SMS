@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -186,7 +187,6 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 
 			//Copy the tokens to the subject tokens array
 			subjectTokens = results[0].Tokens
-			fmt.Println("[auth] Cache Miss!")
 
 			//Add the subject ID and corresponding tokens array to Redis.
 			//Further requests with the same token subject will be honored by Redis instead.
@@ -201,22 +201,16 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			fmt.Printf("[AUTH; REDIS ERROR]: %s\n", err)
 		} else {
 			//Cache hit; copy the token list from Redis
-			fmt.Println("[auth] Cache Hit!")
 			subjectTokens = redisTokens
 		}
 
-		fmt.Printf("TOKENS: %v\n", subjectTokens)
-
-		//Check if the token is expired
-		//TODO: get the token from the user db first
-		//fmt.Printf("Tok expiry: %s\n", tokObj.GetExpiry())
-		//fmt.Printf("Tok subject: %s\n", tokSubject)
-
-		if tokExp := tokObj.GetExpiry(); time.Now().After(tokExp) {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthExpiredToken), http.StatusUnauthorized)
+		//Check if the subject's token list includes the incoming token
+		if !slices.Contains(subjectTokens, token) {
+			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
 			return
 		}
 
+		fmt.Printf("TOKENS: %v\n", subjectTokens)
 		fmt.Printf("Got token: %v\n", tokObj)
 
 		//Forward the request; authentication passed successfully
