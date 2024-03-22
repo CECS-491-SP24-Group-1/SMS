@@ -132,7 +132,7 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 
 		//Ensure the provided token isn't invalid
 		//It's faster to pre-check validity than to query for an invalid token
-		if !tokObj.Validate(false) {
+		if !tokObj.Validate(true) {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
 			return
 		}
