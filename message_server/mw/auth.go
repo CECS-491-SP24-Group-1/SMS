@@ -130,16 +130,16 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		//Check if the token has expired
-		if tokExp := tokObj.GetExpiry(); tokObj.Expire && time.Now().After(tokExp) {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthExpiredToken), http.StatusUnauthorized)
-			return
-		}
-
 		//Ensure the provided token isn't invalid
 		//It's faster to pre-check validity than to query for an invalid token
 		if !tokObj.Validate(false) {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
+			return
+		}
+
+		//Check if the token has expired
+		if tokExp := tokObj.GetExpiry(); tokObj.Expire && time.Now().After(tokExp) {
+			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthExpiredToken), http.StatusUnauthorized)
 			return
 		}
 
