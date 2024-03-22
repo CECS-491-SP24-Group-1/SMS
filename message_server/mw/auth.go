@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
@@ -129,8 +130,15 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		//Ensure the provided token isn't expired or invalid
-		if !tokObj.Validate() {
+		//Check if the token has expired
+		if tokExp := tokObj.GetExpiry(); tokObj.Expire && time.Now().After(tokExp) {
+			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthExpiredToken), http.StatusUnauthorized)
+			return
+		}
+
+		//Ensure the provided token isn't invalid
+		//It's faster to pre-check validity than to query for an invalid token
+		if !tokObj.Validate(false) {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
 			return
 		}

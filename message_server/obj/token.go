@@ -155,9 +155,9 @@ func (ut *Token) UnmarshalText(text []byte) error {
 }
 
 // Determines if a token is valid.
-func (ut Token) Validate() bool {
+func (ut Token) Validate(skipExipryCheck bool) bool {
 	//Determine if the token is expired before anything else
-	if ut.Expire && time.Now().After(ut.GetExpiry()) {
+	if !skipExipryCheck && ut.Expire && time.Now().After(ut.GetExpiry()) {
 		return false
 	}
 
