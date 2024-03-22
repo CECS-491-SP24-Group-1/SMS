@@ -139,7 +139,11 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		//TODO: blanket-check here for validity from the token class itself;
+		//Ensure the token object is valid
+		if !tokObj.Validate() {
+			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
+			return
+		}
 
 		//Query the database and get the tokens of the subject; Redis is used here to cache the results
 		subjectTokens := make([]string, 0)

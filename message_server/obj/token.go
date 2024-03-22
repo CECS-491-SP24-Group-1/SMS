@@ -1,8 +1,10 @@
 package obj
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
+	"slices"
 	"time"
 	"unsafe" //The implications of using this package are understood.
 
@@ -150,4 +152,35 @@ func (ut *Token) UnmarshalText(text []byte) error {
 	tok, err := TokenFromB64(string(text[:]))
 	*ut = *tok
 	return err
+}
+
+// Determines if a token is valid
+func (ut Token) Validate() bool {
+	//Determine if the token expired
+	if ut.Expire && time.Now().After(ut.GetExpiry()) {
+		return false
+	}
+
+	//Check 1: Check for possible tampering of the ID and type
+	if ut.ID.Version() != 7 || ut.Type != IdTypeTOKEN || time.Unix(ut.ID.Time().UnixTime()).After(ut.GetExpiry()) {
+		return false
+	}
+
+	//Check 2: Check for possible tampering of the subject
+	if ut.ID == ut.Subject || ut.Subject.Version() != 7 || time.Unix(ut.Subject.Time().UnixTime()).After(ut.GetExpiry()) {
+		return false
+	}
+
+	//Check 3: Check the rands of the id and subject uuids
+	if bytes.Equal(ut.ID.UUID[8:], ut.Subject.UUID[8:]) {
+		return false
+	}
+
+	//Check 4: Check for possible tampering of the scope
+	if !slices.Contains(TokenScopeValues(), ut.Scope) {
+		return false
+	}
+
+	//No issues, so return true
+	return true
 }

@@ -13,7 +13,7 @@ import (
 
 const (
 	// The token is only allowed to complete the login challenges.
-	TokenScopePOSTSIGNUP TokenScope = iota
+	TokenScopePOSTSIGNUP TokenScope = iota + 1
 	// The token is allowed to be used everywhere that a normal user can access.
 	TokenScopeUSER
 )

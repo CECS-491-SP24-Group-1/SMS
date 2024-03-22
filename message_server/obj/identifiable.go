@@ -5,7 +5,7 @@ import (
 )
 
 //
-//-- CLASS: Challenge
+//-- CLASS: Identifiable
 //
 
 /*
