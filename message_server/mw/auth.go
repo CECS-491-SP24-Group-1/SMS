@@ -130,8 +130,12 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		//Ensure the provided token isn't invalid
-		//It's faster to pre-check validity than to query for an invalid token
+		/*
+			Ensure the provided token isn't an invalid object for whatever reason. It's
+			faster and safer to pre-check validity before anything else than to query for
+			an invalid token. After this point, the token object itself is valid. Further
+			checks can now occur before the database is queried for the subject's tokens.
+		*/
 		if !tokObj.Validate(true) {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
 			return
@@ -215,7 +219,10 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			subjectTokens = redisTokens
 		}
 
-		//Check if the subject's token list includes the incoming token
+		/*
+			Check if the subject's token list includes the incoming token. If this check
+			passes, the client is let through and the middleware finishes without error.
+		*/
 		if !slices.Contains(subjectTokens, token) {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
 			return
