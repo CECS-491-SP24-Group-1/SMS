@@ -234,9 +234,6 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		fmt.Printf("TOKENS: %v\n", subjectTokens)
-		fmt.Printf("Got token: %v\n", tokObj)
-
 		//Forward the request; authentication passed successfully
 		next.ServeHTTP(w, r)
 	})
