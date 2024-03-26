@@ -150,8 +150,9 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 
 		/*
 			Ensure the token's scope is among those that are authorized. A token is considered
-			valid for a route if the token's scope value is greater than or equal to the route's
-			lowest allowed scope.
+			valid for a route if the token's scope value is greater than or equal to the auth
+			handler's lowest allowed scope. The scopes of an auth handler are pre-sorted in
+			ascending order just after initialization.
 		*/
 		if !(tokObj.Scope >= amw.allowedScopes[0]) {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthUnauthorized), http.StatusUnauthorized)
