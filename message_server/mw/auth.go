@@ -36,9 +36,9 @@ var (
 )
 
 type authMiddleware struct {
-	allowedScopes []obj.TokenScope
-	mclient       *mongo.Client
-	rclient       *redis.Client
+	allowedScopes []obj.TokenScope //The scopes for which the token is valid, sorted in increasing order.
+	mclient       *mongo.Client    //The MongoDB database client.
+	rclient       *redis.Client    //The Redis database client.
 }
 
 // Returns a new handler for the authentication middleware.
@@ -51,6 +51,7 @@ func NewAuthMiddleware(allowedScopes []obj.TokenScope, mclient *mongo.Client, rc
 	}
 
 	//Return the instance
+	slices.Sort(mw.allowedScopes)
 	return mw.authMWHandler
 }
 
@@ -147,8 +148,12 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		//Ensure the token's scope is among those that are authorized
-		if !slices.Contains(amw.allowedScopes, tokObj.Scope) {
+		/*
+			Ensure the token's scope is among those that are authorized. A token is considered
+			valid for a route if the token's scope value is greater than or equal to the route's
+			lowest allowed scope.
+		*/
+		if !(tokObj.Scope >= amw.allowedScopes[0]) {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthUnauthorized), http.StatusUnauthorized)
 			return
 		}

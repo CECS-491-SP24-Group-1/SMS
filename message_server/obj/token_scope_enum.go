@@ -12,19 +12,25 @@ import (
 )
 
 const (
-	// The token is only allowed to complete the login challenges.
-	TokenScopePOSTSIGNUP TokenScope = iota + 1
-	// The token is allowed to be used everywhere that a normal user can access.
+	// The token is valid nowhere.												(binary: 0000 0000)
+	TokenScopeNONE TokenScope = iota
+	// The token is only allowed to complete the login challenges.				(binary: 0000 0001)
+	TokenScopePOSTSIGNUP
+	// The token is allowed to be used everywhere that a normal user can access	(binary: 0000 0010)
 	TokenScopeUSER
+	// The token is valid anywhere.												(binary: 1111 1111)
+	TokenScopeEVERWHERE TokenScope = iota + 252
 )
 
 var ErrInvalidTokenScope = fmt.Errorf("not a valid TokenScope, try [%s]", strings.Join(_TokenScopeNames, ", "))
 
-const _TokenScopeName = "POST_SIGNUPUSER"
+const _TokenScopeName = "NONEPOST_SIGNUPUSEREVERWHERE"
 
 var _TokenScopeNames = []string{
-	_TokenScopeName[0:11],
-	_TokenScopeName[11:15],
+	_TokenScopeName[0:4],
+	_TokenScopeName[4:15],
+	_TokenScopeName[15:19],
+	_TokenScopeName[19:28],
 }
 
 // TokenScopeNames returns a list of possible string values of TokenScope.
@@ -37,14 +43,18 @@ func TokenScopeNames() []string {
 // TokenScopeValues returns a list of the values for TokenScope
 func TokenScopeValues() []TokenScope {
 	return []TokenScope{
+		TokenScopeNONE,
 		TokenScopePOSTSIGNUP,
 		TokenScopeUSER,
+		TokenScopeEVERWHERE,
 	}
 }
 
 var _TokenScopeMap = map[TokenScope]string{
-	TokenScopePOSTSIGNUP: _TokenScopeName[0:11],
-	TokenScopeUSER:       _TokenScopeName[11:15],
+	TokenScopeNONE:       _TokenScopeName[0:4],
+	TokenScopePOSTSIGNUP: _TokenScopeName[4:15],
+	TokenScopeUSER:       _TokenScopeName[15:19],
+	TokenScopeEVERWHERE:  _TokenScopeName[19:28],
 }
 
 // String implements the Stringer interface.
@@ -63,8 +73,10 @@ func (x TokenScope) IsValid() bool {
 }
 
 var _TokenScopeValue = map[string]TokenScope{
-	_TokenScopeName[0:11]:  TokenScopePOSTSIGNUP,
-	_TokenScopeName[11:15]: TokenScopeUSER,
+	_TokenScopeName[0:4]:   TokenScopeNONE,
+	_TokenScopeName[4:15]:  TokenScopePOSTSIGNUP,
+	_TokenScopeName[15:19]: TokenScopeUSER,
+	_TokenScopeName[19:28]: TokenScopeEVERWHERE,
 }
 
 // ParseTokenScope attempts to convert a string to a TokenScope.

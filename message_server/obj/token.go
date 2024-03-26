@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"slices"
 	"time"
 	"unsafe" //The implications of using this package are understood.
 
@@ -173,11 +172,6 @@ func (ut Token) Validate(skipExipryCheck bool) bool {
 
 	//Check 3: Check the rands of the id and subject uuids
 	if bytes.Equal(ut.ID.UUID[8:], ut.Subject.UUID[8:]) {
-		return false
-	}
-
-	//Check 4: Check for possible tampering of the scope
-	if !slices.Contains(TokenScopeValues(), ut.Scope) {
 		return false
 	}
 
