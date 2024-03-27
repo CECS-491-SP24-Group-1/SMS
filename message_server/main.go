@@ -33,6 +33,13 @@ func main() {
 	}
 	fmt.Printf("config:%+v\n", cfg)
 
+	//Acquire an env instance, but cease further operation if an error occurred
+	env, envErr := config.EnvInit("")
+	if envErr != nil {
+		log.Panicf("Encountered unrecoverable error while loading env: %s\n", envErr.Error())
+	}
+	fmt.Printf("env:%+v\n", env)
+
 	//Setup scheduled tasks
 	//TODO: pass config instance eventually
 	//setupScheduledTasks()
