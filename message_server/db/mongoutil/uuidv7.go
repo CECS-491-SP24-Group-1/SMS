@@ -67,6 +67,16 @@ func UUIDFromBytes(input []byte) *UUID {
 	return &UUID{id}
 }
 
+// Returns the bytes of the UUID.
+func (id UUID) Bytes() [16]byte {
+	return id.UUID
+}
+
+// IsZero implements the bson.Zeroer interface.
+func (id UUID) IsZero() bool {
+	return bytes.Equal(id.UUID[:], uuid.Nil[:])
+}
+
 // MarshalBSONValue implements the bson.ValueMarshaler interface.
 func (id UUID) MarshalBSONValue() (bsontype.Type, []byte, error) {
 	return bson.TypeBinary, bsoncore.AppendBinary(nil, bson.TypeBinaryUUID, id.UUID[:]), nil
@@ -90,15 +100,26 @@ func (id *UUID) UnmarshalBSONValue(t bsontype.Type, raw []byte) error {
 	return nil
 }
 
-// IsZero implements the bson.Zeroer interface.
-func (id UUID) IsZero() bool {
-	return bytes.Equal(id.UUID[:], uuid.Nil[:])
-}
-
-func (id UUID) Bytes() [16]byte {
-	return id.UUID
-}
-
+// Outputs a UUID with no separation hyphens
 func (id UUID) ShortString() string {
 	return strings.ReplaceAll(id.String(), "-", "")
+}
+
+// Tests if a UUID is valid. This is shorthand for `uuid.Validate() == nil`.
+func IsValidUUID(s string) bool {
+	return uuid.Validate(s) == nil
+}
+
+// Tests if a UUIDv7 is valid.
+func IsValidUUIDv7(s string) bool {
+	//Test for validity before anything
+	if !IsValidUUID(s) {
+		return false
+	}
+
+	/*
+		Parse the UUID into an object and check the version bit Using `MustParse()`
+		is ok here since the UUID is guaranteed to be valid at this point
+	*/
+	return uuid.MustParse(s).Version() == 7
 }
