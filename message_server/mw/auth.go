@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +25,12 @@ var (
 
 	//The name of the HTTP query parameter to look for.
 	AuthHttpParamName = "token"
+
+	//The name of the auth subject header to send
+	AuthHttpHeaderSubject = "X-Auth-For"
+
+	//The name of the auth scope header to send
+	AuthHttpHeaderScope = "X-Auth-Scope"
 )
 
 // Holds the error messages.
@@ -56,7 +63,7 @@ func NewAuthMiddleware(allowedScopes []obj.TokenScope, mclient *mongo.Client, rc
 }
 
 /*
-TokenFromCookie tries to retreive the token string from a cookie named "token".
+TokenFromCookie tries to retrieve the token string from a cookie named "token".
 See: https://github.com/go-chi/jwtauth/blob/1ff608193a049433794670a8c18fd739c5b2f236/jwtauth.go#L256
 */
 func TokenFromCookie(r *http.Request) string {
@@ -233,6 +240,10 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
 			return
 		}
+
+		//Add headers to the request (auth subject and token scope)
+		r.Header.Add(AuthHttpHeaderSubject, tokSubject.String())
+		r.Header.Add(AuthHttpHeaderScope, strconv.Itoa(int(tokObj.Scope)))
 
 		//Forward the request; authentication passed successfully
 		next.ServeHTTP(w, r)
