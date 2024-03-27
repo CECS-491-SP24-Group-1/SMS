@@ -35,7 +35,7 @@ var (
 
 // Holds the error messages.
 var (
-	ErrAuthUnauthorized   = errors.New("token is unauthorized")
+	ErrAuthUnauthorized   = errors.New("token is not authorized for this route")
 	ErrAuthExpiredToken   = errors.New("token has expired")
 	ErrAuthNoTokenFound   = errors.New("no token found")
 	ErrAuthBadTokenFormat = errors.New("token format is incorrect")
