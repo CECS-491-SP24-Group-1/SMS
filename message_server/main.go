@@ -14,6 +14,7 @@ import (
 	"wraith.me/message_server/obj"
 	credis "wraith.me/message_server/redis"
 	"wraith.me/message_server/router"
+	"wraith.me/message_server/router/challenges"
 	"wraith.me/message_server/router/users"
 
 	"github.com/go-chi/chi/middleware"
@@ -26,11 +27,11 @@ const RQS_PER_MIN = 3
 
 func main() {
 	//Acquire a config instance, but cease further operation if an error occurred
-	cfg, cfgErr := config.Init("./config.toml")
+	cfg, cfgErr := config.ConfigInit("")
 	if cfgErr != nil {
 		log.Panicf("Encountered unrecoverable error while loading config: %s\n", cfgErr.Error())
 	}
-	//fmt.Printf("config->access_logs->mode=%d\n", cfg.AccessLogs.Mode)
+	fmt.Printf("config:%+v\n", cfg)
 
 	//Setup scheduled tasks
 	//TODO: pass config instance eventually
@@ -60,7 +61,7 @@ func main() {
 	}
 
 	//Setup Chi and start listening for connections
-	r := setupServer(cfg, mclient, rclient)
+	r := setupServer(&cfg, mclient, rclient)
 	connStr := fmt.Sprintf("%s:%d", cfg.Server.BindAddr, cfg.Server.ListenPort)
 	log.Printf("Listening on %s\n", connStr)
 	http := http.Server{
@@ -120,8 +121,15 @@ func setupServer(cfg *config.Config, mclient *mongo.Client, rclient *redis.Clien
 	//User routes
 	r.Mount("/users", users.UserRoutes())
 
+	//Challenge routes; protected by auth middleware (post_signup and users only)
+	r.Group(func(r chi.Router) {
+		authScopes := []obj.TokenScope{obj.TokenScopePOSTSIGNUP, obj.TokenScopeUSER}
+		r.Use(mw.NewAuthMiddleware(authScopes, mclient, rclient))
+		r.Mount("/challenges", challenges.ChallengeRoutes(mclient, rclient))
+	})
+
 	//AUTH TEST START
-	scopes := []obj.TokenScope{obj.TokenScopePOSTSIGNUP, obj.TokenScopeUSER}
+	scopes := []obj.TokenScope{obj.TokenScopeUSER}
 	r.Group(func(r chi.Router) {
 		r.Use(mw.NewAuthMiddleware(scopes, mclient, rclient))
 		r.Get("/auth_test", router.AuthTest)
