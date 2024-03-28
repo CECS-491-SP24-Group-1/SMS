@@ -67,7 +67,7 @@ func NewToken(subject mongoutil.UUID, creationIP ip_addr.IPAddr, scope TokenScop
 
 // Creates a token from a base64 string.
 func TokenFromB64(b64 string) (*Token, error) {
-	buf, err := base64.StdEncoding.DecodeString(b64)
+	buf, err := base64.URLEncoding.DecodeString(b64)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (ut Token) String() string {
 
 // Converts the token into a base64 string.
 func (ut Token) ToB64() string {
-	return base64.StdEncoding.EncodeToString(ut.ToBytes())
+	return base64.URLEncoding.EncodeToString(ut.ToBytes())
 }
 
 // Converts a token into a byte array. See: https://stackoverflow.com/a/56272984
