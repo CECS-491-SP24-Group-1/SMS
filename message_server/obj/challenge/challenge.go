@@ -1,15 +1,18 @@
 package challenge
 
 import (
+	"encoding/base64"
 	"time"
 
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
+	"wraith.me/message_server/util"
 )
 
 const (
 	//Defines how long a challenge should last. This is 30 minutes by default.
-	DEFAULT_CHALLENGE_EXPIRY = time.Minute * 30
+	DEFAULT_CHALLENGE_EXPIRY    = time.Minute * 30
+	DEFAULT_CHALLENGE_TEXT_SIZE = 32
 )
 
 //
@@ -42,13 +45,21 @@ type Challenge struct {
 
 	//The status of the challenge.
 	Status ChallengeStatus `json:"status" bson:"status"`
+
+	//The payload text of the challenge. This is what will actually be sent to a user.
+	Payload string `json:"payload" bson:"payload"`
 }
 
 func NewChallenge(
 	scope ChallengeScope,
 	initiator obj.Identifiable,
 	responder obj.Identifiable,
+	expiry time.Time,
 ) *Challenge {
+	//Create random challenge text
+	ctext := base64.StdEncoding.EncodeToString(util.MustGenRandBytes(DEFAULT_CHALLENGE_TEXT_SIZE))
+
+	//Create and return a challenge
 	return &Challenge{
 		Identifiable: obj.Identifiable{
 			ID:   *mongoutil.MustNewUUID7(),
@@ -57,8 +68,9 @@ func NewChallenge(
 		Scope:     scope,
 		Initiator: initiator,
 		Responder: responder,
-		Expiry:    time.Now().UTC().Add(DEFAULT_CHALLENGE_EXPIRY),
+		Expiry:    expiry.Truncate(time.Millisecond).UTC(),
 		Status:    ChallengeStatusPENDING,
+		Payload:   ctext,
 	}
 }
 

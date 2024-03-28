@@ -68,7 +68,7 @@ func main() {
 	}
 
 	//Setup Chi and start listening for connections
-	r := setupServer(&cfg, mclient, rclient)
+	r := setupServer(&cfg, &env, mclient, rclient)
 	connStr := fmt.Sprintf("%s:%d", cfg.Server.BindAddr, cfg.Server.ListenPort)
 	log.Printf("Listening on %s\n", connStr)
 	http := http.Server{
@@ -81,7 +81,7 @@ func main() {
 }
 
 // TODO: Maybe add https://github.com/goware/firewall
-func setupServer(cfg *config.Config, mclient *mongo.Client, rclient *redis.Client) chi.Router {
+func setupServer(cfg *config.Config, env *config.Env, mclient *mongo.Client, rclient *redis.Client) chi.Router {
 	//Setup Chi router
 	r := chi.NewRouter()
 
@@ -132,7 +132,7 @@ func setupServer(cfg *config.Config, mclient *mongo.Client, rclient *redis.Clien
 	r.Group(func(r chi.Router) {
 		authScopes := []obj.TokenScope{obj.TokenScopePOSTSIGNUP, obj.TokenScopeUSER}
 		r.Use(mw.NewAuthMiddleware(authScopes, mclient, rclient))
-		r.Mount("/challenges", challenges.ChallengeRoutes(mclient, rclient))
+		r.Mount("/challenges", challenges.ChallengeRoutes(mclient, rclient, env))
 	})
 
 	//AUTH TEST START
