@@ -37,6 +37,11 @@ type Config struct {
 	} `toml:"mongo_db"`
 }
 
+// Overrides the `defaultPathName()` method in `IConfig`.
+func (Config) defaultPathName() string {
+	return DEFAULT_TCONF_PATH
+}
+
 // Server config block
 
 // Logging config block
@@ -65,14 +70,9 @@ func ConfigInit(path string) (Config, error) {
 		return toml.Unmarshal(b, c)
 	}
 
-	//Create a new blank config object
+	//Create a new blank config object and set defaults
 	cfg := Config{}
 	defaults.Set(&cfg)
-
-	//Get the default path is one wasn't specified
-	if path == "" {
-		path = DEFAULT_TCONF_PATH
-	}
 
 	//Call the helper and return the results
 	err := initHelper[Config](&cfg, path, marshaller, unmarshaller)

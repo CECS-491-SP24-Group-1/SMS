@@ -11,13 +11,21 @@ import (
 //
 
 // Generic interface for configuration models.
-type IConfig interface{}
+type IConfig interface {
+	//Gets the default path name for the config type.
+	defaultPathName() string
+}
 
 /*
 Initializes a configuration object via reading one that exists or creating
 a new one with the default values.
 */
 func initHelper[T IConfig](cfg *T, path string, marshaller func(*T) ([]byte, error), unmarshaller func([]byte, *T) error) error {
+	//Get the default path is one wasn't specified
+	if path == "" {
+		path = (*cfg).defaultPathName()
+	}
+
 	//Check if the config is in a subdirectory
 	ppath := filepath.Dir(path)
 	if ppath != "." {

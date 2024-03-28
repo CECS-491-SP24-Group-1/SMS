@@ -25,6 +25,11 @@ type Env struct {
 	ID mongoutil.UUID `env:"ID"`
 }
 
+// Overrides the `defaultPathName()` method in `IConfig`.
+func (Env) defaultPathName() string {
+	return DEFAULT_ENV_PATH
+}
+
 // Configures a new env config object.
 func EnvInit(path string) (Env, error) {
 	//Define the marshalling and unmarshalling functions
@@ -69,14 +74,9 @@ func EnvInit(path string) (Env, error) {
 		return nil
 	}
 
-	//Create a new blank env object
+	//Create a new blank env object and set defaults
 	cfg := Env{}
 	cfg.ID = *mongoutil.MustNewUUID7()
-
-	//Get the default path is one wasn't specified
-	if path == "" {
-		path = DEFAULT_ENV_PATH
-	}
 
 	//Call the helper and return the results
 	err := initHelper[Env](&cfg, path, marshaller, unmarshaller)
