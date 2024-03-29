@@ -11,8 +11,18 @@ import (
 
 const (
 	//Defines how long a challenge should last. This is 30 minutes by default.
-	DEFAULT_CHALLENGE_EXPIRY    = time.Minute * 30
-	DEFAULT_CHALLENGE_TEXT_SIZE = 32
+	DEFAULT_CHALLENGE_EXPIRY = time.Minute * 30
+
+	//Defines the default size of the challenge payload.
+	DEFAULT_CHALLENGE_PAYLOAD_SIZE = 24
+)
+
+var (
+	// Defines the size of the challenge payload.
+	ChallengePayloadSize = DEFAULT_CHALLENGE_PAYLOAD_SIZE
+
+	//Defines the URL parameter name to target when getting a challenge solution.
+	ChallengeURLParamName = "sol"
 )
 
 //
@@ -57,7 +67,7 @@ func NewChallenge(
 	expiry time.Time,
 ) *Challenge {
 	//Create random challenge text
-	ctext := base64.StdEncoding.EncodeToString(util.MustGenRandBytes(DEFAULT_CHALLENGE_TEXT_SIZE))
+	ctext := base64.URLEncoding.EncodeToString(util.MustGenRandBytes(ChallengePayloadSize))
 
 	//Create and return a challenge
 	return &Challenge{

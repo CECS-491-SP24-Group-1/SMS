@@ -126,7 +126,7 @@ func setupServer(cfg *config.Config, env *config.Env, mclient *mongo.Client, rcl
 	r.Post("/send_message", router.SendMessage)
 
 	//User routes
-	r.Mount("/users", users.UserRoutes())
+	r.Mount("/users", users.UserRoutes(env))
 
 	//Challenge routes; protected by auth middleware (post_signup and users only)
 	r.Group(func(r chi.Router) {

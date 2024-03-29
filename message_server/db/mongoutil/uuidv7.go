@@ -100,7 +100,7 @@ func (id *UUID) UnmarshalBSONValue(t bsontype.Type, raw []byte) error {
 	return nil
 }
 
-// Outputs a UUID with no separation hyphens
+// Outputs a UUID with no separation hyphens.
 func (id UUID) ShortString() string {
 	return strings.ReplaceAll(id.String(), "-", "")
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -14,7 +15,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/mw"
 	"wraith.me/message_server/obj"
+	"wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/obj/ip_addr"
 	"wraith.me/message_server/util"
 	"wraith.me/message_server/util/httpu"
@@ -214,7 +217,21 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 		return ierr
 	}
 
-	//Step 3: Create challenges for email and public key verification
+	//Step 3a: Create challenges for email and public key verification
+	srvIdent := obj.Identifiable{ID: env.ID, Type: obj.IdTypeSERVER}
+	usrIdent := obj.Identifiable{ID: user.ID, Type: user.Type}
+	expiry := user.Flags.PurgeBy
+	emailChall := challenge.NewChallenge(challenge.ChallengeScopeEMAIL, srvIdent, usrIdent, expiry)
+	pubkeyChall := challenge.NewChallenge(challenge.ChallengeScopePUBKEY, srvIdent, usrIdent, expiry)
+
+	//Step 3b: Send the email challenge to the user's email
+	baseUrl := "http://127.0.0.1:8888" //TODO: change this eventually
+	echallUrl := util.Must(url.Parse(fmt.Sprintf("%s/challenges/%s/solve", baseUrl, emailChall.ID)))
+	eurlParams := echallUrl.Query()
+	eurlParams.Set(mw.AuthHttpParamName, tempToken.ToB64())
+	eurlParams.Set(challenge.ChallengeURLParamName, emailChall.Payload)
+	echallUrl.RawQuery = eurlParams.Encode()
+	w.Header().Add("X-EChall", echallUrl.String()) //Challenge is sent as a header since Fresh improperly handles stdout with % signs
 
 	//Step 4: Push the challenges to the database for later retrieval
 
@@ -222,7 +239,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	psu := postsignupUser{
 		ID:              user.ID,
 		RedactedEmail:   util.RedactEmail(user.Email),
-		Challenges:      make([]mongoutil.UUID, 0),
+		Challenges:      []mongoutil.UUID{emailChall.ID, pubkeyChall.ID},
 		TempAccessToken: tempToken.ToB64(),
 	}
 	if jerr := json.NewEncoder(w).Encode(&psu); jerr != nil {

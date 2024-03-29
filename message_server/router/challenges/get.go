@@ -23,6 +23,8 @@ func GetChallengeRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//
+
 	names, _ := mcl.ListDatabaseNames(context.TODO(), bson.M{})
 
 	s := fmt.Sprintf("id: %s; x: %v; cfor: %s; csub: %s; srv_id: %s", cid, names, r.Header.Get(mw.AuthHttpHeaderSubject), r.Header.Get(mw.AuthHttpHeaderScope), env.ID.String())
