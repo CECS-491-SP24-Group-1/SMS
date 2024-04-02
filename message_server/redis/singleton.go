@@ -64,7 +64,7 @@ func (m *RClient) Connect(cfg *RConfig) (*redis.Client, error) {
 
 	//Ensure there isn't already a connection open
 	if m.client != nil {
-		return m.client, fmt.Errorf("cannot establish a connection that is already open")
+		return m.client, fmt.Errorf("redis: cannot establish a connection that is already open")
 	}
 
 	//Set client options
@@ -93,14 +93,14 @@ ping time in microseconds.
 func (m RClient) Heartbeat() (delta int64, err error) {
 	//Ensure a connection actually exists
 	if m.client == nil {
-		return -1, fmt.Errorf("cannot perform a heartbeat; client is not currently connected to a server")
+		return -1, fmt.Errorf("redis: cannot perform a heartbeat; client is not currently connected to a server")
 	}
 
 	//Ping the server
 	bm := time.Now()
 	var pong *redis.StatusCmd
 	if pong = m.client.Ping(context.Background()); pong.String() != "ping: PONG" {
-		err = fmt.Errorf("unexpected server response; %s", pong)
+		err = fmt.Errorf("redis: unexpected server response; %s", pong)
 		return
 	}
 	delta = time.Since(bm).Microseconds()

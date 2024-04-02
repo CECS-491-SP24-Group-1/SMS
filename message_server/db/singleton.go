@@ -65,7 +65,7 @@ func (m *MClient) Connect(cfg *MConfig) (*mongo.Client, error) {
 
 	//Ensure there isn't already a connection open
 	if m.client != nil {
-		return m.client, fmt.Errorf("cannot establish a connection that is already open")
+		return m.client, fmt.Errorf("mongodb: cannot establish a connection that is already open")
 	}
 
 	//Set client option
@@ -103,7 +103,7 @@ ping time in microseconds.
 func (m MClient) Heartbeat() (int64, error) {
 	//Ensure a connection actually exists
 	if m.client == nil {
-		return -1, fmt.Errorf("cannot perform a heartbeat; client is not currently connected to a server")
+		return -1, fmt.Errorf("mongodb: cannot perform a heartbeat; client is not currently connected to a server")
 	}
 
 	//Ping the server
