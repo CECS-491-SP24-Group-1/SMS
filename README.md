@@ -28,6 +28,8 @@
 
 - A Redis server for caching
 
+- An email server for sending emails to users. See [this documentation page](./documentation/Installing A Dev Email Server.md) for a tutorial on setting one up for a development environment
+
 ### Optional
 
 - MongoDB Compass: allows viewing the contents of the MDB database in a friendly GUI. It can be downloaded from [this link](https://www.mongodb.com/try/download/compasshttps://www.mongodb.com/try/download/compass).
