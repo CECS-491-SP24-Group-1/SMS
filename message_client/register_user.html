@@ -96,8 +96,10 @@
 
 		//handleRandForm() -> void
 		function handleRandForm(){
-			document.getElementById("username").value = faker.internet.userName().toLowerCase().replaceAll(".", "")
-			document.getElementById("email").value = faker.internet.email().toLowerCase();
+			const uname = faker.internet.userName().toLowerCase().replaceAll(".", "");
+			document.getElementById("username").value = uname;
+			//document.getElementById("email").value = faker.internet.email().toLowerCase();
+			document.getElementById("email").value = `${uname}@localhost.com`;
 			document.getElementById("submitBtn").click();
 		}
 	</script>
