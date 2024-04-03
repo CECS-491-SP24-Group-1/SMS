@@ -28,7 +28,7 @@
 
 - A Redis server for caching
 
-- An email server for sending emails to users. See [this documentation page](./documentation/Installing A Dev Email Server.md) for a tutorial on setting one up for a development environment
+- An email server for sending emails to users. See [this documentation page](./documentation/Installing%20A%20Dev%20Email%20Server.md) for a tutorial on setting one up for a development environment
 
 ### Optional
 
