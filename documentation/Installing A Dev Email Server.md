@@ -78,7 +78,7 @@
       
       5. Authentication method: `Autodetect`
       
-      6. Username: `admin@localhost.com`` (or the custom email you set earlier)
+      6. Username: `admin@localhost.com` (or the custom email you set earlier)
    
    2. OUTGOING SERVER
       
@@ -90,7 +90,7 @@
       
       4. Authentication method: `Autodetect`
       
-      5. Username: `admin@localhost.com`` (or the custom email you set earlier)
+      5. Username: `admin@localhost.com` (or the custom email you set earlier)
    
    3. Click the "Re-test" button to confirm that the connection was successful.
 
