@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/config"
 	"wraith.me/message_server/db"
+	"wraith.me/message_server/email"
 	"wraith.me/message_server/mw"
 	"wraith.me/message_server/obj"
 	credis "wraith.me/message_server/redis"
@@ -45,20 +46,22 @@ func main() {
 	//setupScheduledTasks()
 
 	//Connect to MongoDB
-	mcfg := db.DefaultMConfig()
-	//mcfg.Username = ""
-	//mcfg.Password = ""
-	mclient, merr := db.GetInstance().Connect(mcfg)
+	mclient, merr := db.GetInstance().Connect(&cfg.MongoDB)
 	if merr != nil {
 		panic(merr)
 	}
 	defer db.GetInstance().Disconnect()
 
 	//Connect to Redis
-	rcfg := credis.DefaultRConfig()
-	rclient, rerr := credis.GetInstance().Connect(rcfg)
+	rclient, rerr := credis.GetInstance().Connect(&cfg.Redis)
 	if rerr != nil {
 		panic(rerr)
+	}
+
+	//Connect to the SMTP server
+	_, eerr := email.GetInstance().Connect(&cfg.Email)
+	if eerr != nil {
+		panic(eerr)
 	}
 
 	//Test listing

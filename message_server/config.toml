@@ -1,6 +1,25 @@
+[email]
+	enc_type = "STARTTLS"
+	host = "localhost.com"
+	password = "2SbM2kkMFo"
+	port = 1587
+	username = "admin@localhost.com"
+	verify_cert = false
+
 [mongo_db]
+	app_name = "WraithAPI"
 	host = "127.0.0.1"
+	password = ""
 	port = 27017
+	username = ""
+
+[redis]
+	db = 0
+	expiry = 0
+	host = "127.0.0.1"
+	password = ""
+	port = 6379
+	username = ""
 
 [server]
 	bind_addr = "127.0.0.1"

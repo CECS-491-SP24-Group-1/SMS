@@ -5,6 +5,9 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/pelletier/go-toml"
+	"wraith.me/message_server/db"
+	"wraith.me/message_server/email"
+	"wraith.me/message_server/redis"
 )
 
 //
@@ -31,10 +34,13 @@ type Config struct {
 	//Access logging configuration
 
 	//MongoDB configuration
-	MongoDB struct {
-		Host string `toml:"host" default:"127.0.0.1"`
-		Port int    `toml:"port" default:"27017"`
-	} `toml:"mongo_db"`
+	MongoDB db.MConfig `toml:"mongo_db"`
+
+	//Redis configuration
+	Redis redis.RConfig `toml:"redis"`
+
+	//SMTP configuration
+	Email email.EConfig `toml:"email"`
 }
 
 // Overrides the `defaultPathName()` method in `IConfig`.
