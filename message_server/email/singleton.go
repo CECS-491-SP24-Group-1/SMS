@@ -74,6 +74,7 @@ func (m *EClient) Connect(cfg *EConfig) (*mail.SMTPClient, error) {
 	smtps.Username = cfg.Username
 	smtps.Password = cfg.Password
 	smtps.Encryption = mail.Encryption(cfg.EncType)
+	smtps.KeepAlive = true //This must be true or the client will disconnect after sending one email
 
 	//Set options for TLS if verification is not needed
 	if !cfg.VerifyCert {
