@@ -2,7 +2,9 @@ package obj
 
 import (
 	"crypto/ed25519"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 )
@@ -17,6 +19,12 @@ const (
 
 // Represents the bytes of an entity's public key.
 type PubkeyBytes [PUBKEY_SIZE]byte
+
+// Gets the fingerprint of a `PubkeyBytes` object using SHA256.
+func (pkb PubkeyBytes) Fingerprint() string {
+	hash := sha256.Sum256(pkb[:])
+	return hex.EncodeToString(hash[:])
+}
 
 // Marshals a `PubkeyBytes` object to JSON.
 func (pkb PubkeyBytes) MarshalJSON() ([]byte, error) {

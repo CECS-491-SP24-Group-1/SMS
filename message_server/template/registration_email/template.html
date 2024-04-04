@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="utf-8">
+	<title>Your Wraith Account</title>
+	<style type="text/css">
+		h1, h2, h3, h4, h5, h6, p, span, a {
+			font-family: Arial, Helvetica, sans-serif; /* Sans-serif fonts are more pretty but less readable */
+		}
+		#infoTable {
+			border-collapse: separate;
+			border-spacing: 10px 0; /* Horizontal spacing, vertical spacing */
+		}
+		#infoTable, #infoTable tr, #infoTable td, #infoTable th {
+			border: 0;
+		}
+		#infoTable tr td:first-of-type {
+			font-weight: bold;
+		}
+		#infoTable tr td:first-of-type::after {
+			content: ":";
+		}
+	</style>
+</head>
+<body>
+	<h1>Your Wraith Account</h1>
+	<p>You have successfully registered an account with Wraith. The following user information was provided during sign-up:</p>
+
+	<pre id="userInfo">
+		<table id="infoTable">
+			<tbody>
+				<tr>
+					<td>UUID</td>
+					<td>{{.UUID}}</td>
+				</tr>
+				<tr>
+					<td>Username</td>
+					<td>{{.UName}}</td>
+				</tr>
+				<tr>
+					<td>Email</td>
+					<td>{{.Email}}</td>
+				</tr>
+				<tr>
+					<td>PK Fingerprint</td>
+					<td>{{.PKFingerprint}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</pre>
+
+	<p>To complete your registration, you must verify ownership of both your email and public key. <strong>Failure to do so by <em>{{.PurgeTime}}</em> will result in your account being deleted.</strong> To prevent this from happening, use the below link to verify your email address. Your public key can be verified via completing a challenge in the Wraith app. See <a href="example.com/verify_pubkey">this link</a> to get instructions on how to do this.</p>
+	<p>If you did not initiate sign-up, simply disregard this email. The associated account will be automatically purged at the previously specified time.</p>
+	<p><em>Your unique email verification link: <a href={{.ChallengeLink}}>{{.ChallengeLink}}</a></em></p>
+</body>

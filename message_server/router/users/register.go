@@ -1,6 +1,7 @@
 package users
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -9,16 +10,20 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/tanqiangyes/govalidator"
+	mail "github.com/xhit/go-simple-mail/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/email"
 	"wraith.me/message_server/mw"
 	"wraith.me/message_server/obj"
 	"wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/obj/ip_addr"
+	remailt "wraith.me/message_server/template/registration_email"
 	"wraith.me/message_server/util"
 	"wraith.me/message_server/util/httpu"
 )
@@ -224,14 +229,43 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	emailChall := challenge.NewChallenge(challenge.ChallengeScopeEMAIL, srvIdent, usrIdent, expiry)
 	pubkeyChall := challenge.NewChallenge(challenge.ChallengeScopePUBKEY, srvIdent, usrIdent, expiry)
 
-	//Step 3b: Send the email challenge to the user's email
+	//Step 3b: Compose the challenge URL for the email
 	baseUrl := "http://127.0.0.1:8888" //TODO: change this eventually
 	echallUrl := util.Must(url.Parse(fmt.Sprintf("%s/challenges/%s/solve", baseUrl, emailChall.ID)))
 	eurlParams := echallUrl.Query()
 	eurlParams.Set(mw.AuthHttpParamName, tempToken.ToB64())
 	eurlParams.Set(challenge.ChallengeURLParamName, emailChall.Payload)
 	echallUrl.RawQuery = eurlParams.Encode()
-	w.Header().Add("X-EChall", echallUrl.String()) //Challenge is sent as a header since Fresh improperly handles stdout with % signs
+
+	//Step 3c: Compose the challenge email to send to the user
+	smtpc := email.GetInstance().GetClient()
+	emsg := mail.NewMSG()
+	emsg.SetFrom(cfg.Email.Username)
+	emsg.AddTo(user.Email)
+	emsg.SetSubject("Your Wraith Account")
+
+	//Step 3d: Create the body of the email
+	tmplFields := remailt.Template{
+		UUID:          user.ID.String(),
+		UName:         user.Username,
+		Email:         user.Email,
+		PKFingerprint: user.Pubkey.Fingerprint(),
+		PurgeTime:     user.Flags.PurgeBy.Format(time.RFC1123Z),
+		ChallengeLink: echallUrl.String(),
+	}
+	var ebody bytes.Buffer
+	if err := emailChallTemplate.Execute(&ebody, tmplFields); err != nil {
+		return err
+	}
+	emsg.SetBody(mail.TextHTML, ebody.String())
+
+	//Step 3e: Send the email challenge to the user's email
+	if emsg.Error != nil {
+		return emsg.Error
+	}
+	if err := emsg.Send(smtpc); err != nil {
+		return err
+	}
 
 	//Step 4: Push the challenges to the database for later retrieval
 
@@ -243,7 +277,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 		TempAccessToken: tempToken.ToB64(),
 	}
 	if jerr := json.NewEncoder(w).Encode(&psu); jerr != nil {
-		http.Error(w, jerr.Error(), http.StatusInternalServerError)
+		return jerr
 	}
 
 	//No errors so return nil
