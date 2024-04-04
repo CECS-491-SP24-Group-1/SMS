@@ -1,7 +1,6 @@
 package mw
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -125,7 +124,7 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		}
 
 		//Get a byte array from the token and reject the token if the size is incorrect
-		tbytes, derr := base64.StdEncoding.Strict().DecodeString(token)
+		tbytes, derr := obj.Base64DecodeTok(token)
 		if derr != nil || len(tbytes) != obj.TOKEN_SIZE_BYTES {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
 			return

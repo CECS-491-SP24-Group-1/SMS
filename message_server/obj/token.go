@@ -67,7 +67,7 @@ func NewToken(subject mongoutil.UUID, creationIP ip_addr.IPAddr, scope TokenScop
 
 // Creates a token from a base64 string.
 func TokenFromB64(b64 string) (*Token, error) {
-	buf, err := base64.URLEncoding.DecodeString(b64)
+	buf, err := Base64DecodeTok(b64)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (ut Token) String() string {
 
 // Converts the token into a base64 string.
 func (ut Token) ToB64() string {
-	return base64.URLEncoding.EncodeToString(ut.ToBytes())
+	return Base64EncodeTok(ut.ToBytes())
 }
 
 // Converts a token into a byte array. See: https://stackoverflow.com/a/56272984
@@ -177,4 +177,14 @@ func (ut Token) Validate(skipExipryCheck bool) bool {
 
 	//No issues, so return true
 	return true
+}
+
+// Helper function to decode a base64 string into a byte array.
+func Base64DecodeTok(str string) ([]byte, error) {
+	return base64.URLEncoding.DecodeString(str)
+}
+
+// Helper function to encode a base64 string from a byte array.
+func Base64EncodeTok(bytes []byte) string {
+	return base64.URLEncoding.EncodeToString(bytes)
 }
