@@ -238,7 +238,6 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	echallUrl.RawQuery = eurlParams.Encode()
 
 	//Step 3c: Compose the challenge email to send to the user
-	smtpc := email.GetInstance().GetClient()
 	emsg := mail.NewMSG()
 	emsg.SetFrom(cfg.Email.Username)
 	emsg.AddTo(user.Email)
@@ -263,7 +262,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	if emsg.Error != nil {
 		return emsg.Error
 	}
-	if err := emsg.Send(smtpc); err != nil {
+	if err := email.GetInstance().SendEmail(emsg); err != nil {
 		return err
 	}
 

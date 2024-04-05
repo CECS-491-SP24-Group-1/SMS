@@ -74,7 +74,7 @@ func (m *EClient) Connect(cfg *EConfig) (*mail.SMTPClient, error) {
 	smtps.Username = cfg.Username
 	smtps.Password = cfg.Password
 	smtps.Encryption = mail.Encryption(cfg.EncType)
-	smtps.KeepAlive = true //This must be true or the client will disconnect after sending one email
+	//smtps.KeepAlive = true //This must be true or the client will disconnect after sending one email
 
 	//Set options for TLS if verification is not needed
 	if !cfg.VerifyCert {
@@ -121,4 +121,25 @@ func (m EClient) Heartbeat() (int64, error) {
 
 	//Return the ping time and any errors
 	return delta.Microseconds(), err
+}
+
+/*
+Sends an email using an email object. This method allows the email sending
+routine to respawn the SMTP server connection if it goes down for whatever
+reason, gracefully reconnecting in the process. See the following GitHub
+issues for more information: https://github.com/xhit/go-simple-mail/issues/13,
+https://github.com/xhit/go-simple-mail/issues/23
+*/
+func (m EClient) SendEmail(em *mail.Email) error {
+	//Lock the mutex and defer its unlock
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	//Send a reset command to the server
+	if err := m.client.Reset(); err != nil {
+		return err
+	}
+
+	//Send the email using the given email object
+	return em.Send(m.client)
 }
