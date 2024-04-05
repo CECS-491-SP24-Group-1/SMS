@@ -137,8 +137,8 @@ func (m *EClient) SendEmail(em *mail.Email) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	//Send a reset command to the server
-	if err := m.client.Reset(); err != nil {
+	//Send a NOOP command to the server
+	if err := m.client.Noop(); err != nil {
 		//Attempt a reconnection if there was an issue
 		oerr := err
 		m.client, err = m.server.Connect()
