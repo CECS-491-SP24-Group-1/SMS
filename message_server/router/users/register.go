@@ -250,7 +250,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 		UName:         user.Username,
 		Email:         user.Email,
 		PKFingerprint: user.Pubkey.Fingerprint(),
-		PurgeTime:     user.Flags.PurgeBy.Format(time.RFC1123Z),
+		PurgeTime:     util.Time2OffsetReq(user.Flags.PurgeBy, r).Format(time.RFC1123Z),
 		ChallengeLink: echallUrl.String(),
 	}
 	var ebody bytes.Buffer

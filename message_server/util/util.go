@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math/rand"
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -236,4 +238,37 @@ func SplitAtLastRune(s string, r rune) (string, string) {
 // Truncates a time to milliseconds, chopping off any micro or nano seconds.
 func Strip2Millis(t time.Time) time.Time {
 	return t.Truncate(time.Millisecond)
+}
+
+/*
+Calculates the offset from UTC based on output from the
+`Date.prototype.getTimezoneOffset()`. JS function.
+*/
+func Time2Offset(tin time.Time, off int) time.Time {
+	/*
+		Ensure the offset is in the range +/- 720 since `Date.prototype.getTimezoneOffset()`
+		returns the offset from UTC in minutes and 60 * 12 = 720. See the following webpage
+		for more info: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset
+	*/
+	if off > 720 || off < -720 {
+		return tin
+	}
+
+	//Calculate the offset from UTC of the given offset and get the input time's new value
+	loc := time.FixedZone("", off*60)
+	return tin.UTC().In(loc)
+}
+
+/*
+Calculates the offset from UTC based on the value of the `X-Timezone-Offset`
+HTTP header.
+*/
+func Time2OffsetReq(tin time.Time, r *http.Request) time.Time {
+	//Ensure the string is not blank or an invalid integer
+	off := r.Header.Get("X-Timezone-Offset")
+	ioff, err := strconv.Atoi(off)
+	if err != nil {
+		return tin
+	}
+	return Time2Offset(tin, ioff)
 }
