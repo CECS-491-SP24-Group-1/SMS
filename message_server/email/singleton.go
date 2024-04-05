@@ -19,6 +19,7 @@ email client.
 */
 type EClient struct {
 	client *mail.SMTPClient
+	server *mail.SMTPServer
 	config *EConfig
 	// Guard mutex to ensure atomicity during connect/disconnect operations.
 	mutex *sync.Mutex
@@ -74,15 +75,16 @@ func (m *EClient) Connect(cfg *EConfig) (*mail.SMTPClient, error) {
 	smtps.Username = cfg.Username
 	smtps.Password = cfg.Password
 	smtps.Encryption = mail.Encryption(cfg.EncType)
-	//smtps.KeepAlive = true //This must be true or the client will disconnect after sending one email
+	smtps.KeepAlive = true //This must be true or the client will disconnect after sending one email
+	m.server = smtps
 
 	//Set options for TLS if verification is not needed
 	if !cfg.VerifyCert {
-		smtps.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+		m.server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 
 	//Connect to the SMTP server
-	smtpc, err := smtps.Connect()
+	smtpc, err := m.server.Connect()
 	m.client, m.config = smtpc, cfg
 
 	//Return the client and any error that occurred
@@ -130,14 +132,20 @@ reason, gracefully reconnecting in the process. See the following GitHub
 issues for more information: https://github.com/xhit/go-simple-mail/issues/13,
 https://github.com/xhit/go-simple-mail/issues/23
 */
-func (m EClient) SendEmail(em *mail.Email) error {
+func (m *EClient) SendEmail(em *mail.Email) error {
 	//Lock the mutex and defer its unlock
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
 	//Send a reset command to the server
 	if err := m.client.Reset(); err != nil {
-		return err
+		//Attempt a reconnection if there was an issue
+		oerr := err
+		m.client, err = m.server.Connect()
+		if err != nil {
+			return err
+		}
+		fmt.Printf("[email singleton] Reconnected to SMTP server due to error: %s\n", oerr.Error())
 	}
 
 	//Send the email using the given email object
