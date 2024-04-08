@@ -11,10 +11,15 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	credis "wraith.me/message_server/redis"
 )
 
-// See: https://stackoverflow.com/a/53697645
-func rstructSetA[T any](c *redis.Client, ctx context.Context, key string, values []*T) error {
+/*
+Sets a key and array of values in the Redis database. If the key already
+exists, its value is updated. If not, then a new key is created. Applicable
+to C, U in CRUD. See: https://stackoverflow.com/a/53697645
+*/
+func rstructSetA[T any](c *redis.Client, ctx context.Context, key string, values []T) error {
 	//Create the output byte array
 	bytea := make([][]byte, len(values))
 
@@ -38,30 +43,37 @@ func rstructSetA[T any](c *redis.Client, ctx context.Context, key string, values
 	return nil
 }
 
-// See: https://stackoverflow.com/a/53697645
-func rstructGetA[T any](c *redis.Client, ctx context.Context, key string) ([]*T, error) {
-	//Get from Redis
-	ps, err := c.LRange(ctx, key, 0, -1).Result()
+func TestRedisMultiObjPush(t *testing.T) {
+	//Create some instances plus IDs for each
+	foo1 := "Hello world"
+	foo2 := "how are you doing"
+	foo3 := "nice to meet you"
+
+	//Construct the array and an ID for it
+	aid := uuid.New()
+	objs := []string{foo1, foo2, foo3}
+
+	//Connect to Redis
+	red := redisInit()
+
+	//Push the object list into the Redis database
+	if err := rstructSetA(red, context.Background(), aid.String(), objs); err != nil {
+		t.Error(err)
+	}
+
+	//Get the objects from Redis
+	robjs, err := credis.GetA[string](red, context.Background(), aid.String())
 	if err != nil {
-		return nil, err
+		t.Error(err)
 	}
-
-	//Allocate space for the incoming elements
-	dest := make([]*T, len(ps))
-
-	//Loop over each incoming object
-	for i, p := range ps {
-		//Unmarshal from GOB
-		b := bytes.NewBuffer([]byte(p))
-		dec := gob.NewDecoder(b)
-		if err := dec.Decode(&(dest)[i]); err != nil {
-			return nil, err
-		}
+	if !slices.Equal(objs, robjs) {
+		fmt.Printf("objs : %v\n", objs)
+		fmt.Printf("robjs: %v\n", robjs)
+		t.Errorf("objs != robjs")
 	}
-	return dest, nil
 }
 
-func TestRedisMultiObjPush(t *testing.T) {
+func TestRedisMultiCObjPush(t *testing.T) {
 	//Define the object
 	type Foo struct {
 		ID            uuid.UUID
@@ -70,10 +82,10 @@ func TestRedisMultiObjPush(t *testing.T) {
 		FavoriteFoods []string
 	}
 
-	eq := func(a *Foo, b *Foo) bool {
+	eq := func(a Foo, b Foo) bool {
 		return a.ID == b.ID && a.Name == b.Name && a.Birthday == b.Birthday && slices.Equal(a.FavoriteFoods, b.FavoriteFoods)
 	}
-	eqa := func(a []*Foo, b []*Foo) bool {
+	eqa := func(a []Foo, b []Foo) bool {
 		return slices.EqualFunc(a, b, eq)
 	}
 
@@ -99,7 +111,7 @@ func TestRedisMultiObjPush(t *testing.T) {
 
 	//Construct the array and an ID for it
 	aid := uuid.New()
-	objs := []*Foo{&foo1, &foo2, &foo3}
+	objs := []Foo{foo1, foo2, foo3}
 
 	//Connect to Redis
 	red := redisInit()
@@ -109,7 +121,7 @@ func TestRedisMultiObjPush(t *testing.T) {
 		t.Error(err)
 	}
 	//Get the objects from Redis
-	robjs, err := rstructGetA[Foo](red, context.Background(), aid.String())
+	robjs, err := credis.GetA[Foo](red, context.Background(), aid.String())
 	if err != nil {
 		t.Error(err)
 	}
@@ -118,4 +130,58 @@ func TestRedisMultiObjPush(t *testing.T) {
 		fmt.Printf("robjs: %v\n", robjs)
 		t.Errorf("objs != robjs")
 	}
+}
+
+func TestRedisMultiCObjDel(t *testing.T) {
+	//Define the object
+	type Foo struct {
+		ID            uuid.UUID
+		Name          string
+		Birthday      time.Time
+		FavoriteFoods []string
+	}
+
+	eq := func(a Foo, b Foo) bool {
+		return a.ID == b.ID && a.Name == b.Name && a.Birthday == b.Birthday && slices.Equal(a.FavoriteFoods, b.FavoriteFoods)
+	}
+	eqa := func(a []Foo, b []Foo) bool {
+		return slices.EqualFunc(a, b, eq)
+	}
+
+	//Create some instances
+	foo1 := Foo{
+		ID:            uuid.New(),
+		Name:          "John Doe",
+		Birthday:      time.Now().Round(0),
+		FavoriteFoods: []string{"carrots", "apples", "pasta"},
+	}
+
+	//Construct the array and an ID for it
+	aid := uuid.New()
+	objs := []Foo{foo1}
+
+	//Connect to Redis
+	red := redisInit()
+
+	//Push the object list into the Redis database
+	if err := rstructSetA(red, context.Background(), aid.String(), objs); err != nil {
+		t.Error(err)
+	}
+	//Get the objects from Redis
+	robjs, err := credis.GetA[Foo](red, context.Background(), aid.String())
+	if err != nil {
+		t.Error(err)
+	}
+	if !eqa(objs, robjs) {
+		fmt.Printf("objs : %v\n", objs)
+		fmt.Printf("robjs: %v\n", robjs)
+		t.Errorf("objs != robjs")
+	}
+
+	/*
+		//Delete the object and ensure no errors occurred
+		if _, err := credis.Del(red, context.Background(), aid.String()); err != nil {
+			t.Error(err)
+		}
+	*/
 }
