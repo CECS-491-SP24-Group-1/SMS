@@ -14,12 +14,12 @@ import (
 )
 
 // See: https://stackoverflow.com/a/53697645
-func rstructSetA[T any](c *redis.Client, ctx context.Context, key string, values *[]*T) error {
+func rstructSetA[T any](c *redis.Client, ctx context.Context, key string, values []*T) error {
 	//Create the output byte array
-	bytea := make([][]byte, len(*values))
+	bytea := make([][]byte, len(values))
 
 	//Loop over each incoming object
-	for i, value := range *values {
+	for i, value := range values {
 		//Marshal to GOB
 		var b bytes.Buffer
 		enc := gob.NewEncoder(&b)
@@ -39,26 +39,26 @@ func rstructSetA[T any](c *redis.Client, ctx context.Context, key string, values
 }
 
 // See: https://stackoverflow.com/a/53697645
-func rstructGetA[T any](c *redis.Client, ctx context.Context, key string, dest *[]*T) error {
+func rstructGetA[T any](c *redis.Client, ctx context.Context, key string) ([]*T, error) {
 	//Get from Redis
 	ps, err := c.LRange(ctx, key, 0, -1).Result()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	//Allocate space for the incoming elements
-	*dest = make([]*T, len(ps))
+	dest := make([]*T, len(ps))
 
 	//Loop over each incoming object
 	for i, p := range ps {
 		//Unmarshal from GOB
 		b := bytes.NewBuffer([]byte(p))
 		dec := gob.NewDecoder(b)
-		if err := dec.Decode(&(*dest)[i]); err != nil {
-			return err
+		if err := dec.Decode(&(dest)[i]); err != nil {
+			return nil, err
 		}
 	}
-	return nil
+	return dest, nil
 }
 
 func TestRedisMultiObjPush(t *testing.T) {
@@ -105,12 +105,12 @@ func TestRedisMultiObjPush(t *testing.T) {
 	red := redisInit()
 
 	//Push the object list into the Redis database
-	if err := rstructSetA(red, context.Background(), aid.String(), &objs); err != nil {
+	if err := rstructSetA(red, context.Background(), aid.String(), objs); err != nil {
 		t.Error(err)
 	}
 	//Get the objects from Redis
-	var robjs []*Foo
-	if err := rstructGetA(red, context.Background(), aid.String(), &robjs); err != nil {
+	robjs, err := rstructGetA[Foo](red, context.Background(), aid.String())
+	if err != nil {
 		t.Error(err)
 	}
 	if !eqa(objs, robjs) {
