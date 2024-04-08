@@ -11,18 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
-	credis "wraith.me/message_server/redis"
 )
-
-func redisInit() *redis.Client {
-	//Connect to Redis
-	rcfg := credis.DefaultRConfig()
-	rclient, rerr := credis.GetInstance().Connect(rcfg)
-	if rerr != nil {
-		panic(rerr)
-	}
-	return rclient
-}
 
 // See: https://stackoverflow.com/a/53697645
 func rstructSet[T any](c *redis.Client, ctx context.Context, key string, value *T) error {
