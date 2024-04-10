@@ -185,7 +185,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Fill in the rest of the details
-	uuid, _ := mongoutil.NewUUID7()
+	uuid := mongoutil.MustNewUUID7()
 	user := obj.NewUser(
 		*uuid,
 		obj.NilPubkey(),
