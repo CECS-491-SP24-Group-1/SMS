@@ -52,11 +52,16 @@ func MustNewUUID7() UUID {
 	return uuid
 }
 
+// Returns the "nil uuid": a UUID of all 0s.
+func NilUUID() UUID {
+	return UUID{[16]byte{}}
+}
+
 // UUIDFromStringOrNil returns a UUID parsed from the input string.
 func UUIDFromStringOrNil(input string) UUID {
 	id := uuid.MustParse(input)
 	if id == uuid.Nil {
-		return UUID{}
+		return NilUUID()
 	}
 	return UUID{id}
 }
@@ -70,6 +75,11 @@ func UUIDFromBytes(input []byte) UUID {
 // Returns the bytes of the UUID.
 func (id UUID) Bytes() [16]byte {
 	return id.UUID
+}
+
+// Determines if a UUID is a nil uuid.
+func (id UUID) IsNil() bool {
+	return id.Bytes() == [16]byte{}
 }
 
 // IsZero implements the bson.Zeroer interface.
