@@ -38,3 +38,4 @@ func Delete(
 }
 
 //TODO: DeleteMany, DeleteByFilter
+//deletebyfilter should use https://www.mongodb.com/docs/manual/reference/method/db.collection.findOneAndDelete/

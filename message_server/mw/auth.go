@@ -166,8 +166,7 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		}
 
 		//Get the subject of the token
-		//tokSubject := tokObj.Subject
-		tokSubject := tokObj.Subject.UUID
+		tokSubject := tokObj.Subject
 
 		//
 		// -- BEGIN: Database Query
