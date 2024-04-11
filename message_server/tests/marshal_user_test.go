@@ -28,15 +28,13 @@ func TestUser2BSON(t *testing.T) {
 	//Marshal to BSON
 	bb, err := bson.Marshal(user)
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		t.Fatal(err)
 	}
 
 	//Unmarshal the BSON back to an object
 	var out obj.User
 	if err := bson.Unmarshal(bb, &out); err != nil {
-		t.Error(err)
-		t.FailNow()
+		t.Fatal(err)
 	}
 
 	//Print the input and output objects
@@ -55,8 +53,7 @@ func TestUser2JSON(t *testing.T) {
 	//Marshal to JSON
 	jb, err := json.Marshal(user)
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		t.Fatal(err)
 	}
 
 	fmt.Printf("JSON: %s\n", jb) //Tokens are not marshaled with the JSON
@@ -64,8 +61,7 @@ func TestUser2JSON(t *testing.T) {
 	//Unmarshal the JSON back to an object
 	var out obj.User
 	if err := json.Unmarshal(jb, &out); err != nil {
-		t.Error(err)
-		t.FailNow()
+		t.Fatal(err)
 	}
 
 	//Print the input and output objects

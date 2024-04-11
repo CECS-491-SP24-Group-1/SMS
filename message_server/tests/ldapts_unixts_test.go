@@ -21,8 +21,7 @@ func TestLDAPTSxUnixTS(t *testing.T) {
 
 	//Test for equality
 	if unixIn != unixOut {
-		t.Errorf("mismatched Unix timestamp; %d::%d", unixIn, unixOut)
-		t.FailNow()
+		t.Fatalf("mismatched Unix timestamp; %d::%d", unixIn, unixOut)
 	}
 }
 

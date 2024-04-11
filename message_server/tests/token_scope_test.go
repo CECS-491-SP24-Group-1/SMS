@@ -19,7 +19,7 @@ func TestTokenScopeIsMasked(t *testing.T) {
 
 		//Test for correctness
 		if expected != actual {
-			t.Errorf("[Test #%d/%d]: Incorrect mask status %v, expected %v (val: %d)\n", i+1, tests, actual, expected, rand)
+			t.Fatalf("[Test #%d/%d]: Incorrect mask status %v, expected %v (val: %d)\n", i+1, tests, actual, expected, rand)
 		}
 	}
 }
@@ -33,7 +33,7 @@ func TestTokenScopeSet(t *testing.T) {
 
 	//Test for correctness; the duped values should not change the mask
 	if actual != expected {
-		t.Errorf("Incorrect mask value %d, expected %d\n", actual, expected)
+		t.Fatalf("Incorrect mask value %d, expected %d\n", actual, expected)
 	}
 }
 
@@ -45,14 +45,14 @@ func TestTokenScopeSetAN(t *testing.T) {
 	scope.SetAll()
 	expected1 := obj.TokenScopeEVERWHERE
 	if actual := scope; actual != expected1 {
-		t.Errorf("Unexpected token value %s, expected %s\n", actual, expected1)
+		t.Fatalf("Unexpected token value %s, expected %s\n", actual, expected1)
 	}
 
 	//Mask none
 	scope.SetNone()
 	expected2 := obj.TokenScopeNONE
 	if actual := scope; actual != expected2 {
-		t.Errorf("Unexpected token value %s, expected %s\n", actual, expected2)
+		t.Fatalf("Unexpected token value %s, expected %s\n", actual, expected2)
 	}
 }
 
@@ -64,7 +64,7 @@ func TestTokenScopeUnmask(t *testing.T) {
 
 	//Test for correctness; the duped values should not change the mask
 	if !slices.Equal(actual, expected) {
-		t.Errorf("Incorrect mask value %+v, expected %+v\n", actual, expected)
+		t.Fatalf("Incorrect mask value %+v, expected %+v\n", actual, expected)
 	}
 }
 
@@ -73,7 +73,7 @@ func TestTokenScopeTestFor(t *testing.T) {
 	ts := obj.CreateMaskedTokenScope(scope)
 
 	if actual := ts.TestFor(scope); actual != true {
-		t.Errorf("scope not found in token; got %v expected %v", actual, true)
+		t.Fatalf("scope not found in token; got %v expected %v", actual, true)
 	}
 }
 
@@ -82,7 +82,7 @@ func TestTokenScopeTestForAll(t *testing.T) {
 	ts := obj.CreateMaskedTokenScope(scopes...)
 
 	if actual := ts.TestForAll(scopes...); actual != true {
-		t.Errorf("scopes not found in token; got %v expected %v", actual, true)
+		t.Fatalf("scopes not found in token; got %v expected %v", actual, true)
 	}
 }
 
@@ -91,7 +91,7 @@ func TestTokenScopeTestForAny(t *testing.T) {
 	ts := obj.CreateMaskedTokenScope(scopes...)
 
 	if actual := ts.TestForAny(scopes...); actual != true {
-		t.Errorf("scopes not found in token; got %v expected %v", actual, true)
+		t.Fatalf("scopes not found in token; got %v expected %v", actual, true)
 	}
 }
 
@@ -104,14 +104,14 @@ func TestTokenScopeToggle(t *testing.T) {
 	ts.Toggle(obj.TokenScopeUSER)
 	expected1 := false
 	if actual := ts.TestFor(obj.TokenScopeUSER); actual != expected1 {
-		t.Errorf("Incorrect status on toggled mask; got %v, expected %v", actual, expected1)
+		t.Fatalf("Incorrect status on toggled mask; got %v, expected %v", actual, expected1)
 	}
 
 	//Toggle users on
 	ts.Toggle(obj.TokenScopeUSER)
 	expected2 := true
 	if actual := ts.TestFor(obj.TokenScopeUSER); actual != expected2 {
-		t.Errorf("Incorrect status on toggled mask; got %v, expected %v", actual, expected2)
+		t.Fatalf("Incorrect status on toggled mask; got %v, expected %v", actual, expected2)
 	}
 
 	//Multiple toggles; odd number will have a different end from start, even will have the same start and end
@@ -119,7 +119,7 @@ func TestTokenScopeToggle(t *testing.T) {
 	expected3 := len(toggles)%2 == 0
 	ts.Toggle(toggles...)
 	if actual := ts.TestFor(obj.TokenScopePOSTSIGNUP); actual != expected3 {
-		t.Errorf("Incorrect status on toggled mask; got %v, expected %v", actual, expected3)
+		t.Fatalf("Incorrect status on toggled mask; got %v, expected %v", actual, expected3)
 	}
 }
 
@@ -132,13 +132,13 @@ func TestTokenScopeUnset(t *testing.T) {
 	ts.Unset(obj.TokenScopeUSER)
 	expected1 := false
 	if actual := ts.TestFor(obj.TokenScopeUSER); actual != expected1 {
-		t.Errorf("Incorrect status on unset mask; got %v, expected %v", actual, expected1)
+		t.Fatalf("Incorrect status on unset mask; got %v, expected %v", actual, expected1)
 	}
 
 	//Set users off again; should stay off
 	ts.Unset(obj.TokenScopeUSER)
 	expected2 := false
 	if actual := ts.TestFor(obj.TokenScopeUSER); actual != expected2 {
-		t.Errorf("Incorrect status on unset mask; got %v, expected %v", actual, expected2)
+		t.Fatalf("Incorrect status on unset mask; got %v, expected %v", actual, expected2)
 	}
 }

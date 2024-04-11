@@ -7,7 +7,7 @@ import (
 func testType[T any](t *testing.T, targ T, expected bool) {
 	actual := isComplexType(targ)
 	if expected != actual {
-		t.Errorf("Unexpected test output %v for item `%v`; expected %v\n", expected, targ, actual)
+		t.Fatalf("Unexpected test output %v for item `%v`; expected %v\n", expected, targ, actual)
 	}
 }
 

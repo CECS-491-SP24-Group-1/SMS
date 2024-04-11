@@ -14,10 +14,10 @@ func TestFromNetIP(t *testing.T) {
 
 	//Ensure the raw byte arrays are the same
 	if [IP6_SIZE]byte(i4) != FromNetIP(i4).Bytes {
-		t.Errorf("Unequal i4 arrays: '%v' & '%v'", []byte(i4), FromNetIP(i4).Bytes)
+		t.Fatalf("Unequal i4 arrays: '%v' & '%v'", []byte(i4), FromNetIP(i4).Bytes)
 	}
 	if [IP6_SIZE]byte(i6) != FromNetIP(i6).Bytes {
-		t.Errorf("Unequal i6 arrays: '%v' & '%v'", []byte(i6), FromNetIP(i6).Bytes)
+		t.Fatalf("Unequal i6 arrays: '%v' & '%v'", []byte(i6), FromNetIP(i6).Bytes)
 	}
 }
 
@@ -35,7 +35,6 @@ func TestIPTypeOf(t *testing.T) {
 		result := TypeOf(net.ParseIP(tests[i]))
 		if result != expected[i] {
 			t.Fatalf("Incorrect type received. Got %d, expected %d", result, expected[i])
-			t.FailNow()
 		}
 	}
 }

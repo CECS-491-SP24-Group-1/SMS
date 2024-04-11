@@ -35,18 +35,18 @@ func TestRedisMultiObjPush(t *testing.T) {
 
 	//Push the object list into the Redis database
 	if err := credis.CreateA(red, context.Background(), aid, objs); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	//Get the objects from Redis
 	robjs, err := credis.GetA[string](red, context.Background(), aid)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if !slices.Equal(objs, robjs) {
 		fmt.Printf("objs : %v\n", objs)
 		fmt.Printf("robjs: %v\n", robjs)
-		t.Errorf("objs != robjs")
+		t.Fatal("objs != robjs")
 	}
 }
 
@@ -60,17 +60,17 @@ func TestRedisMultiCObjPush(t *testing.T) {
 
 	//Push the object list into the Redis database
 	if err := credis.CreateA(red, context.Background(), aid, objs); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	//Get the objects from Redis
 	robjs, err := credis.GetA[Foo](red, context.Background(), aid)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if !fooeqa(objs, robjs) {
 		fmt.Printf("objs : %v\n", objs)
 		fmt.Printf("robjs: %v\n", robjs)
-		t.Errorf("objs != robjs")
+		t.Fatal("objs != robjs")
 	}
 }
 
@@ -84,22 +84,22 @@ func TestRedisMultiCObjDel(t *testing.T) {
 
 	//Push the object list into the Redis database
 	if err := credis.CreateA(red, context.Background(), aid, objs); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	//Get the objects from Redis
 	robjs, err := credis.GetA[Foo](red, context.Background(), aid)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if !fooeqa(objs, robjs) {
 		fmt.Printf("objs : %v\n", objs)
 		fmt.Printf("robjs: %v\n", robjs)
-		t.Errorf("objs != robjs")
+		t.Fatal("objs != robjs")
 	}
 
 	//Delete the object and ensure no errors occurred
 	if _, err := credis.Del(red, context.Background(), aid); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 }
 
@@ -113,17 +113,17 @@ func TestRedisMultiCObjModOne(t *testing.T) {
 
 	//Push the object list into the Redis database
 	if err := credis.CreateA(red, context.Background(), aid, objs); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	//Get the objects from Redis
 	robjs, err := credis.GetA[Foo](red, context.Background(), aid)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if !fooeqa(objs, robjs) {
 		fmt.Printf("objs : %v\n", objs)
 		fmt.Printf("robjs: %v\n", robjs)
-		t.Errorf("objs != robjs")
+		t.Fatal("objs != robjs")
 	}
 
 	//Create an updated object
@@ -137,17 +137,17 @@ func TestRedisMultiCObjModOne(t *testing.T) {
 
 	//Push the updated object to the database
 	if err := credis.SetAt(red, context.Background(), aid, midx, foo3a); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	//Ensure the change went through successfully
 	var rfoo3a Foo
 	if err := credis.GetAt(red, context.Background(), aid, midx, &rfoo3a); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if !fooeq(foo3a, rfoo3a) {
 		fmt.Printf("foo3a : %v\n", foo3a)
 		fmt.Printf("rfoo3a: %v\n", rfoo3a)
-		t.Errorf("foo3a != rfoo3a")
+		t.Fatal("foo3a != rfoo3a")
 	}
 }

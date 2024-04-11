@@ -14,8 +14,7 @@ func TestGenericMessage(t *testing.T) {
 
 	//The time of the message's creation should match the current time
 	if msg.Created().Unix() != timeNow.Unix() {
-		t.Errorf("mismatched message time and current time; %d::%d", msg.Created().Unix(), timeNow.Unix())
-		t.FailNow()
+		t.Fatalf("mismatched message time and current time; %d::%d", msg.Created().Unix(), timeNow.Unix())
 	}
 }
 
@@ -39,8 +38,7 @@ func TestExpiringMessage(t *testing.T) {
 		expected := time.Now().Add(dur)
 		actual := expm.Expiry
 		if expected.Unix() != actual.Unix() {
-			t.Errorf("mismatched expected time and actual time; %d::%d", expected.Unix(), actual.Unix())
-			t.FailNow()
+			t.Fatalf("mismatched expected time and actual time; %d::%d", expected.Unix(), actual.Unix())
 		}
 
 		//Debug print
@@ -52,8 +50,7 @@ func TestExpiringMessage(t *testing.T) {
 			//Check if this succeeded
 			expm.ExpireNow()
 			if !expm.IsExpired() {
-				t.Errorf("message expiration failed; remaining: %s", expm.DurationToExpiry())
-				t.FailNow()
+				t.Fatalf("message expiration failed; remaining: %s", expm.DurationToExpiry())
 			}
 		}
 	}

@@ -18,7 +18,7 @@ func TestStringifiedMongoAgg(t *testing.T) {
 	mcfg := db.DefaultMConfig()
 	mclient, merr := db.GetInstance().Connect(mcfg)
 	if merr != nil {
-		t.Error(merr)
+		t.Fatal(merr)
 	}
 	defer db.GetInstance().Disconnect()
 
@@ -26,7 +26,7 @@ func TestStringifiedMongoAgg(t *testing.T) {
 	ucoll := mclient.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
 	res, err := mongoutil.AggregateS(ucoll, str, context.Background())
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	//Show results
@@ -61,7 +61,7 @@ func TestAggregations(t *testing.T) {
 	mcfg := db.DefaultMConfig()
 	mclient, merr := db.GetInstance().Connect(mcfg)
 	if merr != nil {
-		t.Error(merr)
+		t.Fatal(merr)
 	}
 	defer db.GetInstance().Disconnect()
 
@@ -69,7 +69,7 @@ func TestAggregations(t *testing.T) {
 	ucoll := mclient.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
 	res, err := mongoutil.Aggregate(ucoll, agg, context.Background())
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	//Show results

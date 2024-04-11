@@ -28,7 +28,6 @@ func TestTokenSerialization(t *testing.T) {
 
 	//Ensure the tokens are equal
 	if !tok.Equal(*obj) {
-		t.Errorf("Tokens are unequal")
-		t.FailNow()
+		t.Fatalf("Tokens are unequal")
 	}
 }

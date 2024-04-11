@@ -21,7 +21,7 @@ func TestCrudCreateOne(t *testing.T) {
 		foo1.ID, &foo1,
 	)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 }
 

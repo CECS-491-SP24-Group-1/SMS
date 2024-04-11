@@ -17,6 +17,7 @@ endif
 # Tools
 FRESH := fresh
 GO := go
+GOFMT := gofmt
 GO_ENUM := go-enum
 #MAKE := $(MAKE) -s
 
@@ -117,6 +118,11 @@ dev:
 enum:
 	@echo GO-ENUM .
 	$(GO) generate ./...
+
+.PHONY: fmt
+fmt:
+	@echo GOFMT .
+	$(GOFMT) -w -s .
 
 #Runs the generated binary
 .PHONY: run

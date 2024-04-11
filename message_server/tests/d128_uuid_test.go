@@ -29,12 +29,10 @@ func TestUUIDxD128(t *testing.T) {
 
 	//Perform equality tests
 	if d128Str != uuidOutStr {
-		t.Errorf("string equality: D128 and UUID do not match; %s::%s", d128Str, uuidOutStr)
-		t.FailNow()
+		t.Fatalf("string equality: D128 and UUID do not match; %s::%s", d128Str, uuidOutStr)
 	}
 	if uuidIn != uuidOut {
-		t.Errorf("uuid obj equality: in UUID and out UUID do not match; %s::%s", uuidIn, uuidOut)
-		t.FailNow()
+		t.Fatalf("uuid obj equality: in UUID and out UUID do not match; %s::%s", uuidIn, uuidOut)
 	}
 }
 
