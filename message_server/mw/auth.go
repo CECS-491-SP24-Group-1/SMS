@@ -166,7 +166,12 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		}
 
 		//Get the subject of the token
-		tokSubject := tokObj.Subject
+		//tokSubject := tokObj.Subject
+		tokSubject := tokObj.Subject.UUID
+
+		//
+		// -- BEGIN: Database Query
+		//
 
 		//Query the database and get the tokens of the subject; Redis is used here to cache the results
 		var subjectTokens []string
@@ -230,6 +235,10 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			//Cache hit; copy the token list from Redis
 			subjectTokens = redisTokens
 		}
+
+		//
+		// -- END: Database Query
+		//
 
 		/*
 			Check if the subject's token list includes the incoming token. If this check

@@ -4,15 +4,15 @@ import (
 	"slices"
 	"time"
 
-	"github.com/google/uuid"
+	"wraith.me/message_server/db/mongoutil"
 )
 
 // Define the object
 type Foo struct {
-	ID            uuid.UUID
-	Name          string
-	Birthday      time.Time
-	FavoriteFoods []string
+	ID            mongoutil.UUID `bson:"_id"`
+	Name          string         `bson:"name"`
+	Birthday      time.Time      `bson:"birthday"`
+	FavoriteFoods []string       `bson:"favorite_foods"`
 }
 
 func fooeq(a Foo, b Foo) bool {
@@ -24,19 +24,19 @@ func fooeqa(a []Foo, b []Foo) bool {
 
 // Create some instances
 var foo1 = Foo{
-	ID:            uuid.New(),
+	ID:            mongoutil.MustNewUUID4(),
 	Name:          "John Doe",
 	Birthday:      time.Now().Round(0),
 	FavoriteFoods: []string{"carrots", "apples", "pasta"},
 }
 var foo2 = Foo{
-	ID:            uuid.New(),
+	ID:            mongoutil.MustNewUUID4(),
 	Name:          "Jane Doe",
 	Birthday:      time.Now().Round(0),
 	FavoriteFoods: []string{"bananas", "melons", "ice-cream"},
 }
 var foo3 = Foo{
-	ID:            uuid.New(),
+	ID:            mongoutil.MustNewUUID4(),
 	Name:          "Jin Doe",
 	Birthday:      time.Now().Round(0),
 	FavoriteFoods: []string{"ramen", "rice", "sushi"},

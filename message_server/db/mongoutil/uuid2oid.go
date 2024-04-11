@@ -50,5 +50,5 @@ func OID2UUID(oid primitive.ObjectID) UUID {
 	copy(uuidBytes[9:16], oid[5:])
 
 	//Create a UUID from the byte array and return it
-	return *UUIDFromBytes(uuidBytes[:])
+	return UUIDFromBytes(uuidBytes[:])
 }

@@ -87,7 +87,7 @@ func NewUser(
 // Creates a user from only a username and string. This should be used only for mocking.
 func NewUserSimple(username string, email string) *User {
 	return NewUser(
-		*mongoutil.MustNewUUID7(),
+		mongoutil.MustNewUUID7(),
 		PubkeyBytes(util.Must(util.GenRandBytes(PUBKEY_SIZE))),
 		username,
 		username,

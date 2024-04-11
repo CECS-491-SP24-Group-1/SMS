@@ -20,7 +20,7 @@ var user = obj.NewUserSimple(
 func TestUser2BSON(t *testing.T) {
 	//Add a test token
 	tok := obj.NewToken(
-		*mongoutil.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
+		mongoutil.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
 		obj.TokenScopeUSER, time.Now().Add(5*time.Minute),
 	)
 	user.Tokens = append(user.Tokens, *tok)
@@ -47,7 +47,7 @@ func TestUser2BSON(t *testing.T) {
 func TestUser2JSON(t *testing.T) {
 	//Add a test token
 	tok := obj.NewToken(
-		*mongoutil.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
+		mongoutil.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
 		obj.TokenScopeUSER, time.Now().Add(5*time.Minute),
 	)
 	user.Tokens = append(user.Tokens, *tok)

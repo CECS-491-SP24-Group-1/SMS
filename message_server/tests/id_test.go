@@ -32,7 +32,7 @@ func TestUUIDxOID(t *testing.T) {
 	fmt.Printf("TS In:\t  %s -> %d\n", uuidiTS.Format(time.RFC3339Nano), uuidiTS.Unix())
 
 	//Convert the UUID to an OID and get the timestamp
-	oid := mongoutil.UUID2OID(*uuidIn)
+	oid := mongoutil.UUID2OID(uuidIn)
 	oidTS := oid.Timestamp()
 
 	//Print stuff

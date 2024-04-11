@@ -30,8 +30,7 @@ type Test struct {
 func DefaultTest() Test {
 	obj := Test{}
 
-	uuid, _ := mongoutil.NewUUID7()
-	obj.ID = *uuid
+	obj.ID = mongoutil.MustNewUUID7()
 	obj.Foo = 500
 	obj.Bar = "hello world"
 	obj.Baz.Bash = 3.14

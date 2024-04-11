@@ -53,7 +53,7 @@ type Token struct {
 func NewToken(subject mongoutil.UUID, creationIP ip_addr.IPAddr, scope TokenScope, expiry time.Time) *Token {
 	return &Token{
 		Identifiable: Identifiable{
-			ID:   *mongoutil.MustNewUUID7(),
+			ID:   mongoutil.MustNewUUID7(),
 			Type: IdTypeTOKEN,
 		},
 		Subject:    subject,

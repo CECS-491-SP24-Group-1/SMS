@@ -9,6 +9,11 @@ import (
 	credis "wraith.me/message_server/redis"
 )
 
+const (
+	TEST_DB_NAME   = "tests"
+	TEST_COLL_NAME = "tc"
+)
+
 // Determines if an incoming object is a complex type, ie: a struct.
 func isComplexType[T any](targ T) bool {
 	//Get the type and kind of the target

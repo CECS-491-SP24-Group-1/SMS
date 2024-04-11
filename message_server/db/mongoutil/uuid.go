@@ -17,16 +17,16 @@ import (
 type UUID struct{ uuid.UUID }
 
 // NewUUID generates a new MongoDB compatible UUID.
-func NewUUID4() (*UUID, error) {
+func NewUUID4() (res UUID, err error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
-		return nil, err
+		return
 	}
-	return &UUID{UUID: id}, nil
+	return UUID{UUID: id}, nil
 }
 
 // Generates a new version 4 UUID. Panics if an error occurs.
-func MustNewUUID4() *UUID {
+func MustNewUUID4() UUID {
 	uuid, err := NewUUID4()
 	if err != nil {
 		panic(err)
@@ -35,16 +35,16 @@ func MustNewUUID4() *UUID {
 }
 
 // NewUUID generates a new MongoDB compatible UUID.
-func NewUUID7() (*UUID, error) {
+func NewUUID7() (res UUID, err error) {
 	id, err := uuid.NewV7()
 	if err != nil {
-		return nil, err
+		return
 	}
-	return &UUID{UUID: id}, nil
+	return UUID{UUID: id}, nil
 }
 
 // Generates a new version 7 UUID. Panics if an error occurs.
-func MustNewUUID7() *UUID {
+func MustNewUUID7() UUID {
 	uuid, err := NewUUID7()
 	if err != nil {
 		panic(err)
@@ -53,18 +53,18 @@ func MustNewUUID7() *UUID {
 }
 
 // UUIDFromStringOrNil returns a UUID parsed from the input string.
-func UUIDFromStringOrNil(input string) *UUID {
+func UUIDFromStringOrNil(input string) UUID {
 	id := uuid.MustParse(input)
 	if id == uuid.Nil {
-		return nil
+		return UUID{}
 	}
-	return &UUID{id}
+	return UUID{id}
 }
 
 // UUIDFromStringOrNil returns a UUID parsed from the input bytes.
-func UUIDFromBytes(input []byte) *UUID {
+func UUIDFromBytes(input []byte) UUID {
 	id := uuid.Must(uuid.FromBytes(input))
-	return &UUID{id}
+	return UUID{id}
 }
 
 // Returns the bytes of the UUID.

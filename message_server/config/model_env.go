@@ -69,14 +69,14 @@ func EnvInit(path string) (Env, error) {
 
 		//Set the struct fields from the map and return no error
 		*c = Env{
-			ID: *mongoutil.UUIDFromStringOrNil(em["ID"]),
+			ID: mongoutil.UUIDFromStringOrNil(em["ID"]),
 		}
 		return nil
 	}
 
 	//Create a new blank env object and set defaults
 	cfg := Env{}
-	cfg.ID = *mongoutil.MustNewUUID7()
+	cfg.ID = mongoutil.MustNewUUID7()
 
 	//Call the helper and return the results
 	err := initHelper[Env](&cfg, path, marshaller, unmarshaller)

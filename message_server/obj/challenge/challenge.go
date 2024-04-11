@@ -72,7 +72,7 @@ func NewChallenge(
 	//Create and return a challenge
 	return &Challenge{
 		Identifiable: obj.Identifiable{
-			ID:   *mongoutil.MustNewUUID7(),
+			ID:   mongoutil.MustNewUUID7(),
 			Type: obj.IdTypeCHALLENGE,
 		},
 		Scope:     scope,
