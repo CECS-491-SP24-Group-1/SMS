@@ -267,6 +267,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	}
 
 	//Step 4: Push the challenges to the database for later retrieval
+	//crud.AddChallenges()
 
 	//Step 5: Write the response back to the user
 	psu := postsignupUser{

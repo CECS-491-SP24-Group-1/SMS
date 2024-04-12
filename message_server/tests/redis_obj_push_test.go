@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	credis "wraith.me/message_server/redis"
+	cr "wraith.me/message_server/redis"
 )
 
 func TestRedisObjPush(t *testing.T) {
@@ -22,19 +22,19 @@ func TestRedisObjPush(t *testing.T) {
 	red := redisInit()
 
 	//Push the objects into the Redis database
-	if err := credis.Set(red, context.Background(), foo1ID, &foo1); err != nil {
+	if err := cr.Set(red, context.Background(), foo1ID, &foo1); err != nil {
 		t.Fatal(err)
 	}
-	if err := credis.Set(red, context.Background(), foo2ID, &foo2); err != nil {
+	if err := cr.Set(red, context.Background(), foo2ID, &foo2); err != nil {
 		t.Fatal(err)
 	}
-	if err := credis.Set(red, context.Background(), foo3ID, &foo3); err != nil {
+	if err := cr.Set(red, context.Background(), foo3ID, &foo3); err != nil {
 		t.Fatal(err)
 	}
 
 	//Get the objects from Redis
 	var rfoo1 string
-	if err := credis.Get(red, context.Background(), foo1ID, &rfoo1); err != nil {
+	if err := cr.Get(red, context.Background(), foo1ID, &rfoo1); err != nil {
 		t.Fatal(err)
 	}
 	if foo1 != rfoo1 {
@@ -43,7 +43,7 @@ func TestRedisObjPush(t *testing.T) {
 		t.Fatal("foo1 != rfoo1")
 	}
 	var rfoo2 float64
-	if err := credis.Get(red, context.Background(), foo2ID, &rfoo2); err != nil {
+	if err := cr.Get(red, context.Background(), foo2ID, &rfoo2); err != nil {
 		t.Fatal(err)
 	}
 	if foo2 != rfoo2 {
@@ -52,7 +52,7 @@ func TestRedisObjPush(t *testing.T) {
 		t.Fatal("foo2 != rfoo2")
 	}
 	var rfoo3 int
-	if err := credis.Get(red, context.Background(), foo3ID, &rfoo3); err != nil {
+	if err := cr.Get(red, context.Background(), foo3ID, &rfoo3); err != nil {
 		t.Fatal(err)
 	}
 	if foo3 != rfoo3 {
@@ -67,19 +67,19 @@ func TestRedisCObjPush(t *testing.T) {
 	red := redisInit()
 
 	//Push the objects into the Redis database
-	if err := credis.Set(red, context.Background(), foo1.ID.UUID, &foo1); err != nil {
+	if err := cr.Set(red, context.Background(), foo1.ID.UUID, &foo1); err != nil {
 		t.Fatal(err)
 	}
-	if err := credis.Set(red, context.Background(), foo2.ID.UUID, &foo2); err != nil {
+	if err := cr.Set(red, context.Background(), foo2.ID.UUID, &foo2); err != nil {
 		t.Fatal(err)
 	}
-	if err := credis.Set(red, context.Background(), foo3.ID.UUID, &foo3); err != nil {
+	if err := cr.Set(red, context.Background(), foo3.ID.UUID, &foo3); err != nil {
 		t.Fatal(err)
 	}
 
 	//Get the objects from Redis
 	var rfoo1 Foo
-	if err := credis.Get(red, context.Background(), foo1.ID.UUID, &rfoo1); err != nil {
+	if err := cr.Get(red, context.Background(), foo1.ID.UUID, &rfoo1); err != nil {
 		t.Fatal(err)
 	}
 	if !fooeq(foo1, rfoo1) {
@@ -88,7 +88,7 @@ func TestRedisCObjPush(t *testing.T) {
 		t.Fatal("foo1 != rfoo1")
 	}
 	var rfoo2 Foo
-	if err := credis.Get(red, context.Background(), foo2.ID.UUID, &rfoo2); err != nil {
+	if err := cr.Get(red, context.Background(), foo2.ID.UUID, &rfoo2); err != nil {
 		t.Fatal(err)
 	}
 	if !fooeq(foo2, rfoo2) {
@@ -97,7 +97,7 @@ func TestRedisCObjPush(t *testing.T) {
 		t.Fatal("foo2 != rfoo2")
 	}
 	var rfoo3 Foo
-	if err := credis.Get(red, context.Background(), foo3.ID.UUID, &rfoo3); err != nil {
+	if err := cr.Get(red, context.Background(), foo3.ID.UUID, &rfoo3); err != nil {
 		t.Fatal(err)
 	}
 	if !fooeq(foo3, rfoo3) {
@@ -112,13 +112,13 @@ func TestRedisCObjDel(t *testing.T) {
 	red := redisInit()
 
 	//Push the objects into the Redis database
-	if err := credis.Set(red, context.Background(), foo1.ID.UUID, &foo1); err != nil {
+	if err := cr.Set(red, context.Background(), foo1.ID.UUID, &foo1); err != nil {
 		t.Fatal(err)
 	}
 
 	//Get the objects from Redis
 	var rfoo1 Foo
-	if err := credis.Get(red, context.Background(), foo1.ID.UUID, &rfoo1); err != nil {
+	if err := cr.Get(red, context.Background(), foo1.ID.UUID, &rfoo1); err != nil {
 		t.Fatal(err)
 	}
 	if !fooeq(foo1, rfoo1) {
@@ -128,7 +128,7 @@ func TestRedisCObjDel(t *testing.T) {
 	}
 
 	//Delete the object and ensure no errors occurred
-	if _, err := credis.Del(red, context.Background(), foo1.ID.UUID); err != nil {
+	if _, err := cr.Del(red, context.Background(), foo1.ID.UUID); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -138,13 +138,13 @@ func TestRedisCObjMod(t *testing.T) {
 	red := redisInit()
 
 	//Push the objects into the Redis database
-	if err := credis.Set(red, context.Background(), foo1.ID.UUID, &foo1); err != nil {
+	if err := cr.Set(red, context.Background(), foo1.ID.UUID, &foo1); err != nil {
 		t.Fatal(err)
 	}
 
 	//Get the objects from Redis
 	var rfoo1 Foo
-	if err := credis.Get(red, context.Background(), foo1.ID.UUID, &rfoo1); err != nil {
+	if err := cr.Get(red, context.Background(), foo1.ID.UUID, &rfoo1); err != nil {
 		t.Fatal(err)
 	}
 	if !fooeq(foo1, rfoo1) {
@@ -162,13 +162,13 @@ func TestRedisCObjMod(t *testing.T) {
 	fmt.Printf("after:  %v\n", foo2)
 
 	//Push the updated object to the database
-	if err := credis.Set(red, context.Background(), foo2.ID.UUID, &foo2); err != nil {
+	if err := cr.Set(red, context.Background(), foo2.ID.UUID, &foo2); err != nil {
 		t.Fatal(err)
 	}
 
 	//Ensure the change went through successfully
 	var rfoo2 Foo
-	if err := credis.Get(red, context.Background(), foo1.ID.UUID, &rfoo2); err != nil {
+	if err := cr.Get(red, context.Background(), foo1.ID.UUID, &rfoo2); err != nil {
 		t.Fatal(err)
 	}
 	if !fooeq(foo2, rfoo2) {

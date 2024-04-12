@@ -6,7 +6,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/db"
-	credis "wraith.me/message_server/redis"
+	cr "wraith.me/message_server/redis"
 )
 
 const (
@@ -41,8 +41,8 @@ func mongoInit() *mongo.Client {
 
 func redisInit() *redis.Client {
 	//Connect to Redis
-	rcfg := credis.DefaultRConfig()
-	rclient, rerr := credis.GetInstance().Connect(rcfg)
+	rcfg := cr.DefaultRConfig()
+	rclient, rerr := cr.GetInstance().Connect(rcfg)
 	if rerr != nil {
 		panic(rerr)
 	}

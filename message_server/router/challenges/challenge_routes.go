@@ -5,6 +5,8 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/config"
+	"wraith.me/message_server/db"
+	cr "wraith.me/message_server/redis"
 )
 
 // Shared MongoDB client across the entire package.
@@ -17,16 +19,17 @@ var rcl *redis.Client
 var env *config.Env
 
 // Sets up routes for the `/challenges` endpoint.
-func ChallengeRoutes(mclient *mongo.Client, rclient *redis.Client, envv *config.Env) chi.Router {
+func ChallengeRoutes(envv *config.Env) chi.Router {
 	//Create the router
 	r := chi.NewRouter()
 
 	//Set the singletons for the entire package
-	mcl = mclient
-	rcl = rclient
+	mcl = db.GetInstance().GetClient()
+	rcl = cr.GetInstance().GetClient()
 	env = envv
 
 	//Add routes
+	r.Get("/{id}/solve", SolveChallengeRoute)
 	r.Get("/{id}/status", GetChallengeRoute)
 
 	//Return the router

@@ -13,7 +13,7 @@ import (
 	"wraith.me/message_server/email"
 	"wraith.me/message_server/mw"
 	"wraith.me/message_server/obj"
-	credis "wraith.me/message_server/redis"
+	cr "wraith.me/message_server/redis"
 	"wraith.me/message_server/router"
 	"wraith.me/message_server/router/challenges"
 	"wraith.me/message_server/router/users"
@@ -53,7 +53,7 @@ func main() {
 	defer db.GetInstance().Disconnect()
 
 	//Connect to Redis
-	rclient, rerr := credis.GetInstance().Connect(&cfg.Redis)
+	rclient, rerr := cr.GetInstance().Connect(&cfg.Redis)
 	if rerr != nil {
 		panic(rerr)
 	}
@@ -134,14 +134,14 @@ func setupServer(cfg *config.Config, env *config.Env, mclient *mongo.Client, rcl
 	//Challenge routes; protected by auth middleware (post_signup and users only)
 	r.Group(func(r chi.Router) {
 		authScopes := []obj.TokenScope{obj.TokenScopePOSTSIGNUP, obj.TokenScopeUSER}
-		r.Use(mw.NewAuthMiddleware(authScopes, mclient, rclient))
-		r.Mount("/challenges", challenges.ChallengeRoutes(mclient, rclient, env))
+		r.Use(mw.NewAuthMiddleware(authScopes))
+		r.Mount("/challenges", challenges.ChallengeRoutes(env))
 	})
 
 	//AUTH TEST START
 	scopes := []obj.TokenScope{obj.TokenScopePOSTSIGNUP}
 	r.Group(func(r chi.Router) {
-		r.Use(mw.NewAuthMiddleware(scopes, mclient, rclient))
+		r.Use(mw.NewAuthMiddleware(scopes))
 		r.Get("/auth_test", router.AuthTest)
 	})
 	//AUTH TEST END

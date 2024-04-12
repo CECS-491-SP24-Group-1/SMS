@@ -6,14 +6,14 @@ import (
 	"net/http"
 
 	"wraith.me/message_server/db"
-	credis "wraith.me/message_server/redis"
+	cr "wraith.me/message_server/redis"
 	"wraith.me/message_server/util/httpu"
 )
 
 func Heartbeat(w http.ResponseWriter, r *http.Request) {
 	//Perform a heartbeat for the Mongo database, Redis, and SMTP server. Then add them together
 	dbPing, merr := db.GetInstance().Heartbeat()
-	redisPing, rerr := credis.GetInstance().Heartbeat()
+	redisPing, rerr := cr.GetInstance().Heartbeat()
 	totPing := dbPing + redisPing
 
 	//Create the JSON response

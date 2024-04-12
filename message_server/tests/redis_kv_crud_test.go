@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"wraith.me/message_server/db/mongoutil"
-	credis "wraith.me/message_server/redis"
+	cr "wraith.me/message_server/redis"
 )
 
 func TestRedisKVSetS(t *testing.T) {
@@ -29,12 +29,12 @@ func TestRedisKVSetS(t *testing.T) {
 	}
 
 	//Add the map to Redis
-	if err := credis.SetManyS(r, context.Background(), kvs); err != nil {
+	if err := cr.SetManyS(r, context.Background(), kvs); err != nil {
 		t.Fatal(err)
 	}
 
 	//Query the database for the items
-	items, err := credis.GetManyS(r, context.Background(), keys...)
+	items, err := cr.GetManyS(r, context.Background(), keys...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestRedisKVSetS(t *testing.T) {
 	}
 
 	//Cleanup what was inserted
-	_, err = credis.Del(r, context.Background(), keys...)
+	_, err = cr.Del(r, context.Background(), keys...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,12 +73,12 @@ func TestRedisKVSet(t *testing.T) {
 	}
 
 	//Add the map to Redis
-	if err := credis.SetMany(r, context.Background(), kvs); err != nil {
+	if err := cr.SetMany(r, context.Background(), kvs); err != nil {
 		t.Fatal(err)
 	}
 
 	//Query the database for the items
-	items, err := credis.GetMany[Foo](r, context.Background(), keys...)
+	items, err := cr.GetMany[Foo](r, context.Background(), keys...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func TestRedisKVSet(t *testing.T) {
 	}
 
 	//Cleanup what was inserted
-	_, err = credis.Del(r, context.Background(), keys...)
+	_, err = cr.Del(r, context.Background(), keys...)
 	if err != nil {
 		t.Fatal(err)
 	}

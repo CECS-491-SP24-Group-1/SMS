@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	credis "wraith.me/message_server/redis"
+	cr "wraith.me/message_server/redis"
 )
 
 /*
@@ -34,12 +34,12 @@ func TestRedisMultiObjPush(t *testing.T) {
 	red := redisInit()
 
 	//Push the object list into the Redis database
-	if err := credis.CreateA(red, context.Background(), aid, objs); err != nil {
+	if err := cr.CreateA(red, context.Background(), aid, objs); err != nil {
 		t.Fatal(err)
 	}
 
 	//Get the objects from Redis
-	robjs, err := credis.GetA[string](red, context.Background(), aid)
+	robjs, err := cr.GetA[string](red, context.Background(), aid)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,11 +59,11 @@ func TestRedisMultiCObjPush(t *testing.T) {
 	red := redisInit()
 
 	//Push the object list into the Redis database
-	if err := credis.CreateA(red, context.Background(), aid, objs); err != nil {
+	if err := cr.CreateA(red, context.Background(), aid, objs); err != nil {
 		t.Fatal(err)
 	}
 	//Get the objects from Redis
-	robjs, err := credis.GetA[Foo](red, context.Background(), aid)
+	robjs, err := cr.GetA[Foo](red, context.Background(), aid)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,11 +83,11 @@ func TestRedisMultiCObjDel(t *testing.T) {
 	red := redisInit()
 
 	//Push the object list into the Redis database
-	if err := credis.CreateA(red, context.Background(), aid, objs); err != nil {
+	if err := cr.CreateA(red, context.Background(), aid, objs); err != nil {
 		t.Fatal(err)
 	}
 	//Get the objects from Redis
-	robjs, err := credis.GetA[Foo](red, context.Background(), aid)
+	robjs, err := cr.GetA[Foo](red, context.Background(), aid)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,7 +98,7 @@ func TestRedisMultiCObjDel(t *testing.T) {
 	}
 
 	//Delete the object and ensure no errors occurred
-	if _, err := credis.Del(red, context.Background(), aid); err != nil {
+	if _, err := cr.Del(red, context.Background(), aid); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -112,11 +112,11 @@ func TestRedisMultiCObjModOne(t *testing.T) {
 	red := redisInit()
 
 	//Push the object list into the Redis database
-	if err := credis.CreateA(red, context.Background(), aid, objs); err != nil {
+	if err := cr.CreateA(red, context.Background(), aid, objs); err != nil {
 		t.Fatal(err)
 	}
 	//Get the objects from Redis
-	robjs, err := credis.GetA[Foo](red, context.Background(), aid)
+	robjs, err := cr.GetA[Foo](red, context.Background(), aid)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,13 +136,13 @@ func TestRedisMultiCObjModOne(t *testing.T) {
 	fmt.Printf("after:  %v\n", foo3a)
 
 	//Push the updated object to the database
-	if err := credis.SetAt(red, context.Background(), aid, midx, foo3a); err != nil {
+	if err := cr.SetAt(red, context.Background(), aid, midx, foo3a); err != nil {
 		t.Fatal(err)
 	}
 
 	//Ensure the change went through successfully
 	var rfoo3a Foo
-	if err := credis.GetAt(red, context.Background(), aid, midx, &rfoo3a); err != nil {
+	if err := cr.GetAt(red, context.Background(), aid, midx, &rfoo3a); err != nil {
 		t.Fatal(err)
 	}
 	if !fooeq(foo3a, rfoo3a) {

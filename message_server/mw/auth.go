@@ -12,7 +12,9 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/crud"
+	"wraith.me/message_server/db"
 	"wraith.me/message_server/obj"
+	cr "wraith.me/message_server/redis"
 	"wraith.me/message_server/util/httpu"
 )
 
@@ -46,12 +48,12 @@ type authMiddleware struct {
 }
 
 // Returns a new handler for the authentication middleware.
-func NewAuthMiddleware(allowedScopes []obj.TokenScope, mclient *mongo.Client, rclient *redis.Client) func(next http.Handler) http.Handler {
+func NewAuthMiddleware(allowedScopes []obj.TokenScope) func(next http.Handler) http.Handler {
 	//Get a struct object
 	mw := authMiddleware{
 		allowedScopes: allowedScopes,
-		mclient:       mclient,
-		rclient:       rclient,
+		mclient:       db.GetInstance().GetClient(),
+		rclient:       cr.GetInstance().GetClient(),
 	}
 
 	//Return the instance
