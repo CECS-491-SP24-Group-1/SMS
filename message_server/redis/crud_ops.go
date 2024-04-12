@@ -46,6 +46,15 @@ func CreateManyS(c *redis.Client, ctx context.Context, kp map[uuid.UUID]string) 
 }
 
 /*
+Creates a key and array of strings in the Redis database. This function is an
+alias of `SetSA()`. Applicable to C in CRUD. See:
+https://stackoverflow.com/a/53697645
+*/
+func CreateSA(c *redis.Client, ctx context.Context, key uuid.UUID, values []string) error {
+	return SetSA(c, ctx, key, values)
+}
+
+/*
 Deletes a value or array of values by its key in the Redis database.
 Returns the number of objects that were deleted. This function works for
 both single value and multi-value keypairs, hence why `DelA` is  not a
@@ -220,6 +229,22 @@ func GetManyS(c *redis.Client, ctx context.Context, keys ...uuid.UUID) ([]string
 }
 
 /*
+Gets the array of strings for a key in the Redis database. If the key
+doesn't exist, then an empty array will be emitted. Applicable to R in
+CRUD. See: https://stackoverflow.com/a/53697645
+*/
+func GetSA(c *redis.Client, ctx context.Context, key uuid.UUID) ([]string, error) {
+	//Get from Redis
+	ps, err := c.LRange(ctx, key.String(), 0, -1).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	//Return the string array
+	return ps, nil
+}
+
+/*
 Sets a key and value in the Redis database. If the key already exists, its
 value is updated. If not, then a new key is created. Applicable to C, U in
 CRUD. See: https://stackoverflow.com/a/53697645
@@ -331,5 +356,30 @@ func SetManyS(c *redis.Client, ctx context.Context, kp map[uuid.UUID]string) err
 
 	//Add the items to Redis by executing the pipeline
 	_, err := pl.Exec(ctx)
+	return err
+}
+
+/*
+Sets a key and array of strings in the Redis database. If the key already exists,
+its old contents are discarded and its value array is replaced with this one.
+Applicable to U in CRUD. See: https://stackoverflow.com/a/53697645
+*/
+func SetSA(c *redis.Client, ctx context.Context, key uuid.UUID, values []string) error {
+	//Create a Redis pipeline
+	pl := c.TxPipeline()
+
+	//Check if the key exists and delete it if it does
+	exists, err := c.Exists(ctx, key.String()).Result()
+	if err == nil && exists > 0 {
+		pl.Del(ctx, key.String())
+	}
+
+	//Add the items to Redis
+	if err := pl.RPush(ctx, key.String(), values).Err(); err != nil {
+		return err
+	}
+
+	//Execute the pipeline
+	_, err = pl.Exec(ctx)
 	return err
 }
