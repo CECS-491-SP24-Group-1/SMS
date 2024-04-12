@@ -1,8 +1,10 @@
 package util
 
 import (
+	"bytes"
 	crand "crypto/rand"
 	"encoding/base64"
+	"encoding/gob"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -56,6 +58,16 @@ func FormatBytes(size uint64, sp bool) string {
 
 	//Sprintf the output
 	return fmt.Sprintf("%.2f%s%s", value, ws, unit)
+}
+
+// Unmarshals an object from a GOB byte stream.
+func FromGOBBytes[T any](target []byte) (T, error) {
+	//Unmarshal from GOB
+	var dest T
+	b := bytes.NewBuffer([]byte(target))
+	dec := gob.NewDecoder(b)
+	err := dec.Decode(&dest)
+	return dest, err
 }
 
 /*
@@ -271,4 +283,15 @@ func Time2OffsetReq(tin time.Time, r *http.Request) time.Time {
 		return tin
 	}
 	return Time2Offset(tin, ioff)
+}
+
+// Marshals an object to a GOB byte stream.
+func ToGOBBytes[T any](target T) ([]byte, error) {
+	//Marshal to GOB
+	var b bytes.Buffer
+	enc := gob.NewEncoder(&b)
+	if err := enc.Encode(target); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }

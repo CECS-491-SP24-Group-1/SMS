@@ -1,13 +1,12 @@
 package redis
 
 import (
-	"bytes"
 	"context"
-	"encoding/gob"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	"wraith.me/message_server/util"
 )
 
 /*
@@ -55,7 +54,7 @@ func Get[T any](c *redis.Client, ctx context.Context, key uuid.UUID, dest *T) (e
 	}
 
 	//Unmarshal from bytes
-	*dest, err = fromBytes[T]([]byte(p))
+	*dest, err = util.FromGOBBytes[T]([]byte(p))
 	return
 }
 
@@ -77,7 +76,7 @@ func GetA[T any](c *redis.Client, ctx context.Context, key uuid.UUID) ([]T, erro
 	//Loop over each incoming object
 	for i, p := range ps {
 		//Unmarshal from bytes
-		obj, err := fromBytes[T]([]byte(p))
+		obj, err := util.FromGOBBytes[T]([]byte(p))
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +98,7 @@ func GetAt[T any](c *redis.Client, ctx context.Context, key uuid.UUID, idx int64
 	}
 
 	//Unmarshal from bytes
-	*dest, err = fromBytes[T]([]byte(p))
+	*dest, err = util.FromGOBBytes[T]([]byte(p))
 	return
 }
 
@@ -110,7 +109,7 @@ CRUD. See: https://stackoverflow.com/a/53697645
 */
 func Set[T any](c *redis.Client, ctx context.Context, key uuid.UUID, value T) error {
 	//Marshal to bytes
-	bytes, err := toBytes(value)
+	bytes, err := util.ToGOBBytes(value)
 	if err != nil {
 		return err
 	}
@@ -137,7 +136,7 @@ func SetA[T any](c *redis.Client, ctx context.Context, key uuid.UUID, values []T
 	//Loop over each incoming object
 	for _, value := range values {
 		//Marshal the value to bytes
-		bytes, err := toBytes(value)
+		bytes, err := util.ToGOBBytes(value)
 		if err != nil {
 			return err
 		}
@@ -160,32 +159,11 @@ indexed. Applicable to U in CRUD. See: https://stackoverflow.com/a/53697645
 */
 func SetAt[T any](c *redis.Client, ctx context.Context, key uuid.UUID, idx int64, value T) error {
 	//Marshal to bytes
-	bytes, err := toBytes(value)
+	bytes, err := util.ToGOBBytes(value)
 	if err != nil {
 		return err
 	}
 
 	//Add to Redis
 	return c.LSet(ctx, key.String(), idx, bytes).Err()
-}
-
-// Unmarshals an object from a GOB byte stream.
-func fromBytes[T any](target []byte) (T, error) {
-	//Unmarshal from GOB
-	var dest T
-	b := bytes.NewBuffer([]byte(target))
-	dec := gob.NewDecoder(b)
-	err := dec.Decode(&dest)
-	return dest, err
-}
-
-// Marshals an object to a GOB byte stream.
-func toBytes[T any](target T) ([]byte, error) {
-	//Marshal to GOB
-	var b bytes.Buffer
-	enc := gob.NewEncoder(&b)
-	if err := enc.Encode(target); err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
 }
