@@ -34,7 +34,7 @@ func TestRedisMultiObjPush(t *testing.T) {
 	red := redisInit()
 
 	//Push the object list into the Redis database
-	if err := cr.CreateSA(red, context.Background(), aid, objs); err != nil {
+	if err := cr.CreateSA(red, context.Background(), aid, objs...); err != nil {
 		t.Fatal(err)
 	}
 

@@ -23,7 +23,7 @@ Creates a key and array of values in the Redis database. This function is an
 alias of `SetA()`. Applicable to C in CRUD. See:
 https://stackoverflow.com/a/53697645
 */
-func CreateA[T any](c *redis.Client, ctx context.Context, key uuid.UUID, values []T) error {
+func CreateA[T any](c *redis.Client, ctx context.Context, key uuid.UUID, values ...T) error {
 	return SetA(c, ctx, key, values)
 }
 
@@ -50,8 +50,8 @@ Creates a key and array of strings in the Redis database. This function is an
 alias of `SetSA()`. Applicable to C in CRUD. See:
 https://stackoverflow.com/a/53697645
 */
-func CreateSA(c *redis.Client, ctx context.Context, key uuid.UUID, values []string) error {
-	return SetSA(c, ctx, key, values)
+func CreateSA(c *redis.Client, ctx context.Context, key uuid.UUID, values ...string) error {
+	return SetSA(c, ctx, key, values...)
 }
 
 /*
@@ -265,7 +265,7 @@ Sets a key and array of values in the Redis database. If the key already exists,
 its old contents are discarded and its value array is replaced with this one.
 Applicable to U in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func SetA[T any](c *redis.Client, ctx context.Context, key uuid.UUID, values []T) error {
+func SetA[T any](c *redis.Client, ctx context.Context, key uuid.UUID, values ...T) error {
 	//Create a Redis pipeline
 	pl := c.TxPipeline()
 
@@ -364,7 +364,7 @@ Sets a key and array of strings in the Redis database. If the key already exists
 its old contents are discarded and its value array is replaced with this one.
 Applicable to U in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func SetSA(c *redis.Client, ctx context.Context, key uuid.UUID, values []string) error {
+func SetSA(c *redis.Client, ctx context.Context, key uuid.UUID, values ...string) error {
 	//Create a Redis pipeline
 	pl := c.TxPipeline()
 
