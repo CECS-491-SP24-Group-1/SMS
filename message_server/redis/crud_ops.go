@@ -24,7 +24,7 @@ alias of `SetA()`. Applicable to C in CRUD. See:
 https://stackoverflow.com/a/53697645
 */
 func CreateA[T any](c *redis.Client, ctx context.Context, key uuid.UUID, values ...T) error {
-	return SetA(c, ctx, key, values)
+	return SetA(c, ctx, key, values...)
 }
 
 /*
