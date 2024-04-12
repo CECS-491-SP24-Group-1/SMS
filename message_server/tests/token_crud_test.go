@@ -9,7 +9,7 @@ import (
 	"wraith.me/message_server/db/mongoutil"
 )
 
-func TestTCGet(t *testing.T) {
+func TestTokCRUDGet(t *testing.T) {
 	//Get a Mongo and Redis client
 	m := mongoInit()
 	r := redisInit()
