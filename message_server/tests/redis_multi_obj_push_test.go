@@ -59,7 +59,7 @@ func TestRedisMultiCObjPush(t *testing.T) {
 	red := redisInit()
 
 	//Push the object list into the Redis database
-	if err := cr.CreateA(red, context.Background(), aid, objs); err != nil {
+	if err := cr.CreateA(red, context.Background(), aid, objs...); err != nil {
 		t.Fatal(err)
 	}
 	//Get the objects from Redis
@@ -83,7 +83,7 @@ func TestRedisMultiCObjDel(t *testing.T) {
 	red := redisInit()
 
 	//Push the object list into the Redis database
-	if err := cr.CreateA(red, context.Background(), aid, objs); err != nil {
+	if err := cr.CreateA(red, context.Background(), aid, objs...); err != nil {
 		t.Fatal(err)
 	}
 	//Get the objects from Redis
@@ -112,7 +112,7 @@ func TestRedisMultiCObjModOne(t *testing.T) {
 	red := redisInit()
 
 	//Push the object list into the Redis database
-	if err := cr.CreateA(red, context.Background(), aid, objs); err != nil {
+	if err := cr.CreateA(red, context.Background(), aid, objs...); err != nil {
 		t.Fatal(err)
 	}
 	//Get the objects from Redis
