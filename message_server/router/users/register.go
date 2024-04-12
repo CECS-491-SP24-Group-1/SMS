@@ -12,10 +12,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/tanqiangyes/govalidator"
 	mail "github.com/xhit/go-simple-mail/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"wraith.me/message_server/crud"
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/email"
@@ -23,6 +25,7 @@ import (
 	"wraith.me/message_server/obj"
 	"wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/obj/ip_addr"
+	cr "wraith.me/message_server/redis"
 	remailt "wraith.me/message_server/template/registration_email"
 	"wraith.me/message_server/util"
 	"wraith.me/message_server/util/httpu"
@@ -175,8 +178,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Get the users collection from the database and ensure a record doesn't already exist
-	dbc := db.GetInstance().GetClient()
-	userCollection := dbc.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
+	userCollection := mcl.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
 
 	//Ensure the user doesn't already exist in the database
 	if err := ensureNonexistantUser(userCollection, iuser, r.Context()); err != nil {
@@ -211,7 +213,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	tempToken := obj.NewToken(user.ID, ip_addr.HttpIP2NetIP(r.RemoteAddr), obj.TokenScopePOSTSIGNUP, user.Flags.PurgeBy)
 	fmt.Printf("TOK: '%s'\n", tempToken.ToB64())
 
-	//Step 2: Push the token to the user's list of tokens and add the user to the database
+	//Step 2a: Push the token to the user's list of tokens and add the user to the database
 	user.Tokens = append(user.Tokens, *tempToken)
 	userBson, jerr := bson.Marshal(user)
 	_, ierr := ucoll.InsertOne(r.Context(), userBson)
@@ -221,6 +223,11 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	if ierr != nil {
 		return ierr
 	}
+
+	//Set 2b: Cache the access tokens
+	tokm := make(map[uuid.UUID]string)
+	tokm[tempToken.ID.UUID] = tempToken.String()
+	cr.CreateManyS(rcl, r.Context(), tokm)
 
 	//Step 3a: Create challenges for email and public key verification
 	srvIdent := obj.Identifiable{ID: env.ID, Type: obj.IdTypeSERVER}
@@ -267,7 +274,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	}
 
 	//Step 4: Push the challenges to the database for later retrieval
-	//crud.AddChallenges()
+	crud.AddChallenges(mcl, rcl, r.Context(), emailChall, pubkeyChall)
 
 	//Step 5: Write the response back to the user
 	psu := postsignupUser{

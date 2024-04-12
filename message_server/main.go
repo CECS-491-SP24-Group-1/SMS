@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/config"
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/email"
@@ -21,7 +20,6 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
-	"github.com/redis/go-redis/v9"
 )
 
 const RQS_PER_MIN = 3
@@ -53,7 +51,7 @@ func main() {
 	defer db.GetInstance().Disconnect()
 
 	//Connect to Redis
-	rclient, rerr := cr.GetInstance().Connect(&cfg.Redis)
+	_, rerr := cr.GetInstance().Connect(&cfg.Redis)
 	if rerr != nil {
 		panic(rerr)
 	}
@@ -71,7 +69,7 @@ func main() {
 	}
 
 	//Setup Chi and start listening for connections
-	r := setupServer(&cfg, &env, mclient, rclient)
+	r := setupServer(&cfg, &env)
 	connStr := fmt.Sprintf("%s:%d", cfg.Server.BindAddr, cfg.Server.ListenPort)
 	log.Printf("Listening on %s\n", connStr)
 	http := http.Server{
@@ -84,7 +82,7 @@ func main() {
 }
 
 // TODO: Maybe add https://github.com/goware/firewall
-func setupServer(cfg *config.Config, env *config.Env, mclient *mongo.Client, rclient *redis.Client) chi.Router {
+func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 	//Setup Chi router
 	r := chi.NewRouter()
 

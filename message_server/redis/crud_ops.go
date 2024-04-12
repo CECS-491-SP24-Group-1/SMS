@@ -28,6 +28,24 @@ func CreateA[T any](c *redis.Client, ctx context.Context, key uuid.UUID, values 
 }
 
 /*
+Creates a series of keys and object values in the Redis database from a map.
+This function is an alias of `SetMany()`. Applicable to C in CRUD. See:
+https://stackoverflow.com/a/53697645
+*/
+func CreateMany[T any](c *redis.Client, ctx context.Context, kp map[uuid.UUID]T) error {
+	return SetMany(c, ctx, kp)
+}
+
+/*
+Creates a series of keys and object values in the Redis database from a map.
+This function is an alias of `SetMany()`. Applicable to C in CRUD. See:
+https://stackoverflow.com/a/53697645
+*/
+func CreateManyS(c *redis.Client, ctx context.Context, kp map[uuid.UUID]string) error {
+	return SetManyS(c, ctx, kp)
+}
+
+/*
 Deletes a value or array of values by its key in the Redis database.
 Returns the number of objects that were deleted. This function works for
 both single value and multi-value keypairs, hence why `DelA` is  not a
@@ -268,7 +286,7 @@ func SetAt[T any](c *redis.Client, ctx context.Context, key uuid.UUID, idx int64
 }
 
 /*
-Sets a series of keys and string values in the Redis database from a map.
+Sets a series of keys and object values in the Redis database from a map.
 If the key already exists, its value is updated. If not, then a new key is
 created. Applicable to C, U in CRUD. See: https://stackoverflow.com/a/53697645
 */
