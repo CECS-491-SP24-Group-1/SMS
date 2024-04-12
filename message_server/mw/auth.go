@@ -10,10 +10,8 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"wraith.me/message_server/db"
-	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/crud"
 	"wraith.me/message_server/obj"
 	"wraith.me/message_server/util/httpu"
 )
@@ -172,67 +170,17 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		// -- BEGIN: Database Query
 		//
 
-		//Query the database and get the tokens of the subject; Redis is used here to cache the results
-		var subjectTokens []string
-		redisTokens, err := amw.rclient.LRange(r.Context(), tokSubject.String(), 0, -1).Result()
-		if err == redis.Nil || len(redisTokens) == 0 {
-			//Cache miss; query MongoDB for the tokens of the subject and add them to Redis for later
-			//Define the aggregation to run
-			query := bson.A{
-				bson.D{{Key: "$match", Value: bson.D{{Key: "_id", Value: tokSubject}}}},
-				bson.D{
-					{Key: "$project",
-						Value: bson.D{
-							{Key: "_id", Value: 0},
-							{Key: "tokens", Value: 1},
-						},
-					},
-				},
-			}
-
-			//Define the structure of the output; a list of string tokens
-			type tokenRet struct {
-				Tokens []string `bson:"tokens"`
-			}
-
-			//Execute the aggregation. Should return a singular `tokenRet` in the output array if the database has tokens for the subject
-			ucoll := amw.mclient.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
-			var results []tokenRet
-			if aerr := mongoutil.AggregateT(&results, ucoll, query, r.Context()); aerr != nil {
-				//If there is a database aggregation error, deny the client by default for safety; do not report the error
-				httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthGeneric), http.StatusUnauthorized)
-				fmt.Printf("[AUTH; MONGO AGGREGATION ERROR]: %s\n", aerr)
-				return
-			}
-
-			//If the query returns nothing, simply bail out; the subject has no tokens to begin with
-			if len(results) == 0 || len(results[0].Tokens) == 0 {
-				httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
-				return
-			}
-
-			//Copy the tokens to the subject tokens array
-			subjectTokens = results[0].Tokens
-
-			/*
-				Add the subject ID and corresponding tokens array to Redis. Further
-				requests with the same token subject will be honored by Redis instead
-				of MongoDB (cache hit). If any errors occur, silently fail and do not
-				alert the client. Authentication can still be done, but caching won't
-				work.
-			*/
-			cacheSetResult := amw.rclient.RPush(r.Context(), tokSubject.String(), results[0].Tokens)
-			if err := cacheSetResult.Err(); err != nil {
-				fmt.Printf("[AUTH; REDIS CACHE RPUSH ERROR]: %s\n", err)
-			}
-		} else if err != nil {
-			//If there is a cache retrieval error, deny the client by default for safety; do not report the error
+		//Query the database for user tokens; if any errors occur, report them but do not alert the client of the specifics
+		subjectTokens, dberr := crud.GetSTokens(amw.mclient, amw.rclient, r.Context(), tokSubject)
+		if dberr != nil {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthGeneric), http.StatusUnauthorized)
-			fmt.Printf("[AUTH; REDIS ERROR]: %s\n", err)
 			return
-		} else {
-			//Cache hit; copy the token list from Redis
-			subjectTokens = redisTokens
+		}
+
+		//If the query returns nothing, simply bail out; the subject has no tokens to begin with
+		if len(subjectTokens) == 0 {
+			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
+			return
 		}
 
 		//

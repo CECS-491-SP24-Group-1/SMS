@@ -28,18 +28,18 @@ func Create[T any](
 		return UpdatedCount{0, 0}, err
 	}
 
-	//1: Insert the document into MongoDB
+	//Step 1: Insert the document into MongoDB
 	_, err = c.InsertOne(ctx, bs)
 	if err != nil {
 		return UpdatedCount{0, 0}, err
 	}
 
-	//2: Cache the keypair in Redis
+	//Step 2: Cache the keypair in Redis
 	if err = credis.Create(r, ctx, id.UUID, obj); err != nil {
 		return UpdatedCount{0, 0}, err
 	}
 
-	//3: No errors occurred, so return true
+	//Step 3: No errors occurred, so return true
 	return UpdatedCount{1, 1}, nil
 }
 

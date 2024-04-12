@@ -139,7 +139,7 @@ func setupServer(cfg *config.Config, env *config.Env, mclient *mongo.Client, rcl
 	})
 
 	//AUTH TEST START
-	scopes := []obj.TokenScope{obj.TokenScopeUSER}
+	scopes := []obj.TokenScope{obj.TokenScopePOSTSIGNUP}
 	r.Group(func(r chi.Router) {
 		r.Use(mw.NewAuthMiddleware(scopes, mclient, rclient))
 		r.Get("/auth_test", router.AuthTest)
