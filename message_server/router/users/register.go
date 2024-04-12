@@ -207,7 +207,6 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: pipeline the Redis queries if possible
 func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *mongo.Collection) error {
 	//Step 1: Issue a token that's good for the duration of the challenge window; otherwise the routes won't be allowed
 	tempToken := obj.NewToken(user.ID, ip_addr.HttpIP2NetIP(r.RemoteAddr), obj.TokenScopePOSTSIGNUP, user.Flags.PurgeBy)

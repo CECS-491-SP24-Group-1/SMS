@@ -40,7 +40,7 @@ func main() {
 	fmt.Printf("env:%+v\n", env)
 
 	//Setup scheduled tasks
-	//TODO: pass config instance eventually
+	//TODO: Break this up into its own package
 	//setupScheduledTasks()
 
 	//Connect to MongoDB

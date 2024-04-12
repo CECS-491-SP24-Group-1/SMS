@@ -10,6 +10,13 @@ import (
 	"wraith.me/message_server/util"
 )
 
+const (
+	//The default expiry of Redis tokens: no expiration.
+	DEFAULT_EXPIRY = time.Duration(0)
+)
+
+//TODO: Add expiry methods too
+
 /*
 Creates a key and value in the Redis database. This function is an alias of
 `Set()`. Applicable to C in CRUD. See: https://stackoverflow.com/a/53697645
