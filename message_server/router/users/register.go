@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/tanqiangyes/govalidator"
 	mail "github.com/xhit/go-simple-mail/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -208,6 +207,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// TODO: pipeline the Redis queries if possible
 func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *mongo.Collection) error {
 	//Step 1: Issue a token that's good for the duration of the challenge window; otherwise the routes won't be allowed
 	tempToken := obj.NewToken(user.ID, ip_addr.HttpIP2NetIP(r.RemoteAddr), obj.TokenScopePOSTSIGNUP, user.Flags.PurgeBy)
@@ -225,9 +225,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	}
 
 	//Set 2b: Cache the access tokens
-	tokm := make(map[uuid.UUID]string)
-	tokm[tempToken.ID.UUID] = tempToken.String()
-	cr.CreateManyS(rcl, r.Context(), tokm)
+	cr.CreateSA(rcl, r.Context(), user.ID.UUID, tempToken.String())
 
 	//Step 3a: Create challenges for email and public key verification
 	srvIdent := obj.Identifiable{ID: env.ID, Type: obj.IdTypeSERVER}
