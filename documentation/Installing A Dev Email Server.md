@@ -20,27 +20,29 @@
    
    ```
    docker run \
-   	-d \
-   	-p 1125:25 \
-   	-p 1180:80 \
-   	-p 1443:443 \
-   	-p 1110:110 \
-   	-p 1143:143 \
-   	-p 1465:465 \
-   	-p 1587:587 \
-   	-p 1993:993 \
-   	-p 1995:995 \
-   	-e TZ=America/Los_Angeles \
-   	-e HTTP_PORT=80 \
-   	-e HTTPS_PORT=443 \
-   	--restart unless-stopped \
-   	--name "PosteLocal" \
-   	-t analogic/poste.io
+       -d \
+       -p 1125:25 \
+       -p 1180:80 \
+       -p 1443:443 \
+       -p 1110:110 \
+       -p 1143:143 \
+       -p 1465:465 \
+       -p 1587:587 \
+       -p 1993:993 \
+       -p 1995:995 \
+       -e TZ=America/Los_Angeles \
+       -e HTTP_PORT=80 \
+       -e HTTPS_PORT=443 \
+       -e "DISABLE_CLAMAV=TRUE" \
+       -e "DISABLE_RSPAMD=TRUE" \
+       --restart unless-stopped \
+       --name "PosteLocal" \
+       -t analogic/poste.io
    ```
 
 2. Navigate to `https://localhost:1443/admin/install/server` and configure the admin email and password. The admin email should end with `localhost.com`. **Note these down or lose access to the web panel.** 
 
-3. Navigate to "Virtual Domains" > "localhost" > "Edit settings" > "Additional settings"
+3. Navigate to "Virtual Domains" > "localhost.com" > "Edit settings" > "Additional settings"
    
    1. Tick the box that says "Domain bin".
    
@@ -48,7 +50,13 @@
    
    3. Save changes
 
-4. Profit!
+4. Navigate to "System settings" > "Advanced" and scroll down to "Connection blocking"
+   
+   1. Untick the box that says "Enabled" under that header. This prevents the email server from blacklisting your IP address due to an excess of connections.
+   
+   2. Save changes
+
+5. Profit!
 
 ### Supplemental: Setup For Thunderbird
 
@@ -101,11 +109,3 @@
 6. Click "Finish" to save the email account.
 
 7. Profit!
-
-
-
-
-
-
-
-
