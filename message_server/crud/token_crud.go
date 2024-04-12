@@ -16,7 +16,7 @@ Retrieves a list of a user's tokens from either Redis if cached or from
 MongoDB if Redis doesn't have them. If a cache miss occurs, then this
 function will automatically cache them in Redis for faster future
 retrievals. The tokens are encoded as a string, and must be parsed to be
-usable.
+usable. This operation is equivalent to an R operation in CRUD.
 */
 func GetSTokens(
 	//Database drivers & context
@@ -82,9 +82,12 @@ func GetSTokens(
 	return mr[0].Tokens, nil
 }
 
-//func GetTokenById
-
-//func AddTokens
-
-//func RevokeTokens
-//func RevokeTokenById
+/*
+TODO: Add the below functions:
+func GetTokenById; R
+func AddTokens; C
+func AddToken; C
+func RevokeTokens; D
+func RevokeTokenById; D
+* Tokens are immutable and do not have a U operation
+*/
