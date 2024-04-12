@@ -142,7 +142,7 @@ func GetMany[T any](c *redis.Client, ctx context.Context, keys ...uuid.UUID) ([]
 			return nil, fmt.Errorf("string assert err for res #%d", i+1)
 		}
 
-		//Unmarshal the value string to the target object add it to the output array
+		//Unmarshal the value string to the target type add it to the output array
 		obj, err := util.FromGOBBytes[T]([]byte(sr.Val()))
 		if err != nil {
 			return nil, fmt.Errorf("unmarshal err; %v", err)
@@ -234,7 +234,7 @@ func SetA[T any](c *redis.Client, ctx context.Context, key uuid.UUID, values []T
 
 	//Loop over each incoming object
 	for _, value := range values {
-		//Marshal the value to bytes
+		//Marshal the current value to bytes
 		bytes, err := util.ToGOBBytes(value)
 		if err != nil {
 			return err
