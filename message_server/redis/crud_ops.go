@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -103,6 +104,104 @@ func GetAt[T any](c *redis.Client, ctx context.Context, key uuid.UUID, idx int64
 }
 
 /*
+Gets an array of objects for an array of keys in the Redis database.
+The values must be present in the database for this function to succeed.
+Applicable to R in CRUD. See: https://stackoverflow.com/a/53697645
+*/
+func GetMany[T any](c *redis.Client, ctx context.Context, keys ...uuid.UUID) ([]T, error) {
+	//Create the output array, matching the size of the input key array
+	dest := make([]T, len(keys))
+
+	//Create a Redis pipeline
+	pl := c.TxPipeline()
+
+	//Loop over the input key array and queue each value to be fetched from Redis
+	for _, key := range keys {
+		//Query Redis for the item via the pipeline
+		if err := pl.Get(ctx, key.String()).Err(); err != nil {
+			return nil, fmt.Errorf("pipeline queue err; %v", err)
+		}
+	}
+
+	//Execute the commands in the pipeline and get the results array
+	resl, err := pl.Exec(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("pipeline exec err; %v", err)
+	}
+
+	//Loop over the fetched strings
+	for i, res := range resl {
+		//Check if the current result is an error
+		if res.Err() != nil {
+			return nil, res.Err()
+		}
+
+		//Type assert the result to a `StringCmd`
+		sr, ok := res.(*redis.StringCmd)
+		if !ok {
+			return nil, fmt.Errorf("string assert err for res #%d", i+1)
+		}
+
+		//Unmarshal the value string to the target object add it to the output array
+		obj, err := util.FromGOBBytes[T]([]byte(sr.Val()))
+		if err != nil {
+			return nil, fmt.Errorf("unmarshal err; %v", err)
+		}
+		dest[i] = obj
+	}
+
+	//Return the list of items
+	return dest, nil
+}
+
+/*
+Gets an array of strings for an array of keys in the Redis database.
+The values must be present in the database for this function to succeed.
+Applicable to R in CRUD. See: https://stackoverflow.com/a/53697645
+*/
+func GetManyS(c *redis.Client, ctx context.Context, keys ...uuid.UUID) ([]string, error) {
+	//Create the output array, matching the size of the input key array
+	dest := make([]string, len(keys))
+
+	//Create a Redis pipeline
+	pl := c.TxPipeline()
+
+	//Loop over the input key array and queue each value to be fetched from Redis
+	for _, key := range keys {
+		//Query Redis for the item via the pipeline
+		if err := pl.Get(ctx, key.String()).Err(); err != nil {
+			return nil, fmt.Errorf("pipeline queue err; %v", err)
+		}
+	}
+
+	//Execute the commands in the pipeline and get the results array
+	resl, err := pl.Exec(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("pipeline exec err; %v", err)
+	}
+
+	//Loop over the fetched strings
+	for i, res := range resl {
+		//Check if the current result is an error
+		if res.Err() != nil {
+			return nil, res.Err()
+		}
+
+		//Type assert the result to a `StringCmd`
+		sr, ok := res.(*redis.StringCmd)
+		if !ok {
+			return nil, fmt.Errorf("string assert err for res #%d", i+1)
+		}
+
+		//Add the string result to the output array
+		dest[i] = sr.Val()
+	}
+
+	//Return the list of items
+	return dest, nil
+}
+
+/*
 Sets a key and value in the Redis database. If the key already exists, its
 value is updated. If not, then a new key is created. Applicable to C, U in
 CRUD. See: https://stackoverflow.com/a/53697645
@@ -125,7 +224,7 @@ Applicable to U in CRUD. See: https://stackoverflow.com/a/53697645
 */
 func SetA[T any](c *redis.Client, ctx context.Context, key uuid.UUID, values []T) error {
 	//Create a Redis pipeline
-	pl := c.Pipeline()
+	pl := c.TxPipeline()
 
 	//Check if the key exists and delete it if it does
 	exists, err := c.Exists(ctx, key.String()).Result()
@@ -148,7 +247,7 @@ func SetA[T any](c *redis.Client, ctx context.Context, key uuid.UUID, values []T
 	}
 
 	//Execute the pipeline
-	_, err = pl.Exec(context.Background())
+	_, err = pl.Exec(ctx)
 	return err
 }
 
@@ -166,4 +265,53 @@ func SetAt[T any](c *redis.Client, ctx context.Context, key uuid.UUID, idx int64
 
 	//Add to Redis
 	return c.LSet(ctx, key.String(), idx, bytes).Err()
+}
+
+/*
+Sets a series of keys and string values in the Redis database from a map.
+If the key already exists, its value is updated. If not, then a new key is
+created. Applicable to C, U in CRUD. See: https://stackoverflow.com/a/53697645
+*/
+func SetMany[T any](c *redis.Client, ctx context.Context, kp map[uuid.UUID]T) error {
+	//Create a Redis pipeline
+	pl := c.TxPipeline()
+
+	//Loop over the input map and add the pairing to the pipeline
+	for key, val := range kp {
+		//Marshal the current value to a byte string
+		bytes, err := util.ToGOBBytes(val)
+		if err != nil {
+			return err
+		}
+
+		//Add the current keypair to Redis
+		if err := pl.Set(ctx, key.String(), bytes, time.Duration(0)).Err(); err != nil {
+			return err
+		}
+	}
+
+	//Add the items to Redis by executing the pipeline
+	_, err := pl.Exec(ctx)
+	return err
+}
+
+/*
+Sets a series of keys and string values in the Redis database from a map.
+If the key already exists, its value is updated. If not, then a new key is
+created. Applicable to C, U in CRUD. See: https://stackoverflow.com/a/53697645
+*/
+func SetManyS(c *redis.Client, ctx context.Context, kp map[uuid.UUID]string) error {
+	//Create a Redis pipeline
+	pl := c.TxPipeline()
+
+	//Loop over the input map and add the pairing to the pipeline
+	for key, val := range kp {
+		if err := pl.Set(ctx, key.String(), val, time.Duration(0)).Err(); err != nil {
+			return err
+		}
+	}
+
+	//Add the items to Redis by executing the pipeline
+	_, err := pl.Exec(ctx)
+	return err
 }
