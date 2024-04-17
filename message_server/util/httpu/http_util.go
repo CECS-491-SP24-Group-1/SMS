@@ -37,6 +37,9 @@ func HttpErrorAsJson(w http.ResponseWriter, err error, code int) {
 		Desc:   err.Error(),
 	}
 
+	//Set the mimetype of the output to be JSON
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	//Write the object to the response writer
 	w.WriteHeader(code)
 	jerr := json.NewEncoder(w).Encode(&resp)
@@ -59,6 +62,9 @@ func HttpMultipleErrorsAsJson(w http.ResponseWriter, errs []error, code int) {
 		Status: "multiple_errors",
 		Desc:   stringErrs,
 	}
+
+	//Set the mimetype of the output to be JSON
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	//Write the object to the response writer
 	w.WriteHeader(code)

@@ -78,7 +78,7 @@ func TestRedisKVSet(t *testing.T) {
 	}
 
 	//Query the database for the items
-	items, err := cr.GetMany[Foo](r, context.Background(), keys...)
+	items, err := cr.GetMany[uuid.UUID, Foo](r, context.Background(), keys...)
 	if err != nil {
 		t.Fatal(err)
 	}

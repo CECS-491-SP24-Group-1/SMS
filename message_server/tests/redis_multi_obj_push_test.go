@@ -63,7 +63,7 @@ func TestRedisMultiCObjPush(t *testing.T) {
 		t.Fatal(err)
 	}
 	//Get the objects from Redis
-	robjs, err := cr.GetA[Foo](red, context.Background(), aid)
+	robjs, err := cr.GetA[uuid.UUID, Foo](red, context.Background(), aid)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +87,7 @@ func TestRedisMultiCObjDel(t *testing.T) {
 		t.Fatal(err)
 	}
 	//Get the objects from Redis
-	robjs, err := cr.GetA[Foo](red, context.Background(), aid)
+	robjs, err := cr.GetA[uuid.UUID, Foo](red, context.Background(), aid)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +116,7 @@ func TestRedisMultiCObjModOne(t *testing.T) {
 		t.Fatal(err)
 	}
 	//Get the objects from Redis
-	robjs, err := cr.GetA[Foo](red, context.Background(), aid)
+	robjs, err := cr.GetA[uuid.UUID, Foo](red, context.Background(), aid)
 	if err != nil {
 		t.Fatal(err)
 	}

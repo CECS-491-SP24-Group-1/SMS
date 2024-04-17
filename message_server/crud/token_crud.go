@@ -84,10 +84,11 @@ func GetSTokens(
 
 /*
 TODO: Add the below functions:
-func GetTokenById; R
-func AddTokens; C
-func AddToken; C
-func RevokeTokens; D
-func RevokeTokenById; D
+func GetSTokenById; R
+func AddSTokens; C
+func AddSToken; C
+func RevokeSTokens; D
+func RevokeSTokenById; D
+PLUS non-string versions (maybe not)
 * Tokens are immutable and do not have a U operation
 */
