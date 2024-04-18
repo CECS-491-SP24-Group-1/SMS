@@ -15,10 +15,10 @@ lowest permissions to highest permissions.
 */
 /*
 ENUM(
-	NONE =			0		//The token is valid nowhere.												(binary: 0000 0000)
-	POST_SIGNUP = 	1		//The token is only allowed to complete the login challenges.				(binary: 0000 0001)
-	USER =			2		//The token is allowed to be used everywhere that a normal user can access	(binary: 0000 0010)
-	EVERWHERE =		255 	//The token is valid anywhere.												(binary: 1111 1111)
+	NONE =			0		//The token is valid nowhere. (binary: 0000 0000)
+	POST_SIGNUP = 	1		//The token is only valid for completing post-signup challenges that are required to retain accounts on the server. (binary: 0000 0001)
+	USER =			2		//The token is allowed to be used everywhere that a normal user can access. (binary: 0000 0010)
+	EVERWHERE =		255 	//The token is valid anywhere. (binary: 1111 1111)
 )
 */
 type TokenScope uint8

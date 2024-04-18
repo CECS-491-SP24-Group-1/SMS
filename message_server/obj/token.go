@@ -30,16 +30,16 @@ type Token struct {
 	//UserToken extends the abstract identifiable type.
 	Identifiable `bson:",inline"`
 
-	//The IP address that created the token.
+	//The IP address of the client who created the token.
 	CreationIP ip_addr.IPAddr `json:"creation_ip" bson:"creation_ip"`
 
 	//The user that this token is for by ID.
 	Subject mongoutil.UUID `json:"subject" bson:"subject"`
 
-	//Defines the scope for which the token is allowed
+	//Defines the scopes for which the token is valid. This is a bitmasked value that may hold multiple scopes on a single variable.
 	Scope TokenScope `json:"token_scope" bson:"token_scope"`
 
-	//Denotes whether the token should expire
+	//Denotes whether the token should expire.
 	Expire bool `json:"expire" bson:"expire"`
 
 	//Denotes when the token will expire, as a Unix timestamp.

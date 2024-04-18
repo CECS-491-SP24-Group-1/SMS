@@ -12,13 +12,13 @@ import (
 )
 
 const (
-	// The token is valid nowhere.												(binary: 0000 0000)
+	// The token is valid nowhere. (binary: 0000 0000)
 	TokenScopeNONE TokenScope = iota
-	// The token is only allowed to complete the login challenges.				(binary: 0000 0001)
+	// The token is only valid for completing post-signup challenges that are required to retain accounts on the server. (binary: 0000 0001)
 	TokenScopePOSTSIGNUP
-	// The token is allowed to be used everywhere that a normal user can access	(binary: 0000 0010)
+	// The token is allowed to be used everywhere that a normal user can access. (binary: 0000 0010)
 	TokenScopeUSER
-	// The token is valid anywhere.												(binary: 1111 1111)
+	// The token is valid anywhere. (binary: 1111 1111)
 	TokenScopeEVERWHERE TokenScope = iota + 252
 )
 

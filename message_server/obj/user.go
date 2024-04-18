@@ -47,7 +47,7 @@ type User struct {
 	Options UserOptions `json:"options" bson:"options"`
 
 	/*
-		The user's tokens along with the IP address that created it. This should
+		The user's list of authentication tokens. This should
 		NOT be outputted if a JSON representation is requested.
 	*/
 	Tokens []Token `json:"-" bson:"tokens"`
@@ -105,13 +105,13 @@ func NewUserSimple(username string, email string) *User {
 
 // Represents user flags.
 type UserFlags struct {
-	//Whether the user's email has been verified.
+	//Indicates if the user's email has been verified.
 	EmailVerified bool `json:"email_verified" bson:"email_verified"`
 
-	//Whether the user's public key has been verified to correspond to a private key.
+	//Indicates if the user's public key has been verified to correspond to a private key.
 	PubkeyVerified bool `json:"pubkey_verified" bson:"pubkey_verified"`
 
-	//Whether the user's account has been marked for deletion. This flag is set to true by default, and is lifted when the 2 above flags are false.
+	//Indicates if the user's account has been marked for deletion. This flag is set to true by default, and is lifted when the 2 above flags are false.
 	ShouldPurge bool `json:"should_purge" bson:"should_purge"`
 
 	//The UTC time at which the account should be purged from the database. This field is ignored if `ShouldPurge` is false.
@@ -134,13 +134,13 @@ func DefaultUserFlags() UserFlags {
 
 // Represents user options.
 type UserOptions struct {
-	//Whether the user should be discoverable by their username.
+	//Indicates if the user should be discoverable by their username.
 	FindByUName bool `json:"find_by_uname" bson:"find_by_uname"`
 
 	//Controls who read receipts are sent to.
 	ReadReceipts ReadReceiptsScope `json:"read_receipts" bson:"read_receipts"`
 
-	//Whether the user can receive message from non-friended users.
+	//Indicates if the user can receive messages from non-friended users.
 	UnsolicitedMessages bool `json:"unsolicited_messages" bson:"unsolicited_messages"`
 }
 
