@@ -75,6 +75,28 @@ func Exists(coll *mongo.Collection, filter bson.D, ctx context.Context) bool {
 	return hit.Decode(&bson) == nil
 }
 
+// Retrieves a list of documents by their IDs.
+func FindById[T any](coll *mongo.Collection, ctx context.Context, ids ...UUID) ([]T, error) {
+	//Construct the output slice to hold the results
+	res := []T{}
+
+	//Construct a BSON document from the list of IDs
+	query := bson.M{"_id": bson.M{"$in": ids}}
+
+	//Execute a find operation on the database using the BSON document
+	cursor, err := coll.Find(context.TODO(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	//Collect all the results into a slice and return them
+	if err := cursor.All(context.TODO(), &res); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 /*
 Outputs a BSON array, representing a database aggregation pipeline, given
 a well-formed ExtJSON string. This function can be chained with `Aggregate()`

@@ -23,7 +23,8 @@ func GetChallengeRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//
+	//Get the challenge from the database by its ID
+	//crud.
 
 	names, _ := mcl.ListDatabaseNames(context.TODO(), bson.M{})
 

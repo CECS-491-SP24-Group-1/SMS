@@ -195,8 +195,12 @@ func GetMany[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.C
 		dest[i] = obj
 	}
 
-	//Return the list of items
-	return dest, MultiRedisErr{nil, problematicIndices}
+	//Return the list of items and a `Redis.Nil` error if there was at least one problematic index
+	var oerr error = nil
+	if len(problematicIndices) > 0 {
+		oerr = redis.Nil
+	}
+	return dest, MultiRedisErr{oerr, problematicIndices}
 }
 
 /*
@@ -252,8 +256,12 @@ func GetManyS[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context
 		dest[i] = sr.Val()
 	}
 
-	//Return the list of items
-	return dest, MultiRedisErr{nil, problematicIndices}
+	//Return the list of items and a `Redis.Nil` error if there was at least one problematic index
+	var oerr error = nil
+	if len(problematicIndices) > 0 {
+		oerr = redis.Nil
+	}
+	return dest, MultiRedisErr{oerr, problematicIndices}
 }
 
 /*
