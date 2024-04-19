@@ -66,13 +66,23 @@ func NewChallenge(
 	responder obj.Identifiable,
 	expiry time.Time,
 ) *Challenge {
+	return NewChallengeDeterministic(mongoutil.MustNewUUID7(), scope, initiator, responder, expiry)
+}
+
+func NewChallengeDeterministic(
+	id mongoutil.UUID,
+	scope ChallengeScope,
+	initiator obj.Identifiable,
+	responder obj.Identifiable,
+	expiry time.Time,
+) *Challenge {
 	//Create random challenge text
 	ctext := base64.URLEncoding.EncodeToString(util.MustGenRandBytes(ChallengePayloadSize))
 
 	//Create and return a challenge
 	return &Challenge{
 		Identifiable: obj.Identifiable{
-			ID:   mongoutil.MustNewUUID7(),
+			ID:   id,
 			Type: obj.IdTypeCHALLENGE,
 		},
 		Scope:     scope,

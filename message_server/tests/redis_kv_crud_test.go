@@ -35,7 +35,7 @@ func TestRedisKVSetS(t *testing.T) {
 
 	//Query the database for the items
 	items, err := cr.GetManyS(r, context.Background(), keys...)
-	if err != nil {
+	if err.Cause() != nil {
 		t.Fatal(err)
 	}
 
@@ -49,9 +49,9 @@ func TestRedisKVSetS(t *testing.T) {
 	}
 
 	//Cleanup what was inserted
-	_, err = cr.Del(r, context.Background(), keys...)
-	if err != nil {
-		t.Fatal(err)
+	_, err2 := cr.Del(r, context.Background(), keys...)
+	if err2 != nil {
+		t.Fatal(err2)
 	}
 }
 
@@ -79,7 +79,7 @@ func TestRedisKVSet(t *testing.T) {
 
 	//Query the database for the items
 	items, err := cr.GetMany[uuid.UUID, Foo](r, context.Background(), keys...)
-	if err != nil {
+	if err.Cause() != nil {
 		t.Fatal(err)
 	}
 
@@ -93,8 +93,8 @@ func TestRedisKVSet(t *testing.T) {
 	}
 
 	//Cleanup what was inserted
-	_, err = cr.Del(r, context.Background(), keys...)
-	if err != nil {
-		t.Fatal(err)
+	_, err2 := cr.Del(r, context.Background(), keys...)
+	if err2 != nil {
+		t.Fatal(err2)
 	}
 }

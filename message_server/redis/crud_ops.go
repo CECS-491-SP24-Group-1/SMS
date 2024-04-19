@@ -143,7 +143,7 @@ Gets an array of objects for an array of keys in the Redis database.
 The values must be present in the database for this function to succeed.
 Applicable to R in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func GetMany[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, keys ...K) ([]V, error) {
+func GetMany[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, keys ...K) ([]V, MultiRedisErr) {
 	//Create the output array, matching the size of the input key array
 	dest := make([]V, len(keys))
 
@@ -154,39 +154,49 @@ func GetMany[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.C
 	for _, key := range keys {
 		//Query Redis for the item via the pipeline
 		if err := pl.Get(ctx, u2s(key)).Err(); err != nil {
-			return nil, fmt.Errorf("pipeline queue err; %v", err)
+			return nil, MultiRedisErr{fmt.Errorf("pipeline queue err; %v", err), []int{}}
 		}
 	}
 
 	//Execute the commands in the pipeline and get the results array
+	//Only bail if a non-nil error is not a redis nil error
 	resl, err := pl.Exec(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("pipeline exec err; %v", err)
+	if err != nil && err != redis.Nil {
+		return nil, MultiRedisErr{fmt.Errorf("pipeline exec err; %v", err), []int{}}
 	}
 
 	//Loop over the fetched strings
+	problematicIndices := []int{}
 	for i, res := range resl {
+		//Check if the current result is a cache miss (`redis.Nil`)
+		if res.Err() != nil && res.Err() == redis.Nil {
+			fmt.Printf("[RCRUD_GetMany] Cache miss @ idx %d\n", i)
+			//Simply add the index to the list of those that are problematic and skip the iteration
+			problematicIndices = append(problematicIndices, i)
+			continue
+		}
+
 		//Check if the current result is an error
 		if res.Err() != nil {
-			return nil, res.Err()
+			return nil, MultiRedisErr{fmt.Errorf("error for res #%d: %v", i+1, res.Err()), []int{i}}
 		}
 
 		//Type assert the result to a `StringCmd`
 		sr, ok := res.(*redis.StringCmd)
 		if !ok {
-			return nil, fmt.Errorf("string assert err for res #%d", i+1)
+			return nil, MultiRedisErr{fmt.Errorf("string assert err for res #%d", i+1), []int{i}}
 		}
 
 		//Unmarshal the value string to the target type add it to the output array
 		obj, err := util.FromGOBBytes[V]([]byte(sr.Val()))
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal err; %v", err)
+			return nil, MultiRedisErr{fmt.Errorf("unmarshal err for res #%d: %v", i+1, err), []int{i}}
 		}
 		dest[i] = obj
 	}
 
 	//Return the list of items
-	return dest, nil
+	return dest, MultiRedisErr{nil, problematicIndices}
 }
 
 /*
@@ -194,7 +204,7 @@ Gets an array of strings for an array of keys in the Redis database.
 The values must be present in the database for this function to succeed.
 Applicable to R in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func GetManyS[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, keys ...K) ([]string, error) {
+func GetManyS[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, keys ...K) ([]string, MultiRedisErr) { //TODO: replace function body
 	//Create the output array, matching the size of the input key array
 	dest := make([]string, len(keys))
 
@@ -205,27 +215,37 @@ func GetManyS[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context
 	for _, key := range keys {
 		//Query Redis for the item via the pipeline
 		if err := pl.Get(ctx, u2s(key)).Err(); err != nil {
-			return nil, fmt.Errorf("pipeline queue err; %v", err)
+			return nil, MultiRedisErr{fmt.Errorf("pipeline queue err; %v", err), []int{}}
 		}
 	}
 
 	//Execute the commands in the pipeline and get the results array
+	//Only bail if a non-nil error is not a redis nil error
 	resl, err := pl.Exec(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("pipeline exec err; %v", err)
+	if err != nil && err != redis.Nil {
+		return nil, MultiRedisErr{fmt.Errorf("pipeline exec err; %v", err), []int{}}
 	}
 
 	//Loop over the fetched strings
+	problematicIndices := []int{}
 	for i, res := range resl {
+		//Check if the current result is a cache miss (`redis.Nil`)
+		if res.Err() != nil && res.Err() == redis.Nil {
+			fmt.Printf("[RCRUD_GetMany] Cache miss @ idx %d\n", i)
+			//Simply add the index to the list of those that are problematic and skip the iteration
+			problematicIndices = append(problematicIndices, i)
+			continue
+		}
+
 		//Check if the current result is an error
 		if res.Err() != nil {
-			return nil, res.Err()
+			return nil, MultiRedisErr{fmt.Errorf("error for res #%d: %v", i+1, res.Err()), []int{i}}
 		}
 
 		//Type assert the result to a `StringCmd`
 		sr, ok := res.(*redis.StringCmd)
 		if !ok {
-			return nil, fmt.Errorf("string assert err for res #%d", i+1)
+			return nil, MultiRedisErr{fmt.Errorf("string assert err for res #%d", i+1), []int{i}}
 		}
 
 		//Add the string result to the output array
@@ -233,7 +253,7 @@ func GetManyS[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context
 	}
 
 	//Return the list of items
-	return dest, nil
+	return dest, MultiRedisErr{nil, problematicIndices}
 }
 
 /*
