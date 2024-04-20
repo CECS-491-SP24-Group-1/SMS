@@ -72,41 +72,14 @@ func AddChallenges(
 }
 
 /*
-Removes a single challenge or list of challenges from the database. This
-function also removes the entries from Redis, using the Redis CRUD wrappers.
-The number of challenges removed is returned as an integer. This operation
-is equivalent to a D operation in CRUD.
+Gets a series of challenges by their IDs from either Redis if cached or
+from MongoDB if Redis doesn't have them. If a cache miss occurs, then this
+function will automatically cache them in Redis for faster future retrievals.
+A cache hit only occurs if all challenges requested are available. Otherwise,
+MongoDB will be consulted for the list of "problematic objects", or those
+that weren't found in Redis. This operation is equivalent to an R operation in
+CRUD.
 */
-func RemoveChallenges(
-	//Database drivers & context
-	m *mongo.Client, r *redis.Client, ctx context.Context,
-	//Challenge ID list
-	ids ...mongoutil.UUID,
-) (int, error) {
-	//Step 1a: Define the Mongo query that targets all challenges specified in the varargs by ID
-	targets := bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: ids}}}}
-
-	//Step 1b: Remove the documents from MongoDB
-	coll := m.Database(db.ROOT_DB).Collection(db.CHALL_COLLECTION)
-	res, err := coll.DeleteMany(ctx, targets)
-	if err != nil {
-		return defualtErrAmt, err
-	}
-
-	//Step 2: Remove the tokens from Redis
-	//TODO: use the redis crud wrapper here
-	sids := make([]string, len(ids))
-	for i, v := range ids {
-		sids[i] = v.String()
-	}
-	if err := r.Del(ctx, sids...).Err(); err != nil {
-		return defualtErrAmt, err
-	}
-
-	//Step 3: No errors occurred, so return the number of documents deleted
-	return int(res.DeletedCount), nil
-}
-
 func GetChallengesById(
 	//Database drivers & context
 	m *mongo.Client, r *redis.Client, ctx context.Context,
@@ -167,12 +140,37 @@ func GetChallengesById(
 }
 
 /*
-TODO: Add the below functions:
-func GetChallenges; R
-func GetChallengeById; R
-func AddChallenges; C
-func AddChallenge; C
-func RemoveChallenges; D
-func RemoveChallengeById; D
-* Challenges are immutable and do not have a U operation
+Removes a single challenge or list of challenges from the database. This
+function also removes the entries from Redis, using the Redis CRUD wrappers.
+The number of challenges removed is returned as an integer. This operation
+is equivalent to a D operation in CRUD.
 */
+func RemoveChallenges(
+	//Database drivers & context
+	m *mongo.Client, r *redis.Client, ctx context.Context,
+	//Challenge ID list
+	ids ...mongoutil.UUID,
+) (int, error) {
+	//Step 1a: Define the Mongo query that targets all challenges specified in the varargs by ID
+	targets := bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: ids}}}}
+
+	//Step 1b: Remove the documents from MongoDB
+	coll := m.Database(db.ROOT_DB).Collection(db.CHALL_COLLECTION)
+	res, err := coll.DeleteMany(ctx, targets)
+	if err != nil {
+		return defualtErrAmt, err
+	}
+
+	//Step 2: Remove the tokens from Redis
+	//TODO: use the redis crud wrapper here
+	sids := make([]string, len(ids))
+	for i, v := range ids {
+		sids[i] = v.String()
+	}
+	if err := r.Del(ctx, sids...).Err(); err != nil {
+		return defualtErrAmt, err
+	}
+
+	//Step 3: No errors occurred, so return the number of documents deleted
+	return int(res.DeletedCount), nil
+}
