@@ -170,7 +170,7 @@ func GetMany[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.C
 	for i, res := range resl {
 		//Check if the current result is a cache miss (`redis.Nil`)
 		if res.Err() != nil && res.Err() == redis.Nil {
-			fmt.Printf("[RCRUD_GetMany] Cache miss @ idx %d\n", i)
+			//fmt.Printf("[RCRUD_GetMany] Cache miss @ idx %d\n", i)
 			//Simply add the index to the list of those that are problematic and skip the iteration
 			problematicIndices = append(problematicIndices, i)
 			continue
