@@ -2,7 +2,6 @@ package crud
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -118,11 +117,10 @@ func GetChallengesById(
 	ch, rerr := cr.GetMany[mongoutil.UUID, chall.Challenge](r, ctx, ids...)
 	if rerr.Cause() != nil && rerr.Cause() != redis.Nil {
 		//An error occurred with Redis that isn't a null-key error; bail out
-		fmt.Printf("[CHALL_CRUD_R; REDIS ERROR]: %s\n", rerr)
 		return nil, rerr
 	} else if len(ch) > 0 && rerr.Cause() != redis.Nil {
 		//Cache hit! Return the challenges from Redis
-		fmt.Printf("CACHE HIT - err: %s, len: %d\n", "<nil>", len(ch))
+		//fmt.Printf("FULL CACHE HIT - err: %s, len: %d\n", "<nil>", len(ch))
 		return ch, nil
 	}
 
@@ -132,7 +130,7 @@ func GetChallengesById(
 		challenges. MongoDB should be queried for any challenges that weren't found,
 		based on the indices in the "problematic indices" array.
 	*/
-	fmt.Printf("CACHE MISS - err: `%s`, len: %d\n", rerr, len(ch))
+	//fmt.Printf("1+ CACHE MISSES - err: `%s`, len: %d\n", rerr, len(ch))
 
 	//Step 2: Get the IDs of the challenges that weren't in Redis
 	missedIds := []mongoutil.UUID{}
@@ -152,35 +150,20 @@ func GetChallengesById(
 		return challs, nil
 	}
 
-	//Step 5a: Create a mapping of the missing challenges to their ID
+	//Step 5a: Create a mapping of the missing challenges to their ID and add them to the output array
 	cmap := make(map[mongoutil.UUID]chall.Challenge)
 	for i, chall := range challs {
 		cmap[missedIds[i]] = chall
+		ch[i] = chall
 	}
 
-	fmt.Printf("chs: %+v\n", cmap)
+	//Step 5b: Add the missing challenges to Redis
+	if err := cr.SetMany(r, ctx, cmap); err != nil {
+		return nil, err
+	}
 
-	//Step 5b: Cache the missing challenges in Redis; further requests with the same challenge IDs will be honored by Redis instead
-
-	//Step 1: Create an output array for the challenges that's the same size as the input list
-	//out := make([]chall.Challenge, len(ids))
-
-	/*
-		//Step 3: Check if the MongoDB query returned nothing; no need to cache if there isn't anything to cache
-		if len(mr) == 0 || len(mr[0].Tokens) == 0 {
-			return mr[0].Tokens, nil
-		}
-
-		//Step 4: Cache the tokens in Redis; further requests with the same user ID will be honored by Redis instead
-		if err := r.RPush(ctx, uid.String(), mr[0].Tokens).Err(); err != nil {
-			//Report the Redis cache error but do not fail; caching not working isn't too big of a deal; just silently fail
-			fmt.Printf("[TOK_CRUD_R; REDIS CACHE RPUSH ERROR]: %s\n", err)
-		}
-
-		//Step 5: Return the MongoDB tokens to the user, along with a nil error
-		return mr[0].Tokens, nil
-	*/
-	return nil, nil
+	//Step 6: Return the list of challenges
+	return ch, nil
 }
 
 /*
