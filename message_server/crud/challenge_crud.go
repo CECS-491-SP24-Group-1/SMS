@@ -164,12 +164,8 @@ func RemoveChallenges(
 	}
 
 	//Step 2: Remove the tokens from Redis
-	//TODO: use the redis crud wrapper here
-	sids := make([]string, len(ids))
-	for i, v := range ids {
-		sids[i] = v.String()
-	}
-	if err := r.Del(ctx, sids...).Err(); err != nil {
+	_, err = cr.Del(r, ctx, ids...)
+	if err != nil {
 		return defualtErrAmt, err
 	}
 

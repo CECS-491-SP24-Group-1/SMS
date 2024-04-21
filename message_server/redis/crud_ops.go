@@ -208,7 +208,7 @@ Gets an array of strings for an array of keys in the Redis database.
 The values must be present in the database for this function to succeed.
 Applicable to R in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func GetManyS[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, keys ...K) ([]string, MultiRedisErr) { //TODO: replace function body
+func GetManyS[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, keys ...K) ([]string, MultiRedisErr) {
 	//Create the output array, matching the size of the input key array
 	dest := make([]string, len(keys))
 

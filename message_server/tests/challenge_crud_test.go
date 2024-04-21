@@ -115,7 +115,6 @@ func TestChallCRUDDel(t *testing.T) {
 	fmt.Printf("Total: %d\n", cnt)
 }
 
-// TODO: test cache durability (if the received challenges still have the same payload for both hits, deletion then get with a miss, then get with a hit)
 func TestChallCRUDGet(t *testing.T) {
 	//Get a Mongo and Redis client
 	m := mongoInit()
