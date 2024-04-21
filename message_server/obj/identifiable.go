@@ -19,3 +19,8 @@ type Identifiable struct {
 	//The type of item this object is.
 	Type IdType `json:"type" bson:"type"`
 }
+
+// Checks if this identifiable is equal to another.
+func (i Identifiable) Equal(other Identifiable) bool {
+	return i.ID == other.ID && i.Type == other.Type
+}

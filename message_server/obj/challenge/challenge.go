@@ -60,27 +60,29 @@ type Challenge struct {
 	Payload string `json:"payload" bson:"payload"`
 }
 
+// Creates a new challenge, generating a random ID and challenge text for it.
 func NewChallenge(
 	scope ChallengeScope,
 	initiator obj.Identifiable,
 	responder obj.Identifiable,
 	expiry time.Time,
-) *Challenge {
+) Challenge {
 	return NewChallengeDeterministic(mongoutil.MustNewUUID7(), scope, initiator, responder, expiry)
 }
 
+// Creates a new challenge from an existing UUID.
 func NewChallengeDeterministic(
 	id mongoutil.UUID,
 	scope ChallengeScope,
 	initiator obj.Identifiable,
 	responder obj.Identifiable,
 	expiry time.Time,
-) *Challenge {
+) Challenge {
 	//Create random challenge text
 	ctext := base64.URLEncoding.EncodeToString(util.MustGenRandBytes(ChallengePayloadSize))
 
 	//Create and return a challenge
-	return &Challenge{
+	return Challenge{
 		Identifiable: obj.Identifiable{
 			ID:   id,
 			Type: obj.IdTypeCHALLENGE,
@@ -94,4 +96,13 @@ func NewChallengeDeterministic(
 	}
 }
 
-//TODO: extend challenge by adding challenge text and solution
+// Checks if this challenge is equal to another.
+func (ch Challenge) Equal(other Challenge) bool {
+	return ch.ID == other.ID &&
+		ch.Scope == other.Scope &&
+		ch.Initiator.Equal(other.Initiator) &&
+		ch.Responder.Equal(other.Responder) &&
+		ch.Expiry == other.Expiry &&
+		ch.Status == other.Status &&
+		ch.Payload == other.Payload
+}

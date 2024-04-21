@@ -25,7 +25,7 @@ func AddChallenges(
 	//Database drivers & context
 	m *mongo.Client, r *redis.Client, ctx context.Context,
 	//Challenge list
-	chl ...*chall.Challenge,
+	chl ...chall.Challenge,
 ) (int, error) {
 	//Step 1: Create arrays to hold the Mongo write queue and Redis byte strings
 	bwq := make([]mongo.WriteModel, len(chl))
@@ -107,7 +107,9 @@ func GetChallengesById(
 
 	//Step 2: Get the IDs of the challenges that weren't in Redis
 	missedIds := []mongoutil.UUID{}
+	missedIdxs := []int{}
 	for _, mid := range rerr.Indices() {
+		missedIdxs = append(missedIdxs, mid)
 		missedIds = append(missedIds, ids[mid])
 	}
 
@@ -124,10 +126,10 @@ func GetChallengesById(
 	}
 
 	//Step 5a: Create a mapping of the missing challenges to their ID and add them to the output array
-	cmap := make(map[mongoutil.UUID]chall.Challenge)
-	for i, chall := range challs {
-		cmap[missedIds[i]] = chall
-		ch[i] = chall
+	cmap := make(map[mongoutil.UUID]chall.Challenge, len(missedIds))
+	for i, mid := range missedIds {
+		ch[missedIdxs[i]] = challs[i]
+		cmap[mid] = challs[i]
 	}
 
 	//Step 5b: Add the missing challenges to Redis

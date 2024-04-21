@@ -3,6 +3,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
 	c "wraith.me/message_server/obj/challenge"
+	cr "wraith.me/message_server/redis"
 )
 
 /*
@@ -131,4 +133,61 @@ func TestChallCRUDGet(t *testing.T) {
 		fmt.Printf("    - %s; payload: %s\n", ch.ID.String(), ch.Payload)
 	}
 	fmt.Printf("Total: %d\n", len(chs))
+}
+
+func TestChallCRUDCacheCorrectness(t *testing.T) {
+	//Get a Mongo and Redis client
+	m := mongoInit()
+	r := redisInit()
+
+	//Get a list of challenges and fill it
+	n := 10
+	chs := make([]c.Challenge, n)
+	ids := make([]mongoutil.UUID, n)
+	for i := 0; i < n; i++ {
+		chs[i] = c.NewChallenge(
+			c.ChallengeScopeEMAIL,
+			obj.Identifiable{ID: mongoutil.MustNewUUID4(), Type: obj.IdTypeUSER},
+			obj.Identifiable{ID: mongoutil.MustNewUUID4(), Type: obj.IdTypeUSER},
+			time.Now().Add(c.DEFAULT_CHALLENGE_EXPIRY),
+		)
+		ids[i] = chs[i].ID
+	}
+
+	//Add the challenges to the database
+	_, err := crud.AddChallenges(m, r, context.Background(), chs...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//Remove a random number of challenges from Redis
+	removals := []mongoutil.UUID{}
+	for i := 0; i < rand.Intn(n); i++ {
+		removals = append(removals, chs[rand.Intn(n)].ID)
+	}
+	if len(removals) > 0 {
+		_, err = cr.Del(r, context.Background(), removals...)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	//Get the challenges from the database
+	actual, err := crud.GetChallengesById(m, r, context.Background(), ids...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//Ensure the matches equal each other
+	for i := 0; i < n; i++ {
+		if !chs[i].Equal(actual[i]) {
+			t.Fatalf("Unequal challenges @ idx %d:\nExpected: %v\nActual:   %v", i+1, chs[i], actual[i])
+		}
+	}
+
+	//Cleanup the challenges
+	_, err = crud.RemoveChallenges(m, r, context.Background(), ids...)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
