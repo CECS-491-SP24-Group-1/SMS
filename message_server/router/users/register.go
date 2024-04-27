@@ -213,6 +213,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	fmt.Printf("TOK: '%s'\n", tempToken.ToB64())
 
 	//Step 2a: Push the token to the user's list of tokens and add the user to the database
+	//TODO: use CRUD operations here
 	user.Tokens = append(user.Tokens, *tempToken)
 	userBson, jerr := bson.Marshal(user)
 	_, ierr := ucoll.InsertOne(r.Context(), userBson)
