@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"wraith.me/message_server/crud"
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/util/httpu"
 )
@@ -16,11 +17,18 @@ func SolveChallengeRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Return a 400 if the ID is not of the proper format
 	if !mongoutil.IsValidUUIDv7(cid) {
-		httpu.HttpErrorAsJson(w, fmt.Errorf("incorrect ID format; must be a UUIDv7"), 400)
+		httpu.HttpErrorAsJson(w, fmt.Errorf("incorrect ID format; must be a UUIDv7"), http.StatusBadRequest)
 		return
 	}
 
-	solve := fmt.Sprintf("solve challenge with id %s, scope %s", cid)
+	//Attempt to get the challenge from the database
+	challs, err := crud.GetChallengesById(mcl, rcl, r.Context(), mongoutil.UUIDFromString(cid))
+	if err != nil {
+		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	solve := fmt.Sprintf("solve challenge with id %s, scope %s", cid, challs[0].Scope)
 
 	//names, _ := mcl.ListDatabaseNames(context.TODO(), bson.M{})
 

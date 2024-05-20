@@ -15,7 +15,7 @@ func TestTokCRUDGet(t *testing.T) {
 	r := redisInit()
 
 	//Query for tokens by the user's ID
-	uid := mongoutil.UUIDFromStringOrNil("018eac6a-9a9d-77f2-bd4b-238b34d9c767")
+	uid := mongoutil.UUIDFromString("018eac6a-9a9d-77f2-bd4b-238b34d9c767")
 	toks, err := crud.GetSTokens(m, r, context.Background(), uid)
 	if err != nil {
 		t.Fatal(err)

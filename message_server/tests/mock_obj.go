@@ -49,24 +49,24 @@ var (
 // Create some mock challenges
 var (
 	chall1 = c.NewChallengeDeterministic(
-		mongoutil.UUIDFromStringOrNil("9f583aab-10f1-4dbe-8388-9daa6a086cf3"),
+		mongoutil.UUIDFromString("9f583aab-10f1-4dbe-8388-9daa6a086cf3"),
 		c.ChallengeScopeEMAIL,
-		obj.Identifiable{ID: mongoutil.UUIDFromStringOrNil("9f583aab-10f1-4dbe-8388-9daa6a086cf4"), Type: obj.IdTypeUSER},
-		obj.Identifiable{ID: mongoutil.UUIDFromStringOrNil("9f583aab-10f1-4dbe-8388-9daa6a086cf5"), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: mongoutil.UUIDFromString("9f583aab-10f1-4dbe-8388-9daa6a086cf4"), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: mongoutil.UUIDFromString("9f583aab-10f1-4dbe-8388-9daa6a086cf5"), Type: obj.IdTypeUSER},
 		time.Now().Add(c.DEFAULT_CHALLENGE_EXPIRY),
 	)
 	chall2 = c.NewChallengeDeterministic(
-		mongoutil.UUIDFromStringOrNil("072b187f-e76a-4285-a36e-e363ecdc6bab"),
+		mongoutil.UUIDFromString("072b187f-e76a-4285-a36e-e363ecdc6bab"),
 		c.ChallengeScopeEMAIL,
-		obj.Identifiable{ID: mongoutil.UUIDFromStringOrNil("072b187f-e76a-4285-a36e-e363ecdc6bac"), Type: obj.IdTypeUSER},
-		obj.Identifiable{ID: mongoutil.UUIDFromStringOrNil("072b187f-e76a-4285-a36e-e363ecdc6bad"), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: mongoutil.UUIDFromString("072b187f-e76a-4285-a36e-e363ecdc6bac"), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: mongoutil.UUIDFromString("072b187f-e76a-4285-a36e-e363ecdc6bad"), Type: obj.IdTypeUSER},
 		time.Now().Add(c.DEFAULT_CHALLENGE_EXPIRY),
 	)
 	chall3 = c.NewChallengeDeterministic(
-		mongoutil.UUIDFromStringOrNil("7dac53f2-0371-476f-8a06-54742f12e873"),
+		mongoutil.UUIDFromString("7dac53f2-0371-476f-8a06-54742f12e873"),
 		c.ChallengeScopeEMAIL,
-		obj.Identifiable{ID: mongoutil.UUIDFromStringOrNil("7dac53f2-0371-476f-8a06-54742f12e874"), Type: obj.IdTypeUSER},
-		obj.Identifiable{ID: mongoutil.UUIDFromStringOrNil("7dac53f2-0371-476f-8a06-54742f12e875"), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: mongoutil.UUIDFromString("7dac53f2-0371-476f-8a06-54742f12e874"), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: mongoutil.UUIDFromString("7dac53f2-0371-476f-8a06-54742f12e875"), Type: obj.IdTypeUSER},
 		time.Now().Add(c.DEFAULT_CHALLENGE_EXPIRY),
 	)
 )

@@ -19,7 +19,7 @@ func GetChallengeRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Return a 400 if the ID is not of the proper format
 	if !mongoutil.IsValidUUIDv7(cid) {
-		httpu.HttpErrorAsJson(w, fmt.Errorf("incorrect ID format; must be a UUIDv7"), 400)
+		httpu.HttpErrorAsJson(w, fmt.Errorf("incorrect ID format; must be a UUIDv7"), http.StatusBadRequest)
 		return
 	}
 

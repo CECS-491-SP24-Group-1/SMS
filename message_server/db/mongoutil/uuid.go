@@ -57,8 +57,11 @@ func NilUUID() UUID {
 	return UUID{[16]byte{}}
 }
 
-// UUIDFromStringOrNil returns a UUID parsed from the input string.
-func UUIDFromStringOrNil(input string) UUID {
+/*
+Returns a UUID parsed from the input string, or a nil UUID if the input
+string is not a valid UUID.
+*/
+func UUIDFromString(input string) UUID {
 	id := uuid.MustParse(input)
 	if id == uuid.Nil {
 		return NilUUID()
@@ -66,7 +69,7 @@ func UUIDFromStringOrNil(input string) UUID {
 	return UUID{id}
 }
 
-// UUIDFromStringOrNil returns a UUID parsed from the input bytes.
+// Returns a UUID parsed from the input bytes.
 func UUIDFromBytes(input []byte) UUID {
 	id := uuid.Must(uuid.FromBytes(input))
 	return UUID{id}

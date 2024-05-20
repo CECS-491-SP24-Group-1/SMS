@@ -69,7 +69,7 @@ func EnvInit(path string) (Env, error) {
 
 		//Set the struct fields from the map and return no error
 		*c = Env{
-			ID: mongoutil.UUIDFromStringOrNil(em["ID"]),
+			ID: mongoutil.UUIDFromString(em["ID"]),
 		}
 		return nil
 	}
