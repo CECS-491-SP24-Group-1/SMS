@@ -73,8 +73,8 @@ func ensureNonexistantUser(coll *mongo.Collection, usr intermediateUser, ctx con
 	//Construct a Mongo aggregation pipeline to run the request; avoids making multiple round-trips to the database
 	//This aggregation was exported from MongoDB; do not edit if you don't know what you are doing!
 	agg := bson.A{
+		//Match any documents that have the same username, email, or public key
 		bson.D{
-			//Match any documents that have the same username, email, or public key
 			{Key: "$match",
 				Value: bson.D{
 					{Key: "$or",
@@ -207,6 +207,10 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+Performs post-signup operations on the newly created user object, such
+as persistence to the database and generation of challenges.
+*/
 func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *mongo.Collection) error {
 	//Step 1: Issue a token that's good for the duration of the challenge window; otherwise the routes won't be allowed
 	tempToken := obj.NewToken(user.ID, ip_addr.HttpIP2NetIP(r.RemoteAddr), obj.TokenScopePOSTSIGNUP, user.Flags.PurgeBy)

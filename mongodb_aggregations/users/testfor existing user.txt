@@ -9,7 +9,10 @@
           email: "thea_predovic87@gmail.com",
         },
         {
-          pubkey: "foo",
+          pubkey: BinData(
+            0,
+            "C+AyhdaclzdM/tvdo1Unh6XH12OCd4QMkilkogVsqKQ="
+          ),
         },
       ],
     },

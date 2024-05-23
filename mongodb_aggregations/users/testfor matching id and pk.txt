@@ -1,0 +1,20 @@
+[
+  {
+    $match: {
+      _id: UUID(
+        "018f9e0a-b0f2-765d-af4f-71c9c7872304"
+      ),
+      pubkey: BinData(
+        0,
+        "C+AyhdaclzdM/tvdo1Unh6XH12OCd4QMkilkogVsqKQ="
+      ),
+    },
+  },
+  {
+    $project: {
+      _id: 1,
+      pubkey: 1,
+      flags: 1,
+    },
+  },
+]

@@ -8,6 +8,9 @@
 	<!-- <script type="application/javascript" src="./static/js/cons_mirror.js"></script> -->
 	<script type="application/javascript" src="./static/js/wasm_loader.js"></script>
 	<script type="application/javascript" src="./static/js/faker_3.0.1.min.js"></script>
+	<script type="application/javascript" src="./static/js/FileSaver.min.js"></script>
+	<script type="application/javascript" src="./static/js/uuid.js"></script>
+	<script type="application/javascript" src="./static/js/vault_simple.js"></script>
 	<style>
 		label + input {
 			margin-left: 10px;
@@ -37,6 +40,9 @@
 		.formBtn + .formBtn {
 			margin-left: 3px;
 		}
+		#dlVaultBtn {
+			display: none;
+		}
 	</style>
 </head>
 <body>
@@ -48,6 +54,7 @@
 		<input type="submit" id="submitBtn" class="formBtn" value="Submit">
 		<button type="button" id="clearBtn" class="formBtn" onclick="handleFClear()">Clear</button>
 		<button type="button" id="randBtn" class="formBtn" onclick="handleRandForm()">Randomize & Submit</button>
+		<button type="button" id="dlVaultBtn" class="formBtn" onclick="">Download Vault</button>
 		<span id="validationWarn">One or more fields are invalid. Please check your inputs and try again.</span>
 	</form>
 	<br>
@@ -63,9 +70,11 @@
 	<script type="application/javascript">
 		//Utility function to get base64 strings from arrays
 		//getB64Str(arr: Array) -> string
+		/*
 		function getB64Str(arr){
 			return btoa(String.fromCharCode.apply(null, new Uint8Array(arr)));
 		}
+		*/
 
 		//validate(data: JSONObject) -> boolean
 		function validate(data){
@@ -132,13 +141,16 @@
 			//Get an Ed25519 keypair from the crypto library
 			let keypair = ed25519Keygen();
 
+			//Create a new vault object to store the keys and eventual ID from the server
+			let vault = new Vault(uuidNil(), keypair.sk, keypair.pk);
+
 			//Add the keypair to the submission form
-			document.getElementById("privkey").innerHTML = getB64Str(keypair.sk);
-			document.getElementById("pubkey").innerHTML = getB64Str(keypair.pk);
+			document.getElementById("privkey").innerHTML = vault.kstore.skString();
+			document.getElementById("pubkey").innerHTML = vault.kstore.pkString();
 			for(const span of document.querySelectorAll(".keySpan")) span.style.setProperty("visibility", "visible", "important");
 
 			//Add the public key to the form data
-			data.pubkey = getB64Str(keypair.pk);
+			data.pubkey = vault.kstore.pkString();
 
 			//Send the form to the server
 			const endpoint = LOCAL_EP_BASE + "/users/register";
@@ -162,7 +174,31 @@
 				//Parse the response
 				return response.text();
 			})
-			.then(resp => log(resp))
+			.then(async resp => {
+				//Log the response
+				log(resp);
+
+				//Parse the response to JSON and add the ID to the subject field of the vault
+				respj = JSON.parse(resp);
+				vault.subject = respj.id;
+
+				console.log(vault.toString());
+				console.log(Vault.fromString(vault.toString()).toString());
+
+				//Bind the export method to this vault instance
+				vault.export = vault.export.bind(vault);
+
+				//Get the download and button and replace any existing instances
+				//This prevents old vaults from being downloaded if multiple users signup using the form
+				let dlBtn = document.getElementById("dlVaultBtn");
+				let clonedBtn = dlBtn.cloneNode(true);
+				dlBtn.parentNode.replaceChild(clonedBtn, dlBtn);
+				dlBtn.replaceWith(dlBtn.cloneNode(true));
+
+				//Show the download button for the vault and bind an event listener
+				clonedBtn.addEventListener("click", vault.export);
+				clonedBtn.style.display = "initial";
+			})
 			.catch(error => log(`${error}\n`));
 		});
 
