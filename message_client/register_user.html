@@ -182,9 +182,6 @@
 				respj = JSON.parse(resp);
 				vault.subject = respj.id;
 
-				console.log(vault.toString());
-				console.log(Vault.fromString(vault.toString()).toString());
-
 				//Bind the export method to this vault instance
 				vault.export = vault.export.bind(vault);
 
