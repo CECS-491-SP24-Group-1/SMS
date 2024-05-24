@@ -126,9 +126,7 @@
 				validationWarn.style.setProperty("visibility", "visible", "important");
 				return;
 			}
-			else {
-				validationWarn.style.setProperty("visibility", "hidden", "important");
-			}
+			validationWarn.style.setProperty("visibility", "hidden", "important");
 
 			//Get an Ed25519 keypair from the crypto library
 			let keypair = ed25519Keygen();
