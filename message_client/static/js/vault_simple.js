@@ -47,6 +47,7 @@ class Vault {
 	 * Derives a `Vault` object from the JSON representation of one.
 	 * @param {string} str The JSON string to ingest
 	 * @returns {Vault} The derived `Vault` object
+	 * @throws {Error} If the JSON failed to parse for whatever reason
 	 */
 	static fromString(str){
 		//Convert the input string to a JSONObject
