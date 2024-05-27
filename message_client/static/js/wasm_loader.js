@@ -49,7 +49,7 @@ function loadWasm(wasmURL, runNow){
 			inst = await result.instance;
 
 			//Initialize a new `WasmInst` object
-			let obj = await new WasmInst(go, mod, inst);
+			const obj = await new WasmInst(go, mod, inst);
 
 			//Run the Go code if requested
 			if(runNow){

@@ -75,9 +75,9 @@
 			if(data.username.trim() === "" || data.email.trim() === "") return false;
 
 			//Step 2: Check if the username and email are valid
-			let unameLower = data.username.toLowerCase();
-			let uvalid = unameLower.match(/^([a-z0-9_]){4,16}$/) !== null;
-			let evalid = data.email.toLowerCase().match(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/) !== null;
+			const unameLower = data.username.toLowerCase();
+			const uvalid = unameLower.match(/^([a-z0-9_]){4,16}$/) !== null;
+			const evalid = data.email.toLowerCase().match(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/) !== null;
 
 			//Step 3: Ensure both the username and email are valid
 			if(!uvalid || !evalid) return false;
@@ -115,13 +115,13 @@
 
 			//Get the form data; the values should be strings
 			const formData = new FormData(form);
-			let data = {
+			const data = {
 				username: formData.get("username"),
 				email: formData.get("email")
 			};
 
 			//Validate the form data
-			let validationWarn = document.getElementById("validationWarn");
+			const validationWarn = document.getElementById("validationWarn");
 			if(!validate(data)){
 				validationWarn.style.setProperty("visibility", "visible", "important");
 				return;
@@ -129,10 +129,10 @@
 			validationWarn.style.setProperty("visibility", "hidden", "important");
 
 			//Get an Ed25519 keypair from the crypto library
-			let keypair = ed25519Keygen();
+			const keypair = ed25519Keygen();
 
 			//Create a new vault object to store the keys and eventual ID from the server
-			let vault = new Vault(uuidNil(), keypair.sk, keypair.pk);
+			const vault = new Vault(uuidNil(), keypair.sk, keypair.pk);
 
 			//Add the keypair to the submission form
 			document.getElementById("privkey").innerHTML = vault.kstore.skString();
@@ -143,8 +143,8 @@
 			data.pubkey = vault.kstore.pkString();
 
 			//Send the form to the server
-			const endpoint = LOCAL_EP_BASE + "/users/register";
-			fetch(endpoint, {
+			const ENDPOINT = LOCAL_EP_BASE + "/users/register";
+			fetch(ENDPOINT, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -177,8 +177,8 @@
 
 				//Get the download and button and replace any existing instances
 				//This prevents old vaults from being downloaded if multiple users signup using the form
-				let dlBtn = document.getElementById("dlVaultBtn");
-				let clonedBtn = dlBtn.cloneNode(true);
+				const dlBtn = document.getElementById("dlVaultBtn");
+				const clonedBtn = dlBtn.cloneNode(true);
 				dlBtn.parentNode.replaceChild(clonedBtn, dlBtn);
 				dlBtn.replaceWith(dlBtn.cloneNode(true));
 

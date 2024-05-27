@@ -37,7 +37,7 @@ class Vault {
 	 * their device.
 	 */
 	export(){
-		let blob = new Blob([this.toString()], {
+		const blob = new Blob([this.toString()], {
 			type: "text/plain;charset=utf-8;",
 		});
 		saveAs(blob, `vault_${this.id}.json`);
@@ -51,14 +51,14 @@ class Vault {
 	 */
 	static fromString(str){
 		//Convert the input string to a JSONObject
-		let json = JSON.parse(str);
+		const json = JSON.parse(str);
 
 		//Parse out the 2 uint8 arrays from the JSON object
-		let sk = new Uint8Array(json.kstore.sk, 0, KEY_SIZE);
-		let pk = new Uint8Array(json.kstore.pk, 0, KEY_SIZE);
+		const sk = new Uint8Array(json.kstore.sk, 0, KEY_SIZE);
+		const pk = new Uint8Array(json.kstore.pk, 0, KEY_SIZE);
 
 		//Create a new vault object
-		let vault = new Vault(json.subject, sk, pk);
+		const vault = new Vault(json.subject, sk, pk);
 
 		//Replace the properties of the object with those in the JSON
 		vault.id = json.id;
@@ -76,7 +76,7 @@ class Vault {
 	 */
 	toString(){
 		//Do the initial conversion to a JSON object
-		let json = JSON.parse(JSON.stringify(this));
+		const json = JSON.parse(JSON.stringify(this));
 
 		//Replace the uint8 arrays with normal arrays
 		json.kstore.sk = Array.from(this.kstore.sk);
