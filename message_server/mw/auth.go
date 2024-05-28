@@ -79,7 +79,7 @@ request header: "Authorization: BEARER T".
 See: https://github.com/go-chi/jwtauth/blob/1ff608193a049433794670a8c18fd739c5b2f236/jwtauth.go#L266
 */
 func TokenFromHeader(r *http.Request) string {
-	// Get token from authorization header.
+	//Get token from authorization header
 	bearer := r.Header.Get("Authorization")
 	if len(bearer) > 7 && strings.ToUpper(bearer[0:6]) == "BEARER" {
 		return bearer[7:]
@@ -93,7 +93,7 @@ query parameter.
 See: https://github.com/go-chi/jwtauth/blob/1ff608193a049433794670a8c18fd739c5b2f236/jwtauth.go#L285
 */
 func TokenFromQuery(r *http.Request) string {
-	// Get token from query param named "jwt".
+	//Get token from query param named "jwt"
 	return r.URL.Query().Get(AuthHttpParamName)
 }
 

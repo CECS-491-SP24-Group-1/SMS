@@ -137,11 +137,8 @@ func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 	})
 
 	//AUTH TEST START
-	scopes := []obj.TokenScope{obj.TokenScopePOSTSIGNUP}
-	r.Group(func(r chi.Router) {
-		r.Use(mw.NewAuthMiddleware(scopes))
-		r.Get("/auth_test", router.AuthTest)
-	})
+	authTest := router.NewAuthTestRouter("", obj.TokenScopeValues())
+	r.Group(authTest.Router())
 	//AUTH TEST END
 
 	//Return the built router for requests

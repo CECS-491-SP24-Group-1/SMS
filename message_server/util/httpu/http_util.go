@@ -30,6 +30,11 @@ func HttpOkJson(w http.ResponseWriter, json string) {
 
 // Issues an HTTP error response as JSON.
 func HttpErrorAsJson(w http.ResponseWriter, err error, code int) {
+	//Ensure the code is valid
+	if code <= 0 {
+		code = http.StatusInternalServerError
+	}
+
 	//Construct an error response object
 	resp := obj.Response{
 		Code:   code,
@@ -50,6 +55,11 @@ func HttpErrorAsJson(w http.ResponseWriter, err error, code int) {
 
 // Issues an HTTP error response as JSON.
 func HttpMultipleErrorsAsJson(w http.ResponseWriter, errs []error, code int) {
+	//Ensure the code is valid
+	if code <= 0 {
+		code = http.StatusInternalServerError
+	}
+
 	//Populate a list of stringified errors
 	stringErrs := make([]string, len(errs))
 	for i, err := range errs {
@@ -61,6 +71,31 @@ func HttpMultipleErrorsAsJson(w http.ResponseWriter, errs []error, code int) {
 		Code:   code,
 		Status: "multiple_errors",
 		Desc:   stringErrs,
+	}
+
+	//Set the mimetype of the output to be JSON
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+	//Write the object to the response writer
+	w.WriteHeader(code)
+	jerr := json.NewEncoder(w).Encode(&resp)
+	if jerr != nil {
+		http.Error(w, jerr.Error(), http.StatusInternalServerError)
+	}
+}
+
+// Issues an HTTP info response as JSON.
+func HttpOkAsJson(w http.ResponseWriter, msg string, code int) {
+	//Ensure the code is valid
+	if code <= 0 {
+		code = http.StatusOK
+	}
+
+	//Construct an error response object
+	resp := obj.Response{
+		Code:   code,
+		Status: "ok",
+		Desc:   msg,
 	}
 
 	//Set the mimetype of the output to be JSON
