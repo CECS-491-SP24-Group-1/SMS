@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Login Existing User</title>
+	<script type="application/javascript" src="./static/js/consts.js"></script>
+	<script type="application/javascript" src="./static/js/wasm_exec2.min.js"></script>
+	<!-- <script type="application/javascript" src="./static/js/wasm_exec_tgo.min.js"></script> -->
+	<!-- <script type="application/javascript" src="./static/js/cons_mirror.js"></script> -->
+	<script type="application/javascript" src="./static/js/wasm_loader.js"></script>
+	<script type="application/javascript" src="./static/js/uuid.js"></script>
+	<script type="application/javascript" src="./static/js/vault_simple.js"></script>
+	<style>
+		/* DEBUG START */
+		table, th, td {
+			border: 1px solid black;
+		}
+		/* DEBUG END */
+
+		label + input {
+			margin-left: 10px;
+		}
+		#output {
+			overflow: scroll;
+		}
+		#loadVaultWarn {
+			margin-left: 5px;
+			color: red;
+			display: inline-block;
+			visibility: hidden;
+		}
+		pre {
+			display: inline-block;
+			margin: 0;
+		}
+		.formBtn + .formBtn {
+			margin-top: 3px;
+		}
+		#fileSelector {
+			display: block;
+		}
+		.header {
+			margin: 0;
+		}
+		.infoTable, h4, h5, h6 {
+			margin-left: 1em !important;
+		}
+		.infoTable td + td {
+			padding: 0 0.5em;
+		}
+		.monoFont {
+			font-family: "Courier New", Courier, monospace;
+		}
+		#skField, .bad {
+			color: red;
+		}
+		#pkField, .good {
+			color: green;
+		}
+		#tokenForm {
+			width: 100%;
+		}
+		.bigCell {
+			width: 50em;
+			overflow: scroll;
+		}
+	</style>
+</head>
+<body>
+	<!-- Load vault form -->
+	<form id="loadVaultForm">
+		<input type="file" id="fileSelector" class="formBtn" name="vault" accept="application/json, text/plain">
+		<button type="button" id="loadVaultBtn" class="formBtn" onclick="readVault()">Load Vault</button>
+		<span id="loadVaultWarn">The following issue occurred while loading the vault: <pre>&nbsp;</pre></span>
+	</form>
+
+	<!-- Vault info -->
+	<div id="vaultInfo">
+		<h3 class="header">Vault Info</h3>
+		<table class="infoTable">
+			<tbody>
+				<tr>
+					<td>ID:</td>
+					<td class="monoFont" id="idField">&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Subject:</td>
+					<td class="monoFont" id="subjectField">&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Last Modified:</td>
+					<td class="monoFont" id="lastModField">&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Notes:</td>
+					<td class="monoFont" id="notesField">&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Device Identifier:</td>
+					<td class="monoFont" id="devIdentField">&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Private Key (SK):</td>
+					<td class="monoFont" id="skField">&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Public Key (PK):</td>
+					<td class="monoFont" id="pkField">&nbsp;</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<br>
+
+	<!-- Challenge stuff -->
+	<div id="challengeActions">
+		<h3 class="header">Challenge Actions</h3>
+		<h4 class="header">Token Check</h4>
+		<table class="infoTable">
+			<tbody>
+				<tr>
+					<td class="tokenEntry">Access Token:</td>
+					<td colspan="2" class="bigCell"><input type="text" placeholder="Token" class="monoFont" id="tokenForm"></td>
+				</tr>
+				<tr>
+					<td><button type="button" id="checkTokenBtn" class="formBtn" onclick="checkToken()">Check Token</button></td>
+					<td>Token Status:</td>
+					<td class="bigCell monoFont"><pre id="tokenStatus">&nbsp;</pre></td>
+				</tr>
+			</tbody>
+		</table>
+		<h4 class="header">Challenge Check</h4>
+		<table class="infoTable">
+			<tbody>
+				<tr>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<br>
+
+	<!-- Login stuff -->
+	<div id="loginActions">
+		<h3 class="header">Login Actions</h3>
+		<table class="infoTable">
+			<tbody>
+				<tr>
+					<td>e</td>
+					<td>e</td>
+					<td>e</td>
+				</tr>
+				<tr>
+					<td>f</td>
+					<td>f</td>
+					<td>f</td>
+				</tr>
+			</tbody>
+		</table>
+		<!--
+
+			Check challenge status (needs token)
+			Solve PK challenge (needs token)
+
+			Get login challenge
+			Sign login challenge
+			Complete login
+		-->
+	</div>
+
+	<!-- Scripts -->
+	<!-- Singletons -->
+	<script type="application/javascript">
+		loadWasm(WASM_URL, true);
+		//loadWasm(WASM_PROD_URL, true);
+
+		//Singleton vault instance for the entire page (Vault).
+		let vault = null;
+
+		//Singleton token instance for the entire page (string).
+		let token = "";
+
+		//Singleton token status instance for the entire page (boolean).
+		let goodToken = false;
+	</script>
+
+	<!-- Vault loading stuff -->
+	<script type="application/javascript">
+		//Clear all warnings & info fields when a new file is selected
+		document.getElementById("fileSelector").addEventListener("change", event => {
+			//Clear warnings
+			hideVaultLoadWarn();
+
+			//Clear info fields
+			populateVaultInfo(null);
+		});
+
+		//populateById(id: string, text: string) -> void
+		function populateById(id, text){
+			document.getElementById(id).innerHTML = text;
+		}
+
+		//populateVaultInfo(vault: vault?) -> void
+		function populateVaultInfo(vault){
+			const CLR_CONTENTS = "&nbsp;"
+			populateById("idField", vault !== null ? vault.id : CLR_CONTENTS);
+			populateById("subjectField", vault !== null ? vault.subject : CLR_CONTENTS);
+			populateById("lastModField", vault !== null ? `${vault.lastMod}` : CLR_CONTENTS);
+			populateById("notesField", vault !== null ? vault.notes : CLR_CONTENTS);
+			populateById("devIdentField", vault !== null ? vault.devIdent : CLR_CONTENTS);
+			populateById("skField", vault !== null ? vault.kstore.skString() : CLR_CONTENTS);
+			populateById("pkField", vault !== null ? vault.kstore.pkString() : CLR_CONTENTS);
+		}
+
+		//showVaultLoadWarn(err: Error) -> void
+		function showVaultLoadWarn(err){
+			//Get the warning head and body elements
+			const warnHead = document.getElementById("loadVaultWarn");
+			const warnBody = warnHead.getElementsByTagName("pre")[0];
+
+			//Set the error message and show the warning
+			warnBody.innerText = `${err.name} - ${err.message}`;
+			warnHead.style.setProperty("visibility", "visible", "important");
+		}
+
+		//hideVaultLoadWarn() -> void
+		function hideVaultLoadWarn(){
+			//Get the warning head and body elements
+			const warnHead = document.getElementById("loadVaultWarn");
+			const warnBody = warnHead.getElementsByTagName("pre")[0];
+
+			//Set the error message and show the warning
+			warnBody.innerText = "&nbsp;";
+			warnHead.style.setProperty("visibility", "hidden", "important");
+		}
+
+		//readVault() -> void
+		async function readVault(){
+			//Get the vault file from the selector
+			const vaultFile = document.getElementById("fileSelector").files[0];
+
+			//Check if a vault file is selected
+			if(!vaultFile){
+				showVaultLoadWarn(new Error("No vault file selected"));
+				return;
+			}
+			hideVaultLoadWarn();
+
+			//Attempt to read the vault
+			try {
+				//Load the vault contents into a string and parse it into a vault object
+				const vaultContent = await readText(vaultFile);
+				vault = Vault.fromString(vaultContent);
+			}
+			catch(err){
+				showVaultLoadWarn(err);
+				return;
+			}
+
+			//Populate the vault info pane
+			populateVaultInfo(vault);	
+		}
+
+		//readText(file: File) -> string
+		async function readText(file){
+			//Check if the file is JSON or plaintext
+			if(file.type && !(file.type === "application/json" || file.type === "text/plain")){
+				throw new Error(`Invalid filetype '${file.type}'; expected 'application/json' or 'text/plain'`)
+			}
+
+			//Start reading the file
+			const fileContents = await new Promise((resolve, reject) => {
+				//Setup a reader as well as handlers on state change
+				const reader = new FileReader();
+				reader.onload = (event) => resolve(event.target.result);
+				reader.onerror = () => reject(new Error("Error reading file"));
+				reader.readAsText(file); //Read the file as plaintext
+			});
+
+			//Return the contents of the file
+			return fileContents;
+		}
+	</script>
+
+	<!-- Token stuff -->
+	<script type="application/javascript">
+		//Get the class list of the token status to restore later; array is cloned using the spread operator
+		const tokenStatusClasslist = [...document.getElementById("tokenStatus").classList];
+
+		//Clear all warnings & info fields when a new token is entered
+		document.getElementById("tokenForm").addEventListener("input", event => {
+			console.log("sdgh")
+			const status = document.getElementById("tokenStatus");
+			status.innerHTML = "&nbsp";
+			status.classList = tokenStatusClasslist;
+		});
+
+		//checkToken() -> void
+		function checkToken(){
+			//Get the token from the user
+			token = document.getElementById("tokenForm").value;
+
+			//Check the token against the server
+			const ENDPOINT = LOCAL_EP_BASE + "/auth_test";
+			fetch(ENDPOINT, {
+				method: "GET",
+				headers: {
+					"Authorization": `Bearer ${token}`
+				}
+			})
+
+			//Display the data back to the webpage
+			.then(async response => {
+				//Get the response data
+				const resp = JSON.parse(await response.text());
+				const ok = await response.ok;
+
+				//Check for errors
+				goodToken = ok;
+
+				//Echo the status back to the user in the token status
+				const statusForm = document.getElementById("tokenStatus");
+				statusForm.classList.add(ok ? "good" : "bad");
+				statusForm.innerHTML = `${resp.status} - ${resp.desc}`;
+			});
+		}
+	</script>
+
+	<!-- Misc -->
+	<script type="application/javascript">
+		function log(msg){
+			const output = document.getElementById("output");
+			output.prepend(`${new Date()}\n${msg}\n`);
+			//console.log(msg);
+		}
+	</script>
+</body>
+</html>
