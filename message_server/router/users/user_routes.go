@@ -50,6 +50,8 @@ func UserRoutes(cfgg *config.Config, envv *config.Env) chi.Router {
 
 	//Add routes
 	r.Post("/register", RegisterUserRoute)
+	r.Post("/login_req", RequestLoginUserRoute)
+	r.Post("/login_verify", VerifyLoginUserRoute)
 
 	//Return the router
 	return r
