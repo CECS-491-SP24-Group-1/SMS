@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/ed25519"
+	"encoding/base64"
 	"fmt"
 	"reflect"
 	"strings"
@@ -23,6 +25,9 @@ type Env struct {
 
 	//The ID of the server.
 	ID mongoutil.UUID `env:"ID"`
+
+	//The server's private cryptographic key.
+	SK ed25519.PrivateKey `env:"SK"`
 }
 
 // Overrides the `defaultPathName()` method in `IConfig`.
@@ -49,11 +54,21 @@ func EnvInit(path string) (Env, error) {
 			//Get the tag value and determine the name of the key
 			keyn := strings.Split(field.Tag.Get("env"), ",")[0]
 
-			//Get the value of the key as a string
-			val := fmt.Sprintf("%v", reflect.ValueOf(*c).Field(i))
+			//Special case: encode byte arrays as base64
+			var vstr string
+			if field.Type == reflect.TypeOf(c.SK) {
+				//Get a byte slice of the crypto key
+				slice := reflect.ValueOf(*c).Field(i).Interface().(ed25519.PrivateKey)
+
+				//Convert the slice to base64
+				vstr = base64.RawStdEncoding.EncodeToString(slice)
+			} else {
+				//Get the value of the key as a string
+				vstr = fmt.Sprintf("%v", reflect.ValueOf(*c).Field(i))
+			}
 
 			//Add the k/v pair to the output string
-			fmt.Fprintf(&out, "%s=%s\n", keyn, val)
+			fmt.Fprintf(&out, "%s=%s\n", keyn, vstr)
 		}
 
 		//Return the output string
@@ -67,9 +82,16 @@ func EnvInit(path string) (Env, error) {
 			return err
 		}
 
+		//Decode the private key
+		sks, err := base64.RawStdEncoding.DecodeString(em["SK"])
+		if err != nil {
+			return err
+		}
+
 		//Set the struct fields from the map and return no error
 		*c = Env{
 			ID: mongoutil.UUIDFromString(em["ID"]),
+			SK: ed25519.PrivateKey(sks),
 		}
 		return nil
 	}
@@ -77,8 +99,13 @@ func EnvInit(path string) (Env, error) {
 	//Create a new blank env object and set defaults
 	cfg := Env{}
 	cfg.ID = mongoutil.MustNewUUID7()
+	var err error = nil
+	_, cfg.SK, err = ed25519.GenerateKey(nil) //`PrivateKey`` contains the public key already
+	if err != nil {
+		panic(err)
+	}
 
 	//Call the helper and return the results
-	err := initHelper[Env](&cfg, path, marshaller, unmarshaller)
+	err = initHelper[Env](&cfg, path, marshaller, unmarshaller)
 	return cfg, err
 }
