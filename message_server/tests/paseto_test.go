@@ -40,6 +40,7 @@ func TestPaseto(t *testing.T) {
 
 	//Print the token to the console
 	fmt.Println("-------------- I N --------------")
+	fmt.Printf("TKS: `%s`\n", encrypted)
 	printTokInfo(key, token)
 
 	//
