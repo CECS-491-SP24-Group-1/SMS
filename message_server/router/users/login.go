@@ -9,8 +9,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"wraith.me/message_server/crypto"
 	"wraith.me/message_server/db/mongoutil"
-	"wraith.me/message_server/obj"
 	"wraith.me/message_server/util/httpu"
 )
 
@@ -95,7 +95,7 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 func ensureExistantUser(coll *mongo.Collection, user loginUser, ctx context.Context) (bool, error) {
 	//Parse out the ID public key of the incoming user
 	id := mongoutil.UUIDFromString(user.ID)
-	pubkey, _ := obj.ParsePubkeyBytes(user.PK) //Errors should not occur here; data is already pre-validated
+	pubkey, _ := crypto.ParsePubkeyBytes(user.PK) //Errors should not occur here; data is already pre-validated
 
 	//Construct a Mongo aggregation pipeline to run the request; avoids making multiple round-trips to the database
 	//This aggregation was exported from MongoDB; do not edit if you don't know what you are doing!
@@ -143,9 +143,9 @@ func ensureCorrectIdAndPKFmt(user loginUser) error {
 	if err != nil {
 		return err
 	}
-	validPubkey := len(dbytes) == obj.PUBKEY_SIZE
+	validPubkey := len(dbytes) == crypto.PUBKEY_SIZE
 	if !validPubkey {
-		return fmt.Errorf("mismatched public key size (%d); expected: %d", len(dbytes), obj.PUBKEY_SIZE)
+		return fmt.Errorf("mismatched public key size (%d); expected: %d", len(dbytes), crypto.PUBKEY_SIZE)
 	}
 
 	//No errors so return nil

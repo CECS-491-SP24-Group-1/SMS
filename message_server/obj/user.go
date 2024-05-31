@@ -4,6 +4,7 @@ import (
 	"net"
 	"time"
 
+	"wraith.me/message_server/crypto"
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj/ip_addr"
 	"wraith.me/message_server/util"
@@ -56,7 +57,7 @@ type User struct {
 // Creates a new user object.
 func NewUser(
 	id mongoutil.UUID,
-	pubkey PubkeyBytes,
+	pubkey crypto.PubkeyBytes,
 	username string,
 	displayName string,
 	email string,
@@ -88,7 +89,7 @@ func NewUser(
 func NewUserSimple(username string, email string) *User {
 	return NewUser(
 		mongoutil.MustNewUUID7(),
-		PubkeyBytes(util.Must(util.GenRandBytes(PUBKEY_SIZE))),
+		crypto.PubkeyBytes(util.Must(util.GenRandBytes(crypto.PUBKEY_SIZE))),
 		username,
 		username,
 		email,

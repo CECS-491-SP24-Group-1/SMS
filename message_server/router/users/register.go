@@ -17,6 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/crud"
+	"wraith.me/message_server/crypto"
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/email"
@@ -68,7 +69,7 @@ not all records are checked if one fails.
 */
 func ensureNonexistantUser(coll *mongo.Collection, usr intermediateUser, ctx context.Context) error {
 	//Parse out the public key of the incoming user
-	pubkey, _ := obj.ParsePubkeyBytes(usr.Pubkey) //Errors should not occur here; data is already pre-validated
+	pubkey, _ := crypto.ParsePubkeyBytes(usr.Pubkey) //Errors should not occur here; data is already pre-validated
 
 	//Construct a Mongo aggregation pipeline to run the request; avoids making multiple round-trips to the database
 	//This aggregation was exported from MongoDB; do not edit if you don't know what you are doing!
@@ -137,13 +138,11 @@ func (iu intermediateUser) validate(strictEmail bool) (bool, []error) {
 	}
 
 	//Step 3: Check the validity of the base64'ed public key by attempting to convert to a byte array
-	dbytes, err := base64.StdEncoding.DecodeString(iu.Pubkey)
+	validPubkey := true
+	_, err := crypto.ParsePubkeyBytes(iu.Pubkey)
 	if err != nil {
+		validPubkey = false
 		errors = append(errors, err)
-	}
-	validPubkey := len(dbytes) == obj.PUBKEY_SIZE
-	if !validPubkey {
-		errors = append(errors, fmt.Errorf("mismatched public key size (%d); expected: %d", len(dbytes), obj.PUBKEY_SIZE))
 	}
 
 	//Return the validity status and any errors that occurred
@@ -189,7 +188,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	uuid := mongoutil.MustNewUUID7()
 	user := obj.NewUser(
 		uuid,
-		obj.NilPubkey(),
+		crypto.NilPubkey(),
 		strings.ToLower(iuser.Username),
 		iuser.Username,
 		strings.ToLower(iuser.Email),

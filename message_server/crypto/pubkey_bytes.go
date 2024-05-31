@@ -1,4 +1,4 @@
-package obj
+package crypto
 
 import (
 	"crypto/ed25519"

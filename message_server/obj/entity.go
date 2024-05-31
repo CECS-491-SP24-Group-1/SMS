@@ -1,5 +1,7 @@
 package obj
 
+import "wraith.me/message_server/crypto"
+
 //
 //-- ABSTRACT CLASS: Entity
 //
@@ -13,5 +15,5 @@ type Entity struct {
 	Identifiable `bson:",inline"`
 
 	//The entity's public key. This must correspond to a private key held by the entity.
-	Pubkey PubkeyBytes `json:"pubkey" bson:"pubkey"`
+	Pubkey crypto.PubkeyBytes `json:"pubkey" bson:"pubkey"`
 }
