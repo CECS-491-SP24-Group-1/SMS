@@ -14,25 +14,25 @@ const (
 )
 
 //
-//-- ALIAS: PubkeyBytes
+//-- ALIAS: Pubkey
 //
 
 // Represents the bytes of an entity's public key.
-type PubkeyBytes [PUBKEY_SIZE]byte
+type Pubkey [PUBKEY_SIZE]byte
 
-// Gets the fingerprint of a `PubkeyBytes` object using SHA256.
-func (pkb PubkeyBytes) Fingerprint() string {
+// Gets the fingerprint of a `Pubkey` object using SHA256.
+func (pkb Pubkey) Fingerprint() string {
 	hash := sha256.Sum256(pkb[:])
 	return hex.EncodeToString(hash[:])
 }
 
-// Marshals a `PubkeyBytes` object to JSON.
-func (pkb PubkeyBytes) MarshalJSON() ([]byte, error) {
+// Marshals a `Pubkey` object to JSON.
+func (pkb Pubkey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(pkb.String())
 }
 
-// Parses a `PubkeyBytes` object from a string.
-func ParsePubkeyBytes(str string) (*PubkeyBytes, error) {
+// Parses a `Pubkey` object from a string.
+func ParsePubkeyBytes(str string) (*Pubkey, error) {
 	//Derive a byte array from the string
 	ba, err := base64.StdEncoding.DecodeString(str)
 	if err != nil {
@@ -45,18 +45,18 @@ func ParsePubkeyBytes(str string) (*PubkeyBytes, error) {
 	}
 
 	//Copy the bytes to a new object and return it
-	obj := &PubkeyBytes{}
+	obj := &Pubkey{}
 	copy(obj[:], ba)
 	return obj, nil
 }
 
-// Converts a `PubkeyBytes` object to a string.
-func (pkb PubkeyBytes) String() string {
+// Converts a `Pubkey` object to a string.
+func (pkb Pubkey) String() string {
 	return base64.StdEncoding.EncodeToString(pkb[:])
 }
 
-// Unmarshals a `PubkeyBytes` object from JSON.
-func (pkb *PubkeyBytes) UnmarshalJSON(b []byte) error {
+// Unmarshals a `Pubkey` object from JSON.
+func (pkb *Pubkey) UnmarshalJSON(b []byte) error {
 	//Unmarshal to a string
 	var s string
 	err := json.Unmarshal(b, &s)
@@ -70,6 +70,7 @@ func (pkb *PubkeyBytes) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-func NilPubkey() PubkeyBytes {
-	return PubkeyBytes{}
+// Creates an empty public key.
+func NilPubkey() Pubkey {
+	return Pubkey{}
 }

@@ -15,5 +15,5 @@ type Entity struct {
 	Identifiable `bson:",inline"`
 
 	//The entity's public key. This must correspond to a private key held by the entity.
-	Pubkey crypto.PubkeyBytes `json:"pubkey" bson:"pubkey"`
+	Pubkey crypto.Pubkey `json:"pubkey" bson:"pubkey"`
 }

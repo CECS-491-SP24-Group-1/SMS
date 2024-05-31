@@ -57,7 +57,7 @@ type User struct {
 // Creates a new user object.
 func NewUser(
 	id mongoutil.UUID,
-	pubkey crypto.PubkeyBytes,
+	pubkey crypto.Pubkey,
 	username string,
 	displayName string,
 	email string,
@@ -89,7 +89,7 @@ func NewUser(
 func NewUserSimple(username string, email string) *User {
 	return NewUser(
 		mongoutil.MustNewUUID7(),
-		crypto.PubkeyBytes(util.Must(util.GenRandBytes(crypto.PUBKEY_SIZE))),
+		crypto.Pubkey(util.Must(util.GenRandBytes(crypto.PUBKEY_SIZE))),
 		username,
 		username,
 		email,
