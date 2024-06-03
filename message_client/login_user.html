@@ -108,6 +108,7 @@
 				</tr>
 			</tbody>
 		</table>
+		<pre id="tmp"></pre>
 	</div>
 	<br>
 
@@ -214,6 +215,19 @@
 			populateById("devIdentField", vault !== null ? vault.devIdent : CLR_CONTENTS);
 			populateById("skField", vault !== null ? vault.kstore.skString() : CLR_CONTENTS);
 			populateById("pkField", vault !== null ? vault.kstore.pkString() : CLR_CONTENTS);
+
+			if(vault !== null){
+				const elem = document.getElementById("tmp");
+
+				let kp = vault.getKeypair();
+				let msg = "this is a test";
+				let sig = ed25519Sign(kp, msg);
+				tmp.innerHTML += `msg: ${msg}\n`;
+				tmp.innerHTML += `signature: ${sig}\n`;
+				tmp.innerHTML += `typeof sig: ${typeof(sig)}\n`;
+				const ok = ed25519Verify(kp, msg, sig);
+				tmp.innerHTML += `sig ok: ${ok}\n`
+			}
 		}
 
 		//showVaultLoadWarn(err: Error) -> void
@@ -293,7 +307,6 @@
 
 		//Clear all warnings & info fields when a new token is entered
 		document.getElementById("tokenForm").addEventListener("input", event => {
-			console.log("sdgh")
 			const status = document.getElementById("tokenStatus");
 			status.innerHTML = "&nbsp";
 			status.classList = tokenStatusClasslist;

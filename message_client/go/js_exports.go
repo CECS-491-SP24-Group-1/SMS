@@ -24,7 +24,11 @@ func main() {
 	//Methods
 	js.Global().Set("ed25519Equal", js.FuncOf(ed25519Equal))
 	js.Global().Set("ed25519JSON", js.FuncOf(ed25519JSON))
+	js.Global().Set("ed25519Sign", js.FuncOf(ed25519Sign))
 	js.Global().Set("ed25519String", js.FuncOf(ed25519String))
+	js.Global().Set("ed25519Verify", js.FuncOf(ed25519Verify))
+
+	//Functions
 
 	//Block the channel to prevent termination; termination will cause errors in the JS RT
 	<-c
@@ -89,9 +93,35 @@ func ed25519JSON(_ js.Value, args []js.Value) interface{} {
 	return ed25519ObjFromJSON(args[0]).JSON()
 }
 
+// ed25519JSON(this Ed25519KP, msg string) -> []byte
+func ed25519Sign(_ js.Value, args []js.Value) interface{} {
+	//Get the args as well-typed items
+	obj := ed25519ObjFromJSON(args[0])
+	msg := util.Val2Any[string](args[1])
+
+	//Calculate the signature of the message and convert it to a `Uint8Array`
+	sig := obj.Sign([]byte(msg))
+	ta := js.Global().Get("Uint8Array").New(len(sig))
+	ta.Call("set", util.GenerifyArray(sig))
+
+	//Return the typed array object
+	return ta
+}
+
 // func ed25519String(this Ed25519KP) -> string
 func ed25519String(_ js.Value, args []js.Value) interface{} {
 	return ed25519ObjFromJSON(args[0]).String()
+}
+
+// ed25519JSON(this Ed25519KP, msg string, sig []byte) -> bool
+func ed25519Verify(_ js.Value, args []js.Value) interface{} {
+	//Get the args as well-typed items
+	obj := ed25519ObjFromJSON(args[0])
+	msg := util.Val2Any[string](args[1])
+	sig := util.Val2Any[[]byte](args[2])
+
+	//Verify the signature and return the results
+	return obj.Verify([]byte(msg), sig)
 }
 
 /* //-- Utility functions */

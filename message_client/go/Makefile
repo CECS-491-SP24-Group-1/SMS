@@ -15,8 +15,8 @@ BIN_MIN := $(BIN_NAME).min.$(BIN_EXT)
 
 #Denotes where to drop the resultant WASM files
 STATIC_DIR := ../static
-OUT_DIR := .$(STATIC_DIR)/wasm
-JS_DIR := .$(STATIC_DIR)/js
+OUT_DIR := $(STATIC_DIR)/wasm
+JS_DIR := $(STATIC_DIR)/js
 
 # Tools
 GO_BUILD := go build

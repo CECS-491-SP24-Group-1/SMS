@@ -32,3 +32,12 @@ func Val2Any[T any](val js.Value) T {
 	v.AssignTo(&out)
 	return out
 }
+
+// Creates a generic array from a given array.
+func GenerifyArray[T any](arr []T) []interface{} {
+	out := make([]interface{}, len(arr))
+	for i := 0; i < len(arr); i++ {
+		out[i] = interface{}(arr[i])
+	}
+	return out
+}

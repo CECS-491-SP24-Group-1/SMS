@@ -44,6 +44,14 @@ class Vault {
 	}
 
 	/**
+	 * Derives an `Ed25519KP` object from this vault.
+	 * @returns {Ed25519KP} The derived `Ed25519KP` object
+	 */
+	getKeypair(){
+		return ed25519FromBytes(Array.from(this.kstore.sk), Array.from(this.kstore.pk));
+	}
+
+	/**
 	 * Derives a `Vault` object from the JSON representation of one.
 	 * @param {string} str The JSON string to ingest
 	 * @returns {Vault} The derived `Vault` object

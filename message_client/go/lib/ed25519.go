@@ -1,23 +1,25 @@
 package lib
 
 import (
-	"bytes"
 	"crypto/ed25519"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+
+	ccrypto "wraith.me/message_server/crypto"
 )
 
 const (
-	ED25519_LEN = 32 //Ed25519 keys are always 32 bytes long.
+	ED25519_LEN = ccrypto.PUBKEY_SIZE
 )
 
 // Represents an Ed25519 keypair.
 type Ed25519KP struct {
-	SK          [ED25519_LEN]byte `json:"sk"`          //Holds the private key.
-	PK          [ED25519_LEN]byte `json:"pk"`          //Holds the public key.
-	Fingerprint string            `json:"fingerprint"` //Holds the fingerprint of the public key as a SHA-256 hash.
+	SK          ccrypto.Privseed `json:"sk"`          //Holds the private key.
+	PK          ccrypto.Pubkey   `json:"pk"`          //Holds the public key.
+	Fingerprint string           `json:"fingerprint"` //Holds the fingerprint of the public key as a SHA-256 hash.
 }
 
 // Generates a new Ed25519 keypair.
@@ -59,9 +61,17 @@ func Ed25519FromSK(sk []byte) Ed25519KP {
 	return Ed25519FromBytes(sk, []byte(pubSmult.(ed25519.PublicKey)))
 }
 
+// Derives a `Privkey` object from this object.
+func (kp Ed25519KP) Amalgamate() ccrypto.Privkey {
+	bytes := [ccrypto.PRIVKEY_SIZE]byte{}
+	copy(bytes[:ccrypto.PRIVKEY_SEED_SIZE], kp.SK[:])
+	copy(bytes[ccrypto.PRIVKEY_SEED_SIZE:], kp.PK[:])
+	return bytes
+}
+
 // Checks if this Ed25519 keypair is equal to another.
 func (kp Ed25519KP) Equal(other Ed25519KP) bool {
-	return bytes.Equal(kp.SK[:], other.SK[:]) && bytes.Equal(kp.PK[:], other.PK[:])
+	return subtle.ConstantTimeCompare(kp.SK[:], other.SK[:]) == 1 && subtle.ConstantTimeCompare(kp.PK[:], other.PK[:]) == 1
 }
 
 // Returns the JSON representation of the object.
@@ -70,7 +80,17 @@ func (kp Ed25519KP) JSON() string {
 	return string(json)
 }
 
+// Signs a message with this `Ed25519KP` object.
+func (kp Ed25519KP) Sign(msg []byte) []byte {
+	return ccrypto.Sign(kp.Amalgamate(), msg)
+}
+
 // Returns the string representation of the object.
 func (kp Ed25519KP) String() string {
 	return fmt.Sprintf("Ed25519KP{sk=%s, pk=%s}", hex.EncodeToString(kp.SK[:]), hex.EncodeToString(kp.PK[:]))
+}
+
+// Verifies a message and signature with this `Ed25519KP` object.
+func (kp Ed25519KP) Verify(msg, sig []byte) bool {
+	return ccrypto.Verify(kp.PK, msg, sig)
 }
