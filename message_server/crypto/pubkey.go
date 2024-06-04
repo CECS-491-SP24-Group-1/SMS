@@ -70,6 +70,11 @@ func (pkb Pubkey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(pkb.String())
 }
 
+// Marshals a `Pubkey` object to a string.
+func (pkb Pubkey) MarshalText() ([]byte, error) {
+	return []byte(pkb.String()), nil
+}
+
 // Converts a `Pubkey` object to a string.
 func (pkb Pubkey) String() string {
 	return base64.StdEncoding.EncodeToString(pkb[:])
@@ -87,5 +92,12 @@ func (pkb *Pubkey) UnmarshalJSON(b []byte) error {
 	//Derive a valid object from the string and reassign
 	obj, err := ParsePubkeyBytes(s)
 	*pkb = obj
+	return err
+}
+
+// Unmarshals a `Pubkey` object from a string.
+func (pkb *Pubkey) UnmarshalText(text []byte) error {
+	var err error
+	*pkb, err = ParsePubkeyBytes(string(text))
 	return err
 }

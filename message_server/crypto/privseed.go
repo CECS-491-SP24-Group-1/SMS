@@ -60,6 +60,11 @@ func (prs Privseed) MarshalJSON() ([]byte, error) {
 	return json.Marshal(prs.String())
 }
 
+// Marshals a `Privseed` object to a string.
+func (prs Privseed) MarshalText() ([]byte, error) {
+	return []byte(prs.String()), nil
+}
+
 // Converts a `Privseed` object to a string.
 func (prs Privseed) String() string {
 	return base64.StdEncoding.EncodeToString(prs[:])
@@ -77,5 +82,12 @@ func (prs *Privseed) UnmarshalJSON(b []byte) error {
 	//Derive a valid object from the string and reassign
 	obj, err := ParsePrivseedBytes(s)
 	*prs = obj
+	return err
+}
+
+// Unmarshals a `Privseed` object from a string.
+func (prs *Privseed) UnmarshalText(text []byte) error {
+	var err error
+	*prs, err = ParsePrivseedBytes(string(text))
 	return err
 }

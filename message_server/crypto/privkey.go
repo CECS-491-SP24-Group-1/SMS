@@ -92,6 +92,11 @@ func (prk Privkey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(prk.String())
 }
 
+// Marshals a `Privkey` object to a string.
+func (prk Privkey) MarshalText() ([]byte, error) {
+	return []byte(prk.String()), nil
+}
+
 // Gets the public part of a `Privkey` object.
 func (prk Privkey) Public() Pubkey {
 	public := Pubkey{}
@@ -128,5 +133,12 @@ func (prk *Privkey) UnmarshalJSON(b []byte) error {
 	//Derive a valid object from the string and reassign
 	obj, err := ParsePrivkeyBytes(s)
 	*prk = obj
+	return err
+}
+
+// Unmarshals a `Privkey` object from a string.
+func (prk *Privkey) UnmarshalText(text []byte) error {
+	var err error
+	*prk, err = ParsePrivkeyBytes(string(text))
 	return err
 }
