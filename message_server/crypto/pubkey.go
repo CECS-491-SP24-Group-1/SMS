@@ -48,7 +48,7 @@ func PubkeyFromBytes(bytes []byte) (Pubkey, error) {
 
 	//Create a new object and return
 	bin := [PUBKEY_SIZE]byte{}
-	copy(bin[:], bytes)
+	subtle.ConstantTimeCopy(1, bin[:], bytes)
 
 	//Create a new object and return
 	return Pubkey(bin), nil

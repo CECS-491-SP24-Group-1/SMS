@@ -67,9 +67,9 @@ func PrivkeyFromBytes(bytes []byte) (Privkey, error) {
 	bin := [PRIVKEY_SIZE]byte{}
 	if len(bytes) == PRIVKEY_SEED_SIZE {
 		priv := ed25519.NewKeyFromSeed(bytes)
-		copy(bin[:], priv)
+		subtle.ConstantTimeCopy(1, bin[:], priv)
 	} else {
-		copy(bin[:], bytes)
+		subtle.ConstantTimeCopy(1, bin[:], bytes)
 	}
 
 	//Create a new object and return
@@ -95,14 +95,14 @@ func (prk Privkey) MarshalJSON() ([]byte, error) {
 // Gets the public part of a `Privkey` object.
 func (prk Privkey) Public() Pubkey {
 	public := Pubkey{}
-	copy(public[:], prk[PRIVKEY_SEED_SIZE:])
+	subtle.ConstantTimeCopy(1, public[:], prk[PRIVKEY_SEED_SIZE:])
 	return public
 }
 
 // Gets the private part of a `Privkey` object.
 func (prk Privkey) Seed() Privseed {
 	seed := Privseed{}
-	copy(seed[:], prk[:PRIVKEY_SEED_SIZE])
+	subtle.ConstantTimeCopy(1, seed[:], prk[:PRIVKEY_SEED_SIZE])
 	return seed
 }
 
