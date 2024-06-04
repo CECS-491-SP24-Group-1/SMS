@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"crypto/ed25519"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
@@ -24,18 +23,33 @@ type Ed25519KP struct {
 
 // Generates a new Ed25519 keypair.
 func Ed25519Keygen() Ed25519KP {
-	pubkey, privkey, _ := ed25519.GenerateKey(nil)
-	return Ed25519FromBytes(privkey.Seed(), pubkey)
+	//Generate a new keypair
+	pk, sk, err := ccrypto.NewKeypair(nil)
+	if err != nil {
+		panic(err)
+	}
+
+	//Create the resultant object
+	seed := sk.Seed()
+	return Ed25519FromBytes(seed[:], pk[:])
 }
 
 // Derives an Ed25519 keypair object from raw bytes.
 func Ed25519FromBytes(sk []byte, pk []byte) Ed25519KP {
-	//Create the base object
-	out := Ed25519KP{}
+	//Get the key objects
+	sko := ccrypto.MustKeyFromBytes(ccrypto.PrivkeyFromBytes, sk)
+	pko := ccrypto.MustKeyFromBytes(ccrypto.PubkeyFromBytes, pk)
 
-	//Assign the public and private key bytes
-	copy(out.SK[:], sk[:])
-	copy(out.PK[:], pk[:])
+	//Ensure the input PK corresponds to the SK
+	if !pko.Equal(sko.Public()) {
+		panic("non-correspondent public & private keys")
+	}
+
+	//Assign the public and private key bytes to a new object
+	out := Ed25519KP{
+		SK: sko.Seed(),
+		PK: pko,
+	}
 
 	//Hash the public key
 	h := sha256.Sum256(pk)
@@ -55,10 +69,10 @@ func Ed25519FromJSON(jsons string) (obj Ed25519KP, err error) {
 // Derives an Ed25519 keypair object from a private key via `scalar_mult()“.
 func Ed25519FromSK(sk []byte) Ed25519KP {
 	//Get the public key equivalent via `scalar_mult()`
-	pubSmult := ed25519.NewKeyFromSeed(sk).Public()
+	pubSmult := ccrypto.MustKeyFromBytes(ccrypto.PrivkeyFromBytes, sk).Public()
 
 	//Return the object
-	return Ed25519FromBytes(sk, []byte(pubSmult.(ed25519.PublicKey)))
+	return Ed25519FromBytes(sk, pubSmult[:])
 }
 
 // Derives a `Privkey` object from this object.
@@ -71,7 +85,7 @@ func (kp Ed25519KP) Amalgamate() ccrypto.Privkey {
 
 // Checks if this Ed25519 keypair is equal to another.
 func (kp Ed25519KP) Equal(other Ed25519KP) bool {
-	return subtle.ConstantTimeCompare(kp.SK[:], other.SK[:]) == 1 && subtle.ConstantTimeCompare(kp.PK[:], other.PK[:]) == 1
+	return subtle.ConstantTimeCompare(kp.SK[:], other.SK[:]) == 1 && subtle.ConstantTimeCompare(kp.PK[:], other.PK[:]) == 1 && subtle.ConstantTimeCompare([]byte(kp.Fingerprint), []byte(other.Fingerprint)) == 1
 }
 
 // Returns the JSON representation of the object.
