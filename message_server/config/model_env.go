@@ -1,13 +1,13 @@
 package config
 
 import (
-	"crypto/ed25519"
 	"encoding/base64"
 	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/joho/godotenv"
+	ccrypto "wraith.me/message_server/crypto"
 	"wraith.me/message_server/db/mongoutil"
 )
 
@@ -27,7 +27,7 @@ type Env struct {
 	ID mongoutil.UUID `env:"ID"`
 
 	//The server's private cryptographic key.
-	SK ed25519.PrivateKey `env:"SK"`
+	SK ccrypto.Privkey `env:"SK"`
 }
 
 // Overrides the `defaultPathName()` method in `IConfig`.
@@ -58,10 +58,10 @@ func EnvInit(path string) (Env, error) {
 			var vstr string
 			if field.Type == reflect.TypeOf(c.SK) {
 				//Get a byte slice of the crypto key
-				slice := reflect.ValueOf(*c).Field(i).Interface().(ed25519.PrivateKey)
+				slice := reflect.ValueOf(*c).Field(i).Interface().(ccrypto.Privkey)
 
 				//Convert the slice to base64
-				vstr = base64.RawStdEncoding.EncodeToString(slice)
+				vstr = base64.RawStdEncoding.EncodeToString(slice[:])
 			} else {
 				//Get the value of the key as a string
 				vstr = fmt.Sprintf("%v", reflect.ValueOf(*c).Field(i))
@@ -91,7 +91,7 @@ func EnvInit(path string) (Env, error) {
 		//Set the struct fields from the map and return no error
 		*c = Env{
 			ID: mongoutil.UUIDFromString(em["ID"]),
-			SK: ed25519.PrivateKey(sks),
+			SK: ccrypto.Privkey(sks),
 		}
 		return nil
 	}
@@ -100,7 +100,7 @@ func EnvInit(path string) (Env, error) {
 	cfg := Env{}
 	cfg.ID = mongoutil.MustNewUUID7()
 	var err error = nil
-	_, cfg.SK, err = ed25519.GenerateKey(nil) //`PrivateKey`` contains the public key already
+	_, cfg.SK, err = ccrypto.NewKeypair(nil) //`PrivateKey`` contains the public key already
 	if err != nil {
 		panic(err)
 	}

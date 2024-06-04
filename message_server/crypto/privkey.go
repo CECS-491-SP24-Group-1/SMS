@@ -64,7 +64,7 @@ func PrivkeyFromBytes(bytes []byte) (Privkey, error) {
 	}
 
 	//If the size is only half that of a private key, do `scalar_mult` to derive the public bytes
-	bin := [PRIVKEY_SIZE]byte{}
+	bin := Privkey{}
 	if len(bytes) == PRIVKEY_SEED_SIZE {
 		priv := ed25519.NewKeyFromSeed(bytes)
 		subtle.ConstantTimeCopy(1, bin[:], priv)
@@ -73,7 +73,7 @@ func PrivkeyFromBytes(bytes []byte) (Privkey, error) {
 	}
 
 	//Create a new object and return
-	return Privkey(bin), nil
+	return bin, nil
 }
 
 // Compares two `Privkey` objects.
