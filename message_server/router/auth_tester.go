@@ -35,7 +35,7 @@ func NewAuthTestRouter(path string, scopes []obj.TokenScope) AuthTestRouter {
 func (atr AuthTestRouter) Router() func(r chi.Router) {
 	//Set up the response to return if everything goes ok
 	successHandler := func(w http.ResponseWriter, r *http.Request) {
-		httpu.HttpOkAsJson(w, fmt.Sprintf("authentication succeeded for user %s", r.Header.Get(mw.AuthHttpHeaderSubject)), 0)
+		httpu.HttpOkAsJson(w, fmt.Sprintf("authentication succeeded for user %s", r.Header.Get(mw.AuthHttpHeaderSubject)), http.StatusOK)
 	}
 
 	//Create the router to respond to the route

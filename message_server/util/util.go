@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 // Checks if any item in a given list is equal to one singular given item.
@@ -103,6 +105,26 @@ func GenRandString(s int) (string, error) {
 // Checks if an integer is inside of a specified range.
 func InRange(num int64, min int64, max int64) bool {
 	return num >= min && num <= max
+}
+
+// Adapter for `MapStructure` that hooks `TextUnmarshaller` for custom types
+func MSTextUnmarshal[T any](input map[string]interface{}, output *T) error {
+	//Setup the decoder config
+	config := &mapstructure.DecoderConfig{
+		Metadata:         nil,
+		Result:           output,
+		WeaklyTypedInput: true,
+		DecodeHook:       mapstructure.TextUnmarshallerHookFunc(),
+	}
+
+	//Setup the decoder
+	decoder, err := mapstructure.NewDecoder(config)
+	if err != nil {
+		return err
+	}
+
+	//Decode the map to the given struct
+	return decoder.Decode(input)
 }
 
 /*

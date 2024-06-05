@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+//TODO: Try to cache these function results with Redis.
+
 // Returns an array of matched documents from the database, given an aggregation pipeline.
 func Aggregate(coll *mongo.Collection, filter bson.A, ctx context.Context) ([]bson.M, error) {
 	var docs []bson.M

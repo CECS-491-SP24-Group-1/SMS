@@ -5,12 +5,14 @@ toolchain go1.21.1
 module wraith.me/message_server
 
 require (
+	aidanwoods.dev/go-paseto v1.5.1
 	github.com/creasty/defaults v1.7.0
 	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/tanqiangyes/govalidator v0.0.5
@@ -19,7 +21,6 @@ require (
 )
 
 require (
-	aidanwoods.dev/go-paseto v1.5.1 // indirect
 	aidanwoods.dev/go-result v0.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect

@@ -6,16 +6,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"wraith.me/message_server/crypto"
+	ccrypto "wraith.me/message_server/crypto"
+	"wraith.me/message_server/db"
 	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/obj"
+	c "wraith.me/message_server/obj/challenge"
+	"wraith.me/message_server/util"
 	"wraith.me/message_server/util/httpu"
 )
 
-// Sets the key name for the subject public key field in a PASETO token.
-const SUBJECT_PK_KEY = "sub-pk"
+const (
+	//The code to emit when the pre-flight parsing section fails.
+	_PF_PARSE_ERR = http.StatusBadRequest
+
+	//The HTTP status code to emit when the pre-flight existing user check fails.
+	_PF_NO_USER = http.StatusNotFound
+
+	//The HTTP status code to emit when the pre-flight authorization check fails.
+	_PF_UNAUTHORIZED = http.StatusForbidden
+)
 
 /*
 Defines the structure of JSON form data sent in the 1st stage of a login
@@ -24,10 +37,10 @@ match what's in the database.
 */
 type loginUser struct {
 	//The UUID of the user to login as.
-	ID string `json:"id"`
+	ID mongoutil.UUID `json:"id" mapstructure:"id"`
 
-	//THe public key of the user to login as.
-	PK string `json:"pk"`
+	//The public key of the user to login as.
+	PK ccrypto.Pubkey `json:"pk" mapstructure:"pk"`
 }
 
 /*
@@ -38,51 +51,66 @@ token that was signed by the private key of the user.
 */
 type loginVerifyUser struct {
 	//`loginVerifyUser` extends `loginUser` by adding the previously generated token and the client's signature.
-	loginUser
+	loginUser `mapstructure:",squash"`
 
 	//The login token that the user was given.
-	Token string `json:"token"`
+	Token string `json:"token" mapstructure:"token"`
 
 	//The signature of the input token, signed by the user's private key.
-	Signature string `json:"signature"`
+	Signature string `json:"signature" mapstructure:"signature"`
 }
 
+/*
+Defines the structure of a user record that's returned from the database
+during the existing user check. This includes the user's ID, public key,
+and the status flags of the user.
+*/
 type existingUserResult struct {
+	//`existingUserResult` extends the abstract entity type.
+	obj.Entity `bson:",inline"`
+
+	//The user's flags. These mark items such as verification status, deletion, etc.
+	Flags obj.UserFlags `json:"flags" bson:"flags"`
 }
 
-//TODO: create pre-login helper function, which contains the common FoC between the request and verify routes
-
-// Handles incoming requests made to `POST /users/login_req`.
+/*
+Handles incoming requests made to `POST /users/login_req`. This is stage 1
+of the login process.
+*/
 func RequestLoginUserRoute(w http.ResponseWriter, r *http.Request) {
-	//Create a new stage 1 object
+	//Create a new stage 1 object plus database result
 	loginReq := loginUser{}
+	hit := existingUserResult{}
 
-	//Get the request body and attempt to parse to JSON
-	if err := json.NewDecoder(r.Body).Decode(&loginReq); err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
+	//Run pre-flight checks
+	if !preFlight(&loginReq, &hit, w, r) {
 		return
 	}
 
-	//Ensure the incoming data is valid
-	if err := ensureCorrectIdAndPKFmt(loginReq); err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
-		return
-	}
+	//Create a public key challenge using the user's info
+	loginTok := c.NewPKChallenge(
+		env.ID,
+		hit.ID,
+		c.CPurposeLOGIN,
+		time.Now().Add(10*time.Minute),
+		hit.Pubkey,
+	).Encrypt(env.SK)
 
-	//Ensure the claims map to an existing user in the database
-
-	resp := fmt.Sprintf("REQUEST S1: %+v", loginReq)
-	w.Write([]byte(resp))
+	//Send the token to the user
+	httpu.HttpOkAsJson(w, loginTok, http.StatusOK)
 }
 
-// Handles incoming requests made to `POST /users/login_verify`.
+/*
+Handles incoming requests made to `POST /users/login_verify`. This is stage
+2 of the login process.
+*/
 func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
-	// Create a new stage 2 object
+	//Create a new stage 2 object plus database result
 	loginVReq := loginVerifyUser{}
+	hit := existingUserResult{}
 
-	//Get the request body and attempt to parse to JSON
-	if err := json.NewDecoder(r.Body).Decode(&loginVReq); err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
+	//Run pre-flight checks
+	if !preFlight(&loginVReq, &hit, w, r) {
 		return
 	}
 
@@ -91,12 +119,126 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(resp))
 }
 
-// Ensures that a user with the given UUID and public key exists.
-func ensureExistantUser(coll *mongo.Collection, user loginUser, ctx context.Context) (bool, error) {
-	//Parse out the ID public key of the incoming user
-	id := mongoutil.UUIDFromString(user.ID)
-	pubkey, _ := crypto.ParsePubkeyBytes(user.PK) //Errors should not occur here; data is already pre-validated
+// Contains the common FoC that is to be ran before any login request.
+func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, w http.ResponseWriter, r *http.Request) bool {
+	//Get the request body and attempt to parse from JSON
+	var reqBody map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
+		return false
+	}
 
+	//Ensure all request fields are present and are the correct type
+	missingErrors := []error{}
+	reqId, ok := reqBody["id"].(string)
+	if !ok {
+		missingErrors = append(missingErrors, fmt.Errorf("missing `id` field or it's poorly formed; expecting `string`"))
+	}
+	reqPK, ok := reqBody["pk"].(string)
+	if !ok {
+		missingErrors = append(missingErrors, fmt.Errorf("missing `pk` field or it's poorly formed; expecting `string`"))
+	}
+
+	//Check for the token and signature if this is a verification request
+	if _, ok := any(user).(*loginVerifyUser); ok {
+		if _, ok := reqBody["token"].(string); !ok {
+			missingErrors = append(missingErrors, fmt.Errorf("missing `token` field or it's poorly formed; expecting `string`"))
+		}
+		if _, ok := reqBody["signature"].(string); !ok {
+			missingErrors = append(missingErrors, fmt.Errorf("missing `signature` field or it's poorly formed; expecting `string`"))
+		}
+	}
+
+	//Error out if any required field is missing
+	if len(missingErrors) > 0 {
+		httpu.HttpMultipleErrorsAsJson(w, missingErrors, _PF_PARSE_ERR)
+		return false
+	}
+
+	//Ensure the incoming data is valid
+	if err := ensureCorrectIdAndPKFmt(reqId, reqPK); err != nil {
+		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
+		return false
+	}
+
+	//Unmarshal the mapped request body into a user object
+	if err := util.MSTextUnmarshal(reqBody, user); err != nil {
+		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
+		return false
+	}
+
+	//Derive a common "loginUser" type; Go generics are kinda dumb
+	//See: https://go.dev/play/p/H3fBSekLyE6
+	var lu loginUser
+	switch any(user).(type) {
+	case *loginUser:
+		tmp, _ := any(user).(*loginUser)
+		lu = *tmp
+	case *loginVerifyUser:
+		tmp, _ := any(user).(*loginVerifyUser)
+		lu = tmp.loginUser
+	default:
+		panic(fmt.Sprintf("Unexpected type %T\n", user))
+	}
+
+	//-------------------------------------------------------------------------------
+	//Ensure the claims map to an existing user in the database
+	userCollection := mcl.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
+	tmp, err := ensureExistantUser(userCollection, lu, r.Context())
+	if err != nil {
+		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
+		return false
+	}
+
+	//Check if a valid user was returned
+	if hit == nil {
+		httpu.HttpErrorAsJson(w, fmt.Errorf("no record found"), _PF_NO_USER)
+		return false
+	}
+	*hit = *tmp
+
+	//Check the user's flags to ensure they can actually sign-in
+	//Their email and public key must be verified
+	//TODO: Move this to auth if possible
+	errors := []error{}
+	if !hit.Flags.EmailVerified {
+		errors = append(errors, fmt.Errorf("unverified email"))
+	}
+	if !hit.Flags.PubkeyVerified {
+		errors = append(errors, fmt.Errorf("unverified public key"))
+	}
+	if len(errors) > 0 {
+		httpu.HttpMultipleErrorsAsJson(w, errors, _PF_UNAUTHORIZED)
+		return false
+	}
+
+	//No errors, so return true
+	return true
+}
+
+// Ensures that the user ID and public key are of the proper format
+func ensureCorrectIdAndPKFmt(id string, pk string) error {
+	//Try to parse the UUID first
+	if validId := mongoutil.IsValidUUIDv7(id); !validId {
+		return fmt.Errorf("invalid UUID format `%s`; expected a UUIDv7 in the form: `xxxxxxxx-xxxx-7xxx-xxxx-xxxxxxxxxxxx`", id)
+	}
+
+	//Check the validity of the base64'ed public key by attempting to convert to a byte array
+	dbytes, err := base64.StdEncoding.DecodeString(pk)
+	if err != nil {
+		return err
+	}
+	validPubkey := len(dbytes) == ccrypto.PUBKEY_SIZE
+	if !validPubkey {
+		return fmt.Errorf("mismatched public key size (%d); expected: %d", len(dbytes), ccrypto.PUBKEY_SIZE)
+	}
+
+	//No errors so return nil
+	return nil
+}
+
+// Ensures that a user with the given UUID and public key exists.
+func ensureExistantUser(coll *mongo.Collection, user loginUser, ctx context.Context) (*existingUserResult, error) {
 	//Construct a Mongo aggregation pipeline to run the request; avoids making multiple round-trips to the database
 	//This aggregation was exported from MongoDB; do not edit if you don't know what you are doing!
 	agg := bson.A{
@@ -104,8 +246,8 @@ func ensureExistantUser(coll *mongo.Collection, user loginUser, ctx context.Cont
 		bson.D{
 			{Key: "$match",
 				Value: bson.D{
-					{Key: "_id", Value: id},
-					{Key: "pubkey", Value: pubkey},
+					{Key: "_id", Value: user.ID},
+					{Key: "pubkey", Value: user.PK},
 				},
 			},
 		},
@@ -122,32 +264,17 @@ func ensureExistantUser(coll *mongo.Collection, user loginUser, ctx context.Cont
 	}
 
 	//Run the request and collect all hits; critical errors may be reported from this function so handle appropriately
-	hits, err := mongoutil.Aggregate(coll, agg, ctx)
+	var hits []existingUserResult
+	err := mongoutil.AggregateT(&hits, coll, agg, ctx)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	//Check if there were any hits
-	return len(hits) > 0, nil
-}
-
-// Ensures that the user ID and public key are of the proper format
-func ensureCorrectIdAndPKFmt(user loginUser) error {
-	//Try to parse the UUID first
-	if validId := mongoutil.IsValidUUIDv7(user.ID); !validId {
-		return fmt.Errorf("invalid UUID format `%s`; expected a UUIDv7 in the form: `xxxxxxxx-xxxx-7xxx-xxxx-xxxxxxxxxxxx`", user.ID)
+	//Check if there was a hit
+	if len(hits) > 0 {
+		return &hits[0], nil
 	}
 
-	//Check the validity of the base64'ed public key by attempting to convert to a byte array
-	dbytes, err := base64.StdEncoding.DecodeString(user.PK)
-	if err != nil {
-		return err
-	}
-	validPubkey := len(dbytes) == crypto.PUBKEY_SIZE
-	if !validPubkey {
-		return fmt.Errorf("mismatched public key size (%d); expected: %d", len(dbytes), crypto.PUBKEY_SIZE)
-	}
-
-	//No errors so return nil
-	return nil
+	//Return nil for both since there was no record found, but no errors otherwise
+	return nil, nil
 }
