@@ -95,7 +95,7 @@ func (kp Ed25519KP) JSON() string {
 }
 
 // Signs a message with this `Ed25519KP` object.
-func (kp Ed25519KP) Sign(msg []byte) []byte {
+func (kp Ed25519KP) Sign(msg []byte) ccrypto.Signature {
 	return ccrypto.Sign(kp.Amalgamate(), msg)
 }
 
@@ -105,6 +105,6 @@ func (kp Ed25519KP) String() string {
 }
 
 // Verifies a message and signature with this `Ed25519KP` object.
-func (kp Ed25519KP) Verify(msg, sig []byte) bool {
+func (kp Ed25519KP) Verify(msg []byte, sig ccrypto.Signature) bool {
 	return ccrypto.Verify(kp.PK, msg, sig)
 }
