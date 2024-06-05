@@ -8,10 +8,25 @@ import (
 	"wraith.me/message_server/db/mongoutil"
 )
 
-const _CHALL_CTYPE = "ctype"
-const _CHALL_CPURPOSE = "cpurpose"
-const _CHALL_CLAIM = "claim"
+const (
+	_CHALL_CTYPE    = "ctype"
+	_CHALL_CPURPOSE = "cpurpose"
+	_CHALL_CLAIM    = "claim"
+)
 
+/*
+Represents a challenge given to a user to solve. A challenge can be used
+to remove holds on accounts, prove identity, or provide authorization for
+an account action such as deletion. A challenge can either be initiated by
+a user or a server. Likewise, a challenge can either be responded to by a
+user or a server, though the latter is not currently slated for immediate
+implementation at this time. This implementation of a challenge is meant
+to be encoded in a stateless PASETO token. This token is then echoed back
+to the server in the case of an email challenge and echoed plus signed in
+the case of a public key challenge. The `Claim` field can either represent
+an email or a base64-encoded public key, and the state depends on the value
+of the `CType`field.
+*/
 type CToken struct {
 	ID        mongoutil.UUID
 	Issuer    mongoutil.UUID
@@ -22,6 +37,7 @@ type CToken struct {
 	Claim     string
 }
 
+// Creates a new challenge meant for validating ownership of an email.
 func NewEmailChallenge(issuer mongoutil.UUID, subjectID mongoutil.UUID, purpose CPurpose, expiry time.Time, email string) CToken {
 	return CToken{
 		ID:        mongoutil.MustNewUUID7(),
@@ -34,6 +50,7 @@ func NewEmailChallenge(issuer mongoutil.UUID, subjectID mongoutil.UUID, purpose 
 	}
 }
 
+// Creates a new challenge meant for validating ownership of a private key.
 func NewPKChallenge(issuer mongoutil.UUID, subjectID mongoutil.UUID, purpose CPurpose, expiry time.Time, pubkey ccrypto.Pubkey) CToken {
 	return CToken{
 		ID:        mongoutil.MustNewUUID7(),

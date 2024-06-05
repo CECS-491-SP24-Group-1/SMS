@@ -107,7 +107,7 @@ func InRange(num int64, min int64, max int64) bool {
 	return num >= min && num <= max
 }
 
-// Adapter for `MapStructure` that hooks `TextUnmarshaller` for custom types
+// Adapter for `MapStructure` that hooks `TextUnmarshaller` for custom types.
 func MSTextUnmarshal[T any](input map[string]interface{}, output *T) error {
 	//Setup the decoder config
 	config := &mapstructure.DecoderConfig{

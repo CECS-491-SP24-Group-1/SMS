@@ -11,6 +11,9 @@ import (
 )
 
 func TestCTokenClaims(t *testing.T) {
+	//Create a new ed25519 key for encryption
+	_, sk, _ := ccrypto.NewKeypair(nil)
+
 	//Test the email claim functionality
 	etok := c.NewEmailChallenge(
 		mongoutil.MustNewUUID7(),
@@ -20,6 +23,8 @@ func TestCTokenClaims(t *testing.T) {
 		"jdoe@example.com",
 	)
 	fmt.Printf("%v\n", etok)
+	fmt.Printf("enc: %s\n", etok.Encrypt(sk))
+	fmt.Println()
 
 	//Test the pk token claim functionality
 	pk, _, err := ccrypto.NewKeypair(nil)
@@ -34,4 +39,6 @@ func TestCTokenClaims(t *testing.T) {
 		pk,
 	)
 	fmt.Printf("%v\n", pktok)
+	fmt.Printf("enc: %s\n", pktok.Encrypt(sk))
+	fmt.Println()
 }
