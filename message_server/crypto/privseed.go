@@ -21,7 +21,7 @@ func NilPrivseed() Privseed {
 	return Privseed{}
 }
 
-// Parses a `Privkey` object from a string.
+// Parses a `Privseed` object from a string.
 func ParsePrivseedBytes(str string) (Privseed, error) {
 	//Derive a byte array from the string
 	ba, err := base64.StdEncoding.DecodeString(str)

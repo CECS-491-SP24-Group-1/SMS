@@ -101,3 +101,8 @@ func (pkb *Pubkey) UnmarshalText(text []byte) error {
 	*pkb, err = ParsePubkeyBytes(string(text))
 	return err
 }
+
+// Verifies a message and signature using this `Privkey` object.
+func (pkb Pubkey) Verify(message []byte, sig Signature) bool {
+	return Verify(pkb, message, sig)
+}

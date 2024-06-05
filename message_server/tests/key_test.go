@@ -16,8 +16,8 @@ func TestKey(t *testing.T) {
 	}
 
 	//Convert the private/public keys to our representations
-	ccrypto.MustKeyFromBytes(ccrypto.PrivkeyFromBytes, edsk)
-	ccrypto.MustKeyFromBytes(ccrypto.PubkeyFromBytes, edpk)
+	ccrypto.MustFromBytes(ccrypto.PrivkeyFromBytes, edsk)
+	ccrypto.MustFromBytes(ccrypto.PubkeyFromBytes, edpk)
 
 	//Attempt to derive the public key
 	//pks

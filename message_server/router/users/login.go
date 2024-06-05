@@ -57,7 +57,7 @@ type loginVerifyUser struct {
 	Token string `json:"token" mapstructure:"token"`
 
 	//The signature of the input token, signed by the user's private key.
-	Signature string `json:"signature" mapstructure:"signature"`
+	Signature ccrypto.Signature `json:"signature" mapstructure:"signature"`
 }
 
 /*
@@ -140,11 +140,13 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 	}
 
 	//Check for the token and signature if this is a verification request
+	var reqSig string
 	if _, ok := any(user).(*loginVerifyUser); ok {
 		if _, ok := reqBody["token"].(string); !ok {
 			missingErrors = append(missingErrors, fmt.Errorf("missing `token` field or it's poorly formed; expecting `string`"))
 		}
-		if _, ok := reqBody["signature"].(string); !ok {
+		reqSig, ok = reqBody["signature"].(string)
+		if !ok {
 			missingErrors = append(missingErrors, fmt.Errorf("missing `signature` field or it's poorly formed; expecting `string`"))
 		}
 	}
@@ -156,7 +158,7 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 	}
 
 	//Ensure the incoming data is valid
-	if err := ensureCorrectIdAndPKFmt(reqId, reqPK); err != nil {
+	if err := ensureCorrectIdAndPKFmt(reqId, reqPK, reqSig); err != nil {
 		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
 		return false
 	}
@@ -178,10 +180,9 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 		tmp, _ := any(user).(*loginVerifyUser)
 		lu = tmp.loginUser
 	default:
-		panic(fmt.Sprintf("Unexpected type %T\n", user))
+		panic(fmt.Sprintf("Unexpected type %T\n", user)) //This block shouldn't ever be hit
 	}
 
-	//-------------------------------------------------------------------------------
 	//Ensure the claims map to an existing user in the database
 	userCollection := mcl.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
 	tmp, err := ensureExistantUser(userCollection, lu, r.Context())
@@ -217,7 +218,7 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 }
 
 // Ensures that the user ID and public key are of the proper format
-func ensureCorrectIdAndPKFmt(id string, pk string) error {
+func ensureCorrectIdAndPKFmt(id string, pk string, sig string) error {
 	//Try to parse the UUID first
 	if validId := mongoutil.IsValidUUIDv7(id); !validId {
 		return fmt.Errorf("invalid UUID format `%s`; expected a UUIDv7 in the form: `xxxxxxxx-xxxx-7xxx-xxxx-xxxxxxxxxxxx`", id)
@@ -226,11 +227,22 @@ func ensureCorrectIdAndPKFmt(id string, pk string) error {
 	//Check the validity of the base64'ed public key by attempting to convert to a byte array
 	dbytes, err := base64.StdEncoding.DecodeString(pk)
 	if err != nil {
-		return err
+		return fmt.Errorf("request.pk: %s", err)
 	}
-	validPubkey := len(dbytes) == ccrypto.PUBKEY_SIZE
-	if !validPubkey {
+	if len(dbytes) != ccrypto.PUBKEY_SIZE {
 		return fmt.Errorf("mismatched public key size (%d); expected: %d", len(dbytes), ccrypto.PUBKEY_SIZE)
+	}
+
+	//Check the validity of the base64'ed signature by attempting to convert to a byte array
+	//Only do this if its not empty
+	if len(sig) > 0 {
+		sbytes, err := base64.StdEncoding.DecodeString(sig)
+		if err != nil {
+			return fmt.Errorf("request.signature: %s", err)
+		}
+		if len(sbytes) != ccrypto.SIG_SIZE {
+			return fmt.Errorf("mismatched signature size (%d); expected: %d", len(sbytes), ccrypto.SIG_SIZE)
+		}
 	}
 
 	//No errors so return nil

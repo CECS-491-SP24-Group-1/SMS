@@ -36,7 +36,7 @@ func NewKeypair(randSrc io.Reader) (Pubkey, Privkey, error) {
 	if err != nil {
 		return NilPubkey(), NilPrivkey(), err
 	}
-	return MustKeyFromBytes(PubkeyFromBytes, pubkey[:]), MustKeyFromBytes(PrivkeyFromBytes, privkey[:]), nil
+	return MustFromBytes(PubkeyFromBytes, pubkey[:]), MustFromBytes(PrivkeyFromBytes, privkey[:]), nil
 }
 
 // Creates an empty private key.
@@ -112,8 +112,12 @@ func (prk Privkey) Seed() Privseed {
 }
 
 // Signs a message using this `Privkey` object.
-func (prk Privkey) Sign(rand io.Reader, message []byte, opts crypto.SignerOpts) (signature []byte, err error) {
-	return ed25519.PrivateKey(prk[:]).Sign(rand, message, opts)
+func (prk Privkey) Sign(rand io.Reader, message []byte, opts crypto.SignerOpts) (signature Signature, err error) {
+	sig, err := ed25519.PrivateKey(prk[:]).Sign(rand, message, opts)
+	if err != nil {
+		return NilSignature(), err
+	}
+	return SignatureFromBytes(sig)
 }
 
 // Converts a `Privkey` object to a string.

@@ -37,8 +37,8 @@ func Ed25519Keygen() Ed25519KP {
 // Derives an Ed25519 keypair object from raw bytes.
 func Ed25519FromBytes(sk []byte, pk []byte) Ed25519KP {
 	//Get the key objects
-	sko := ccrypto.MustKeyFromBytes(ccrypto.PrivkeyFromBytes, sk)
-	pko := ccrypto.MustKeyFromBytes(ccrypto.PubkeyFromBytes, pk)
+	sko := ccrypto.MustFromBytes(ccrypto.PrivkeyFromBytes, sk)
+	pko := ccrypto.MustFromBytes(ccrypto.PubkeyFromBytes, pk)
 
 	//Ensure the input PK corresponds to the SK
 	if !pko.Equal(sko.Public()) {
@@ -69,7 +69,7 @@ func Ed25519FromJSON(jsons string) (obj Ed25519KP, err error) {
 // Derives an Ed25519 keypair object from a private key via `scalar_mult()“.
 func Ed25519FromSK(sk []byte) Ed25519KP {
 	//Get the public key equivalent via `scalar_mult()`
-	pubSmult := ccrypto.MustKeyFromBytes(ccrypto.PrivkeyFromBytes, sk).Public()
+	pubSmult := ccrypto.MustFromBytes(ccrypto.PrivkeyFromBytes, sk).Public()
 
 	//Return the object
 	return Ed25519FromBytes(sk, pubSmult[:])
