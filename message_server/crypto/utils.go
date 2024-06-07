@@ -10,9 +10,18 @@ var (
 	SignAlgo = crypto.SHA512
 )
 
-// Parses a byte slice to a `Privkey` or a `Pubkey`.
+// Parses a byte slice to a `Privkey`, `Pubkey`, `Privseed`, or `Signature`.
 func MustFromBytes[K Privkey | Pubkey | Privseed | Signature](fun func([]byte) (K, error), bytes []byte) K {
 	k, err := fun(bytes)
+	if err != nil {
+		panic(err)
+	}
+	return k
+}
+
+// Parses a string to a `Privkey`, `Pubkey`, `Privseed`, or `Signature`.
+func MustFromString[K Privkey | Pubkey | Privseed | Signature](fun func(string) (K, error), str string) K {
+	k, err := fun(str)
 	if err != nil {
 		panic(err)
 	}

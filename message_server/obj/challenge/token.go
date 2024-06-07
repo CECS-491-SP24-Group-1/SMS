@@ -147,7 +147,7 @@ func Decrypt(token string, issuer mongoutil.UUID, key ccrypto.Privkey) (*CToken,
 
 	//Ensure the claim maps to a valid public key if it is one
 	if ctype == CTypePUBKEY {
-		if _, err := ccrypto.ParsePubkeyBytes(claim); err != nil {
+		if _, err := ccrypto.ParsePubkey(claim); err != nil {
 			return nil, err
 		}
 	}

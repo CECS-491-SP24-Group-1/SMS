@@ -5,6 +5,8 @@ import (
 
 	"wraith.me/clientside_crypto/lib"
 	"wraith.me/clientside_crypto/util"
+
+	ccrypto "wraith.me/message_server/crypto"
 )
 
 func main() {
@@ -93,19 +95,21 @@ func ed25519JSON(_ js.Value, args []js.Value) interface{} {
 	return ed25519ObjFromJSON(args[0]).JSON()
 }
 
-// ed25519JSON(this Ed25519KP, msg string) -> []byte
+// ed25519JSON(this Ed25519KP, msg string) -> string
 func ed25519Sign(_ js.Value, args []js.Value) interface{} {
 	//Get the args as well-typed items
 	obj := ed25519ObjFromJSON(args[0])
 	msg := util.Val2Any[string](args[1])
 
-	//Calculate the signature of the message and convert it to a `Uint8Array`
+	//Calculate the signature of the message
 	sig := obj.Sign([]byte(msg))
-	ta := js.Global().Get("Uint8Array").New(len(sig))
-	ta.Call("set", util.GenerifyArray(sig))
+	/*
+		ta := js.Global().Get("Uint8Array").New(len(sig))
+		ta.Call("set", util.GenerifyArray(sig[:]))
+	*/
 
-	//Return the typed array object
-	return ta
+	//Return the signature
+	return sig.String()
 }
 
 // func ed25519String(this Ed25519KP) -> string
@@ -113,15 +117,16 @@ func ed25519String(_ js.Value, args []js.Value) interface{} {
 	return ed25519ObjFromJSON(args[0]).String()
 }
 
-// ed25519JSON(this Ed25519KP, msg string, sig []byte) -> bool
+// ed25519JSON(this Ed25519KP, msg string, sig string) -> bool
+// TODO: ingest the signature as a string
 func ed25519Verify(_ js.Value, args []js.Value) interface{} {
 	//Get the args as well-typed items
 	obj := ed25519ObjFromJSON(args[0])
 	msg := util.Val2Any[string](args[1])
-	sig := util.Val2Any[[]byte](args[2])
+	sig := util.Val2Any[string](args[2])
 
 	//Verify the signature and return the results
-	return obj.Verify([]byte(msg), sig)
+	return obj.Verify([]byte(msg), ccrypto.MustFromString[ccrypto.Signature](ccrypto.ParseSignature, sig))
 }
 
 /* //-- Utility functions */

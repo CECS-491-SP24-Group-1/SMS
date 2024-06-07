@@ -22,8 +22,8 @@ func TestKey(t *testing.T) {
 	//Attempt to derive the public key
 	//pks
 
-	sk, _ := ccrypto.ParsePrivkeyBytes("eK7Rv8dfHPrWgeVcHIoskqMNke2EjWUFaIgafCaU3ZE=")
-	pk, _ := ccrypto.ParsePubkeyBytes("wDw04q6c94g7zn5IwGe1M0E6NJRDuHCa0x+joia8DFg=")
+	sk, _ := ccrypto.ParsePrivkey("eK7Rv8dfHPrWgeVcHIoskqMNke2EjWUFaIgafCaU3ZE=")
+	pk, _ := ccrypto.ParsePubkey("wDw04q6c94g7zn5IwGe1M0E6NJRDuHCa0x+joia8DFg=")
 	fmt.Printf("sk: `%v`\n", sk)
 
 	msg := "this is a test"

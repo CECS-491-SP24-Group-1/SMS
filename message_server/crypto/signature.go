@@ -25,13 +25,13 @@ with a `Privkey` object.
 */
 type Signature [SIG_SIZE]byte
 
-// Creates an empty private key.
+// Creates an empty signature.
 func NilSignature() Signature {
 	return Signature{}
 }
 
-// Parses a `Privkey` object from a string.
-func ParseSignatureBytes(str string) (Signature, error) {
+// Parses a `Signature` object from a string.
+func ParseSignature(str string) (Signature, error) {
 	//Derive a byte array from the string
 	ba, err := base64.StdEncoding.DecodeString(str)
 	if err != nil {
@@ -89,7 +89,7 @@ func (sig *Signature) UnmarshalJSON(b []byte) error {
 	}
 
 	//Derive a valid object from the string and reassign
-	obj, err := ParseSignatureBytes(s)
+	obj, err := ParseSignature(s)
 	*sig = obj
 	return err
 }
@@ -97,6 +97,6 @@ func (sig *Signature) UnmarshalJSON(b []byte) error {
 // Unmarshals a `Signature` object from a string.
 func (sig *Signature) UnmarshalText(text []byte) error {
 	var err error
-	*sig, err = ParseSignatureBytes(string(text))
+	*sig, err = ParseSignature(string(text))
 	return err
 }

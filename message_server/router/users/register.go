@@ -69,7 +69,7 @@ not all records are checked if one fails.
 */
 func ensureNonexistantUser(coll *mongo.Collection, usr intermediateUser, ctx context.Context) error {
 	//Parse out the public key of the incoming user
-	pubkey, _ := crypto.ParsePubkeyBytes(usr.Pubkey) //Errors should not occur here; data is already pre-validated
+	pubkey, _ := crypto.ParsePubkey(usr.Pubkey) //Errors should not occur here; data is already pre-validated
 
 	//Construct a Mongo aggregation pipeline to run the request; avoids making multiple round-trips to the database
 	//This aggregation was exported from MongoDB; do not edit if you don't know what you are doing!
@@ -139,7 +139,7 @@ func (iu intermediateUser) validate(strictEmail bool) (bool, []error) {
 
 	//Step 3: Check the validity of the base64'ed public key by attempting to convert to a byte array
 	validPubkey := true
-	_, err := crypto.ParsePubkeyBytes(iu.Pubkey)
+	_, err := crypto.ParsePubkey(iu.Pubkey)
 	if err != nil {
 		validPubkey = false
 		errors = append(errors, err)

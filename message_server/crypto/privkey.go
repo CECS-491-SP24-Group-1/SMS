@@ -45,7 +45,7 @@ func NilPrivkey() Privkey {
 }
 
 // Parses a `Privkey` object from a string.
-func ParsePrivkeyBytes(str string) (Privkey, error) {
+func ParsePrivkey(str string) (Privkey, error) {
 	//Derive a byte array from the string
 	ba, err := base64.StdEncoding.DecodeString(str)
 	if err != nil {
@@ -135,7 +135,7 @@ func (prk *Privkey) UnmarshalJSON(b []byte) error {
 	}
 
 	//Derive a valid object from the string and reassign
-	obj, err := ParsePrivkeyBytes(s)
+	obj, err := ParsePrivkey(s)
 	*prk = obj
 	return err
 }
@@ -143,6 +143,6 @@ func (prk *Privkey) UnmarshalJSON(b []byte) error {
 // Unmarshals a `Privkey` object from a string.
 func (prk *Privkey) UnmarshalText(text []byte) error {
 	var err error
-	*prk, err = ParsePrivkeyBytes(string(text))
+	*prk, err = ParsePrivkey(string(text))
 	return err
 }

@@ -28,7 +28,7 @@ func NilPubkey() Pubkey {
 }
 
 // Parses a `Pubkey` object from a string.
-func ParsePubkeyBytes(str string) (Pubkey, error) {
+func ParsePubkey(str string) (Pubkey, error) {
 	//Derive a byte array from the string
 	ba, err := base64.StdEncoding.DecodeString(str)
 	if err != nil {
@@ -90,7 +90,7 @@ func (pkb *Pubkey) UnmarshalJSON(b []byte) error {
 	}
 
 	//Derive a valid object from the string and reassign
-	obj, err := ParsePubkeyBytes(s)
+	obj, err := ParsePubkey(s)
 	*pkb = obj
 	return err
 }
@@ -98,7 +98,7 @@ func (pkb *Pubkey) UnmarshalJSON(b []byte) error {
 // Unmarshals a `Pubkey` object from a string.
 func (pkb *Pubkey) UnmarshalText(text []byte) error {
 	var err error
-	*pkb, err = ParsePubkeyBytes(string(text))
+	*pkb, err = ParsePubkey(string(text))
 	return err
 }
 
