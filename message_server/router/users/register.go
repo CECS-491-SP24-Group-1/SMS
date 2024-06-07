@@ -61,6 +61,63 @@ type postsignupUser struct {
 	TempAccessToken string `json:"temp_access_token"`
 }
 
+// Handles incoming requests made to `POST /users/register`.
+func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
+	//Create a new intermediate user object
+	iuser := intermediateUser{}
+
+	//Get the request body and attempt to parse to JSON
+	if err := json.NewDecoder(r.Body).Decode(&iuser); err != nil {
+		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		return
+	}
+
+	//Validate the unmarshalled struct
+	//At this point, the incoming JSON was accepted, but fields may be missing or invalid
+	valid, verrs := iuser.validate(false)
+	if !valid {
+		httpu.HttpMultipleErrorsAsJson(w, verrs, http.StatusBadRequest)
+		return
+	}
+
+	//Decode the base64 public key to a byte array
+	decodedPK, err := base64.StdEncoding.DecodeString(iuser.Pubkey)
+	if err != nil {
+		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		return
+	}
+
+	//Get the users collection from the database and ensure a record doesn't already exist
+	userCollection := mcl.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
+
+	//Ensure the user doesn't already exist in the database
+	if err := ensureNonexistantUser(userCollection, iuser, r.Context()); err != nil {
+		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		return
+	}
+
+	//Fill in the rest of the details
+	uuid := mongoutil.MustNewUUID7()
+	user := obj.NewUser(
+		uuid,
+		crypto.NilPubkey(),
+		strings.ToLower(iuser.Username),
+		iuser.Username,
+		strings.ToLower(iuser.Email),
+		util.NowMillis(),
+		ip_addr.HttpIP2NetIP(r.RemoteAddr),
+		obj.DefaultUserFlags(),
+		obj.DefaultUserOptions(),
+	)
+	copy(user.Pubkey[:], decodedPK[:])
+
+	//Complete the post-signup steps, including challenge generation and issuance of a temporary token
+	if err := postSignup(w, r, user, userCollection); err != nil {
+		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
+		return
+	}
+}
+
 /*
 Ensures that a user doesn't already exist in the database based on what
 was given by the user. A `nil` error indicates that no matching records
@@ -147,63 +204,6 @@ func (iu intermediateUser) validate(strictEmail bool) (bool, []error) {
 
 	//Return the validity status and any errors that occurred
 	return validUname && validEmail && validPubkey, errors
-}
-
-// Handles incoming requests made to `POST /users/register`.
-func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
-	//Create a new intermediate user object
-	iuser := intermediateUser{}
-
-	//Get the request body and attempt to parse to JSON
-	if err := json.NewDecoder(r.Body).Decode(&iuser); err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
-		return
-	}
-
-	//Validate the unmarshalled struct
-	//At this point, the incoming JSON was accepted, but fields may be missing or invalid
-	valid, verrs := iuser.validate(false)
-	if !valid {
-		httpu.HttpMultipleErrorsAsJson(w, verrs, http.StatusBadRequest)
-		return
-	}
-
-	//Decode the base64 public key to a byte array
-	decodedPK, err := base64.StdEncoding.DecodeString(iuser.Pubkey)
-	if err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
-		return
-	}
-
-	//Get the users collection from the database and ensure a record doesn't already exist
-	userCollection := mcl.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
-
-	//Ensure the user doesn't already exist in the database
-	if err := ensureNonexistantUser(userCollection, iuser, r.Context()); err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
-		return
-	}
-
-	//Fill in the rest of the details
-	uuid := mongoutil.MustNewUUID7()
-	user := obj.NewUser(
-		uuid,
-		crypto.NilPubkey(),
-		strings.ToLower(iuser.Username),
-		iuser.Username,
-		strings.ToLower(iuser.Email),
-		util.NowMillis(),
-		ip_addr.HttpIP2NetIP(r.RemoteAddr),
-		obj.DefaultUserFlags(),
-		obj.DefaultUserOptions(),
-	)
-	copy(user.Pubkey[:], decodedPK[:])
-
-	//Complete the post-signup steps, including challenge generation and issuance of a temporary token
-	if err := postSignup(w, r, user, userCollection); err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
-		return
-	}
 }
 
 /*
