@@ -1,0 +1,20 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "wraith.me/schema/register.schema.json",
+	"title": "IntermediateUser",
+	"description": "A bare-bones object supplied by a user during a registration request.",
+	"type": "object",
+	"properties": {
+		"username": {
+			"type": "string"
+		},
+		"email": {
+			"type": "string"
+		},
+		"pubkey": {
+			"type": "string"
+		}
+	},
+	"required": ["username", "email", "pubkey"],
+	"additionalProperties": false
+}

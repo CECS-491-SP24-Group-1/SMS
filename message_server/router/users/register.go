@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/tanqiangyes/govalidator"
+	"github.com/xeipuuv/gojsonschema"
 	mail "github.com/xhit/go-simple-mail/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,6 +28,7 @@ import (
 	"wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/obj/ip_addr"
 	cr "wraith.me/message_server/redis"
+	"wraith.me/message_server/schema"
 	remailt "wraith.me/message_server/template/registration_email"
 	"wraith.me/message_server/util"
 	"wraith.me/message_server/util/httpu"
@@ -66,8 +69,31 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Create a new intermediate user object
 	iuser := intermediateUser{}
 
+	//Read in the request body to a string
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	//Validate the request body against the registration JSON schema
+	result, err := gojsonschema.Validate(schema.Register, gojsonschema.NewBytesLoader(bodyBytes))
+	if err != nil {
+		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		return
+	}
+	if !result.Valid() {
+		//Collect the validation errors and report them to the client
+		verrs := make([]error, len(result.Errors()))
+		for i, err := range result.Errors() {
+			verrs[i] = fmt.Errorf(err.Description())
+		}
+		httpu.HttpMultipleErrorsAsJson(w, verrs, http.StatusBadRequest)
+		return
+	}
+
 	//Get the request body and attempt to parse to JSON
-	if err := json.NewDecoder(r.Body).Decode(&iuser); err != nil {
+	if err := json.NewDecoder(bytes.NewReader(bodyBytes)).Decode(&iuser); err != nil {
 		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
 		return
 	}
