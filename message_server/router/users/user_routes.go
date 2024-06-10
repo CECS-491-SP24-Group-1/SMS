@@ -40,6 +40,7 @@ func UserRoutes(cfgg *config.Config, envv *config.Env) chi.Router {
 	env = envv
 
 	//Read in the email templates
+	//TODO: use `go/embed` instead of loading from the FS
 	var rerr error
 	emailChallTemplate, rerr = template.ParseFiles("./template/registration_email/template.html")
 
