@@ -1,6 +1,8 @@
 package challenge
 
 import (
+	"crypto/subtle"
+	"fmt"
 	"time"
 
 	"aidanwoods.dev/go-paseto"
@@ -84,12 +86,11 @@ func (t CToken) Encrypt(key ccrypto.Privkey) string {
 }
 
 // Decodes an encrypted v4 Paseto token into a challenge payload.
-func Decrypt(token string, issuer mongoutil.UUID, key ccrypto.Privkey) (*CToken, error) {
+func Decrypt(token string, key ccrypto.Privkey, issuer mongoutil.UUID) (*CToken, error) {
 	//Create a new token parser and add rules
 	parser := paseto.NewParser()
 	parser.AddRule(paseto.ValidAt(time.Now())) //Checks nbf, iat, and exp in one fell-swoop
 	parser.AddRule(paseto.IssuedBy(issuer.String()))
-	//parser.AddRule(paseto.Subject(subIn))
 
 	//Decrypt the token and validate it; due to the "v4_local" construction, any tamper attempts will auto-fail this check
 	decrypted, err := parser.ParseV4Local(edsk2PasetoSK(key), token, nil)
@@ -97,6 +98,38 @@ func Decrypt(token string, issuer mongoutil.UUID, key ccrypto.Privkey) (*CToken,
 		return nil, err
 	}
 
+	//Decode the token and return the payload
+	return pasetoDecode(decrypted, issuer)
+}
+
+// Decodes an encrypted v4 Paseto token into a challenge payload, with stricter checks.
+func DecryptStrict(token string, key ccrypto.Privkey, issuer mongoutil.UUID, subject mongoutil.UUID, pubkey ccrypto.Pubkey) (*CToken, error) {
+	//Create a new token parser and add rules
+	parser := paseto.NewParser()
+	parser.AddRule(paseto.ValidAt(time.Now())) //Checks nbf, iat, and exp in one fell-swoop
+	parser.AddRule(paseto.IssuedBy(issuer.String()))
+	parser.AddRule(paseto.Subject(subject.String()))
+	parser.AddRule(subjectHasPK(pubkey.String()))
+
+	//Decrypt the token and validate it; due to the "v4_local" construction, any tamper attempts will auto-fail this check
+	decrypted, err := parser.ParseV4Local(edsk2PasetoSK(key), token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	//Decode the token and return the payload
+	return pasetoDecode(decrypted, issuer)
+}
+
+// Converts an Ed25519 SK to a PasetoV4 SK.
+func edsk2PasetoSK(key ccrypto.Privkey) paseto.V4SymmetricKey {
+	seed := key.Seed()
+	psk, _ := paseto.V4SymmetricKeyFromBytes(seed[:])
+	return psk
+}
+
+// Decodes a PasetoV4 token into a valid `CToken` object.
+func pasetoDecode(tok *paseto.Token, issuer mongoutil.UUID) (*CToken, error) {
 	//Get the fields of the token
 	var id string
 	var subjectID string
@@ -107,15 +140,15 @@ func Decrypt(token string, issuer mongoutil.UUID, key ccrypto.Privkey) (*CToken,
 
 	//Early return if any conversion function fails
 	perr := func() (err error) {
-		id, err = decrypted.GetJti()
+		id, err = tok.GetJti()
 		if err != nil {
 			return
 		}
-		subjectID, err = decrypted.GetSubject()
+		subjectID, err = tok.GetSubject()
 		if err != nil {
 			return
 		}
-		ctypeS, err := decrypted.GetString(_CHALL_CTYPE)
+		ctypeS, err := tok.GetString(_CHALL_CTYPE)
 		if err != nil {
 			return
 		}
@@ -123,7 +156,7 @@ func Decrypt(token string, issuer mongoutil.UUID, key ccrypto.Privkey) (*CToken,
 		if err != nil {
 			return
 		}
-		purposeS, err := decrypted.GetString(_CHALL_CPURPOSE)
+		purposeS, err := tok.GetString(_CHALL_CPURPOSE)
 		if err != nil {
 			return
 		}
@@ -131,11 +164,11 @@ func Decrypt(token string, issuer mongoutil.UUID, key ccrypto.Privkey) (*CToken,
 		if err != nil {
 			return
 		}
-		expiry, err = decrypted.GetExpiration()
+		expiry, err = tok.GetExpiration()
 		if err != nil {
 			return
 		}
-		claim, err = decrypted.GetString(_CHALL_CLAIM)
+		claim, err = tok.GetString(_CHALL_CLAIM)
 		if err != nil {
 			return
 		}
@@ -164,9 +197,22 @@ func Decrypt(token string, issuer mongoutil.UUID, key ccrypto.Privkey) (*CToken,
 	}, nil
 }
 
-// Converts an Ed25519 SK to a PasetoV4 SK.
-func edsk2PasetoSK(key ccrypto.Privkey) paseto.V4SymmetricKey {
-	seed := key.Seed()
-	psk, _ := paseto.V4SymmetricKeyFromBytes(seed[:])
-	return psk
+// Verifies that the public key of the subject matches an input value.
+func subjectHasPK(pk string) paseto.Rule {
+	return func(token paseto.Token) error {
+		//Get the public key from the token
+		tpk, err := token.GetString(_CHALL_CLAIM)
+		if err != nil {
+			return err
+		}
+
+		//Check the validity of the subject's public key using constant time compare
+		//This prevents side channel attacks against this field of the token
+		if subtle.ConstantTimeCompare([]byte(tpk), []byte(pk)) == 0 {
+			return fmt.Errorf("this token's subject has a mismatched or no public key")
+		}
+
+		//No error, so return `nil`
+		return nil
+	}
 }
