@@ -20,8 +20,8 @@ class Vault {
 	 * @param {string} subject The ID of the person to whom this vault 
 	 * belongs. This is expected to be a UUIDv7, but may start out as a
 	 * nil UUID
-	 * @param {uint8[32]} sk The private key of the vault owner
-	 * @param {uint8[32]} pk The public key of the vault owner
+	 * @param {Uint8Array} sk The private key of the vault owner
+	 * @param {Uint8Array} pk The public key of the vault owner
 	 */
 	constructor(subject, sk, pk){
 		this.id = uuid7();
@@ -61,9 +61,22 @@ class Vault {
 		//Convert the input string to a JSONObject
 		const json = JSON.parse(str);
 
-		//Parse out the 2 uint8 arrays from the JSON object
-		const sk = new Uint8Array(json.kstore.sk, 0, KEY_SIZE);
-		const pk = new Uint8Array(json.kstore.pk, 0, KEY_SIZE);
+		//If the keys are arrays, then parse the array; otherwise use `b64ToU8Arr()`
+		//This is for backwards compatibility between old & new vaults
+		let sk = null;
+		let pk = null;
+		if(Array.isArray(json.kstore.sk)){
+			sk = new Uint8Array(json.kstore.sk, 0, KEY_SIZE);
+		}
+		else {
+			sk = b64ToU8Arr(json.kstore.sk);
+		}
+		if(Array.isArray(json.kstore.pk)){
+			pk = new Uint8Array(json.kstore.pk, 0, KEY_SIZE);
+		}
+		else {
+			pk = b64ToU8Arr(json.kstore.pk);
+		}
 
 		//Create a new vault object
 		const vault = new Vault(json.subject, sk, pk);
@@ -99,8 +112,8 @@ class Vault {
 class KeyStore {
 	/**
 	 * Creates a new `KeyStore` object.
-	 * @param {uint8[32]} sk The private key
-	 * @param {uint8[32]} pk The public key
+	 * @param {Uint8Array} sk The private key
+	 * @param {Uint8Array} pk The public key
 	 */
 	constructor(sk, pk){
 		this.sk = new Uint8Array(sk, 0, KEY_SIZE);
@@ -122,4 +135,24 @@ class KeyStore {
 	pkString(){
 		return btoa(String.fromCharCode.apply(null, this.pk));
 	}
+}
+
+
+//-- Utilities
+/**
+ * Converts a base64 string to a u8 array.
+ * @param {string} b64 The base64 string to ingest
+ * @return {Uint8Array} The resulting u8 array
+ */
+function b64ToU8Arr(b64){
+	return new Uint8Array(atob(b64).split("").map(c => c.charCodeAt(0)));
+}
+
+/**
+ * Converts a u8 array to a base64.
+ * @param {Uint8Array} u8Arr The u8 array to ingest
+ * @return {string} The resulting base64 string
+ */
+function u8ArrToB64(u8Arr){
+	return btoa(Array.from(u8Arr).map(b => String.fromCharCode(b)).join(""));
 }

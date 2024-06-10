@@ -32,16 +32,26 @@
 		#output {
 			overflow: scroll;
 		}
-		#validationWarn {
+		.monoErr {
 			margin-left: 5px;
 			color: red;
-			visibility: hidden;
 		}
 		.formBtn + .formBtn {
 			margin-left: 3px;
 		}
 		#dlVaultBtn {
 			display: none;
+		}
+		#meForm {
+			border: 2px solid lightblue;
+			font-size: 14px;
+			margin-bottom: 0;
+			min-width: 60em;
+			font-family: "Courier New", Courier, monospace;
+		}
+		#meWarn {
+			margin: 0 !important;
+			font-size: 14px;
 		}
 	</style>
 </head>
@@ -50,13 +60,21 @@
 		<label for="username">Username:</label><input type="text" id="username" name="username" required>
 		<br>
 		<label for="email">Email:</label><input type="email" id="email" name="email" required pattern="^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
-		<br>
-		<input type="submit" id="submitBtn" class="formBtn" value="Submit">
+		<!-- <input type="submit" id="submitBtn" class="formBtn" value="Submit"> -->
+	</form>
+	<div id="manualEntryForm" style="display: none">
+		<textarea id="meForm">&lt;enter your registration info here as JSON&gt;</textarea>
+		<p id="meWarn" class="monoErr" style="visibility: hidden">&nbsp;</p>
+	</div>
+	<br>
+	<div id="actionBtnGroup">
+		<button type="button" id="submitBtn" class="formBtn" onclick="submitRegistrationForm()">Submit</button>
 		<button type="button" id="clearBtn" class="formBtn" onclick="handleFClear()">Clear</button>
 		<button type="button" id="randBtn" class="formBtn" onclick="handleRandForm()">Randomize & Submit</button>
-		<button type="button" id="dlVaultBtn" class="formBtn" onclick="">Download Vault</button>
-		<span id="validationWarn">One or more fields are invalid. Please check your inputs and try again.</span>
-	</form>
+		<button type="button" id="manualEntryToggleBtn" class="formBtn" onclick="toggleEntryMode()">Toggle Manual Entry</button>
+		<button type="button" id="dlVaultBtn" class="formBtn">Download Vault</button>
+		<span id="validationWarn" class="monoErr" style="visibility: hidden">One or more fields are invalid. Please check your inputs and try again.</span>
+	</div>
 	<br>
 	<div><span id="privkeySpan" class="keySpan">Your private key: </span><pre id="privkey"></pre></div>
 	<div><span id="pubkeySpan" class="keySpan">Your public key:  </span><pre id="pubkey"></pre></div>
@@ -68,6 +86,52 @@
 		//loadWasm(WASM_PROD_URL, true);
 	</script>
 	<script type="application/javascript">
+		//Block use of the `TAB` key in the manual entry form; see: https://stackoverflow.com/a/6637396
+		document.getElementById("meForm").addEventListener("keydown", function(e){
+			if(e.key == "Tab"){
+				//Stop the default behavior and get the start/end positions of the cursor
+				e.preventDefault();
+				let start = this.selectionStart;
+				let end = this.selectionEnd;
+
+				//Set textarea value to: text before caret + tab + text after caret
+				this.value = `${this.value.substring(0, start)}\t${this.value.substring(end)}`;
+
+				//Put caret at right position again
+				this.selectionStart = this.selectionEnd = start + 1;
+			}
+		});
+
+		//toggleVisibility(elem: HTMLElement, dtype: string) -> void
+		function toggleVisibility(elem, dtype = "block"){
+			elem.style.display === "none" ? elem.style.display = dtype : elem.style.display = "none";
+		}
+
+		//hideErr(elem: HTMLElement, clear boolean) -> void
+		function hideErr(elem, clear){
+			if(clear) elem.innerHTML = "&nbsp";
+			elem.style.setProperty("visibility", "hidden", "important");
+		}
+
+		//showErr(elem: HTMLElement, err any) -> void
+		function showErr(elem, err){
+			if(err !== null) elem.innerHTML = err;
+			elem.style.setProperty("visibility", "visible", "important");
+		}
+
+		//toggleEntryMode() -> void
+		let isManualEntry = false;
+		function toggleEntryMode(){
+			//Get both forms
+			const autoForm = document.getElementById("registerUserForm");
+			const manualForm = document.getElementById("manualEntryForm");
+
+			//Toggle the states of the forms
+			toggleVisibility(autoForm);
+			toggleVisibility(manualForm);
+			isManualEntry = !isManualEntry;
+		}
+
 		//validate(data: JSONObject) -> boolean
 		function validate(data){
 			//Step 1: Ensure the data actually contains the correct fields and they are non-empty
@@ -91,8 +155,11 @@
 			document.getElementById("output").innerHTML = "";
 			document.getElementById("privkey").innerHTML = "";
 			document.getElementById("pubkey").innerHTML = "";
-			document.getElementById("username").value = ""
-			document.getElementById("email").value = ""
+			document.getElementById("username").value = "";
+			document.getElementById("email").value = "";
+			document.getElementById("meForm").value = "<enter your registration info here as JSON>";
+			for(const span of document.querySelectorAll(".keySpan")) span.style.setProperty("visibility", "hidden", "important");
+			document.getElementById("dlVaultBtn").style.display = "none";
 		}
 
 		//handleRandForm() -> void
@@ -109,30 +176,51 @@
 		const form = document.getElementById("registerUserForm");
 		
 		//Listen for submissions
-		form.addEventListener("submit", async function(event){
+		//form.addEventListener("submit", async function(event){
+		function submitRegistrationForm(){
 			//Prevent premature submission
-			event.preventDefault();
+			//event.preventDefault();
 
-			//Get the form data; the values should be strings
-			const formData = new FormData(form);
-			const data = {
-				username: formData.get("username"),
-				email: formData.get("email")
-			};
+			//Choose the data source based on the status of `isManualEntry`
+			let data = {};
+			if(isManualEntry){
+				//Hide the error form
+				const errForm = document.getElementById("meWarn");
+				hideErr(errForm, true);
+
+				//Get the contents of the entry `pre` as JSON
+				try {
+					//Parse the form data to JSON
+					data = JSON.parse(document.getElementById("meForm").value);
+				}
+				catch(err){
+					//Populate the error form and unhide it
+					showErr(errForm, err);
+					return;
+				}
+			}
+			else {
+				//Get the form data; the values should be strings
+				const formData = new FormData(form);
+				data = {
+					username: formData.get("username"),
+					email: formData.get("email")
+				}
+			}
 
 			//Validate the form data
 			const validationWarn = document.getElementById("validationWarn");
+			hideErr(validationWarn, false);
 			if(!validate(data)){
-				validationWarn.style.setProperty("visibility", "visible", "important");
+				showErr(validationWarn, null);
 				return;
 			}
-			validationWarn.style.setProperty("visibility", "hidden", "important");
 
 			//Get an Ed25519 keypair from the crypto library
 			const keypair = ed25519Keygen();
 
 			//Create a new vault object to store the keys and eventual ID from the server
-			const vault = new Vault(uuidNil(), keypair.sk, keypair.pk);
+			const vault = new Vault(uuidNil(), b64ToU8Arr(keypair.sk), b64ToU8Arr(keypair.pk));
 
 			//Add the keypair to the submission form
 			document.getElementById("privkey").innerHTML = vault.kstore.skString();
@@ -143,8 +231,7 @@
 			data.pubkey = vault.kstore.pkString();
 
 			//Send the form to the server
-			const ENDPOINT = LOCAL_EP_BASE + "/users/register";
-			fetch(ENDPOINT, {
+			fetch(REGISTER_EP, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -187,7 +274,8 @@
 				clonedBtn.style.display = "initial";
 			})
 			.catch(error => log(`${error}\n`));
-		});
+		//});
+		}
 
 		function log(msg){
 			const output = document.getElementById("output");
