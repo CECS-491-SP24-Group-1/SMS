@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"syscall/js"
 
 	"wraith.me/clientside_crypto/lib"
@@ -135,12 +136,14 @@ func ed25519ObjFromJSON(arg js.Value) lib.Ed25519KP {
 	//Create a new Ed25519 keypair object
 	obj := lib.Ed25519KP{}
 
-	//Ingest the incoming JSONObject and stringify it
+	//Ingest the incoming JSONObject and stringify it, cleaning it up in the process
 	str := util.Val2Any[string](js.Global().Get("JSON").Call("stringify", arg))
+	strClean := strings.ReplaceAll(str, "\\", "")
+	strClean = strClean[1 : len(strClean)-1] //This strips off the beginning and ending quotes
 
 	//Attempt to derive a keypair object from the JSON
 	//Only replace the original object if there are no errors
-	parsed, err := lib.Ed25519FromJSON(str)
+	parsed, err := lib.Ed25519FromJSON(strClean)
 	if err == nil {
 		obj = parsed
 	}

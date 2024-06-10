@@ -99,9 +99,9 @@ class Vault {
 		//Do the initial conversion to a JSON object
 		const json = JSON.parse(JSON.stringify(this));
 
-		//Replace the uint8 arrays with normal arrays
-		json.kstore.sk = Array.from(this.kstore.sk);
-		json.kstore.pk = Array.from(this.kstore.pk);
+		//Replace the uint8 arrays with base64 versions
+		json.kstore.sk = u8ArrToB64(this.kstore.sk);
+		json.kstore.pk = u8ArrToB64(this.kstore.pk);
 
 		//Emit the modified JSON object as a string
 		return JSON.stringify(json);
@@ -134,6 +134,22 @@ class KeyStore {
 	 */
 	pkString(){
 		return btoa(String.fromCharCode.apply(null, this.pk));
+	}
+
+	/**
+	 * Converts this class to its string representation.
+	 * @returns {string} The string representation of this instance
+	 */
+	toString(){
+		//Do the initial conversion to a JSON object
+		const json = {};
+		
+		//Replace the uint8 arrays with base64 versions
+		json.sk = u8ArrToB64(this.sk);
+		json.pk = u8ArrToB64(this.pk);
+
+		//Emit the modified JSON object as a string
+		return JSON.stringify(json);
 	}
 }
 

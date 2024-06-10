@@ -114,9 +114,27 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("verif_pk: %+v\n", loginVReq.loginUser)
+	//Verify the signature against the token; this proves ownership of the private key
+	ok := ccrypto.Verify(loginVReq.PK, []byte(loginVReq.Token), loginVReq.Signature)
+	if !ok {
+		httpu.HttpErrorAsJson(w, fmt.Errorf("verification failure for PK %s against provided message and signature", loginVReq.PK.Fingerprint()), http.StatusForbidden)
+		return
+	}
+
+	//Decrypt and validate the public key challenge
+	loginTok, err := c.Decrypt(
+		loginVReq.Token,
+		env.ID,
+		env.SK,
+	)
+	if err != nil {
+		httpu.HttpErrorAsJson(w, err, http.StatusForbidden)
+		return
+	}
+
+	fmt.Printf("verif_pk: %+v\n", loginTok)
 	resp := fmt.Sprintf("REQUEST S2: %+v", loginVReq)
-	w.Write([]byte(resp))
+	httpu.HttpOkAsJson(w, resp, http.StatusOK)
 }
 
 // Contains the common FoC that is to be ran before any login request.
@@ -184,6 +202,7 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 	}
 
 	//Ensure the claims map to an existing user in the database
+	//TODO: impl caching here
 	userCollection := mcl.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
 	tmp, err := ensureExistantUser(userCollection, lu, r.Context())
 	if err != nil {

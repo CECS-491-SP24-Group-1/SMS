@@ -3,6 +3,7 @@ package lib
 import (
 	"crypto/sha256"
 	"crypto/subtle"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -60,10 +61,19 @@ func Ed25519FromBytes(sk []byte, pk []byte) Ed25519KP {
 }
 
 // Derives an Ed25519 keypair object from a JSON string.
-func Ed25519FromJSON(jsons string) (obj Ed25519KP, err error) {
+func Ed25519FromJSON(jsons string) (Ed25519KP, error) {
+	//Create an intermediate struct
+	type intermediate struct {
+		SK ccrypto.Privseed `json:"sk"`
+		PK ccrypto.Pubkey   `json:"pk"`
+	}
+
 	//Attempt to unmarshal an object from the JSON
-	err = json.Unmarshal([]byte(jsons), &obj)
-	return
+	obj := intermediate{}
+	err := json.Unmarshal([]byte(jsons), &obj)
+
+	//Create a new Ed25519 keypair object and return it
+	return Ed25519FromBytes(obj.SK[:], obj.PK[:]), err
 }
 
 // Derives an Ed25519 keypair object from a private key via `scalar_mult()“.
@@ -101,7 +111,7 @@ func (kp Ed25519KP) Sign(msg []byte) ccrypto.Signature {
 
 // Returns the string representation of the object.
 func (kp Ed25519KP) String() string {
-	return fmt.Sprintf("Ed25519KP{sk=%s, pk=%s}", hex.EncodeToString(kp.SK[:]), hex.EncodeToString(kp.PK[:]))
+	return fmt.Sprintf("Ed25519KP{sk=%s, pk=%s}", base64.StdEncoding.EncodeToString(kp.SK[:]), base64.StdEncoding.EncodeToString(kp.PK[:]))
 }
 
 // Verifies a message and signature with this `Ed25519KP` object.
