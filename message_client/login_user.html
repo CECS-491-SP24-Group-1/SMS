@@ -59,9 +59,33 @@
 		#tokenForm {
 			width: 100%;
 		}
+		.headerCell {
+			width: 10em;
+			overflow: none;
+		}
+		.headerCell50 {
+			width: 5em;
+			overflow: none;
+		}
+		.headerCell75 {
+			width: 7.5em;
+			overflow: none;
+		}
+		.medCell {
+			width: 45em;
+			overflow: scroll;
+		}
 		.bigCell {
 			width: 50em;
 			overflow: scroll;
+		}
+		.breakWrap {
+			white-space: pre-wrap;
+			overflow-wrap: break-word;
+			word-break: break-all;
+		}
+		.interData {
+			color: rgb(124, 89, 0);
 		}
 	</style>
 </head>
@@ -79,36 +103,35 @@
 		<table class="infoTable">
 			<tbody>
 				<tr>
-					<td>ID:</td>
-					<td class="monoFont" id="idField">&nbsp;</td>
+					<td class="headerCell">ID:</td>
+					<td class="medCell monoFont" id="idField">&nbsp;</td>
 				</tr>
 				<tr>
-					<td>Subject:</td>
-					<td class="monoFont" id="subjectField">&nbsp;</td>
+					<td class="headerCell">Subject:</td>
+					<td class="medCell monoFont" id="subjectField">&nbsp;</td>
 				</tr>
 				<tr>
-					<td>Last Modified:</td>
-					<td class="monoFont" id="lastModField">&nbsp;</td>
+					<td class="headerCell">Last Modified:</td>
+					<td class="medCell monoFont" id="lastModField">&nbsp;</td>
 				</tr>
 				<tr>
-					<td>Notes:</td>
-					<td class="monoFont" id="notesField">&nbsp;</td>
+					<td class="headerCell">Notes:</td>
+					<td class="medCell monoFont" id="notesField">&nbsp;</td>
 				</tr>
 				<tr>
-					<td>Device Identifier:</td>
-					<td class="monoFont" id="devIdentField">&nbsp;</td>
+					<td class="headerCell">Device Identifier:</td>
+					<td class="medCell monoFont" id="devIdentField">&nbsp;</td>
 				</tr>
 				<tr>
-					<td>Private Key (SK):</td>
-					<td class="monoFont" id="skField">&nbsp;</td>
+					<td class="headerCell">Private Key (SK):</td>
+					<td class="medCell monoFont" id="skField">&nbsp;</td>
 				</tr>
 				<tr>
-					<td>Public Key (PK):</td>
-					<td class="monoFont" id="pkField">&nbsp;</td>
+					<td class="headerCell">Public Key (PK):</td>
+					<td class="medCell monoFont" id="pkField">&nbsp;</td>
 				</tr>
 			</tbody>
 		</table>
-		<pre id="tmp"></pre>
 	</div>
 	<br>
 
@@ -119,13 +142,13 @@
 		<table class="infoTable">
 			<tbody>
 				<tr>
-					<td class="tokenEntry">Access Token:</td>
+					<td class="tokenEntry headerCell">Access Token:</td>
 					<td colspan="2" class="bigCell"><input type="text" placeholder="Token" class="monoFont" id="tokenForm"></td>
 				</tr>
 				<tr>
-					<td><button type="button" id="checkTokenBtn" class="formBtn" onclick="checkToken()">Check Token</button></td>
-					<td>Token Status:</td>
-					<td class="bigCell monoFont"><pre id="tokenStatus">&nbsp;</pre></td>
+					<td class="headerCell"><button type="button" id="checkTokenBtn" class="formBtn" onclick="checkToken()">Check Token</button></td>
+					<td class="headerCell75">Token Status:</td>
+					<td class="bigCell"><pre id="tokenStatus">&nbsp;</pre></td>
 				</tr>
 			</tbody>
 		</table>
@@ -151,14 +174,26 @@
 		<table class="infoTable">
 			<tbody>
 				<tr>
-					<td>e</td>
-					<td>e</td>
-					<td>e</td>
+					<td class="headerCell">Request Login:</td>
+					<td class="headerCell50"><button type="button" id="loginS1Btn" class="formBtn" onclick="loginS1()">Submit</button></td>
+					<td class="bigCell"><pre class="breakWrap" id="loginS1Status">&nbsp;</pre></td>
 				</tr>
 				<tr>
-					<td>f</td>
-					<td>f</td>
-					<td>f</td>
+					<td class="headerCell">Login Token:</td>
+					<td colspan="2"><pre class="breakWrap interData" id="loginTokContainer">&nbsp;</pre></td>
+				</tr>
+				<tr>
+					<td class="headerCell">Token Signature:</td>
+					<td colspan="2"><pre class="breakWrap interData" id="loginTokSigContainer">&nbsp;</pre></td>
+				</tr>
+				<tr>
+					<td class="headerCell">Verify Login Req:</td>
+					<td class="headerCell50"><button type="button" id="loginS2Btn" class="formBtn" onclick="loginS2()">Submit</button></td>
+					<td class="bigCell monoFont"><pre class="breakWrap" id="loginS2Status">&nbsp;</pre></td>
+				</tr>
+				<tr>
+					<td class="headerCell">Access Token:</td>
+					<td colspan="2"><pre class="breakWrap interData" id="seshTokContainer">&nbsp;</pre></td>
 				</tr>
 			</tbody>
 		</table>
@@ -187,6 +222,21 @@
 
 		//Singleton token status instance for the entire page (boolean).
 		let goodToken = false;
+
+		//Singleton login token instance for the entire page (string).
+		let loginTok = "";
+
+		//Singleton login token signature instance for the entire page (string).
+		let loginTokSignature = "";
+
+		//Singleton login request status instance for the entire page (boolean).
+		let loginS1Success = false;
+
+		//Singleton login verify status instance for the entire page (boolean).
+		let loginS2Success = false;
+
+		//Singleton access token instance for the entire page (string).
+		let accessToken = "";
 	</script>
 
 	<!-- Vault loading stuff -->
@@ -215,19 +265,6 @@
 			populateById("devIdentField", vault !== null ? vault.devIdent : CLR_CONTENTS);
 			populateById("skField", vault !== null ? vault.kstore.skString() : CLR_CONTENTS);
 			populateById("pkField", vault !== null ? vault.kstore.pkString() : CLR_CONTENTS);
-
-			if(vault !== null){
-				const elem = document.getElementById("tmp");
-
-				let kp = vault.getKeypair();
-				let msg = "this is a test";
-				let sig = ed25519Sign(kp, msg);
-				tmp.innerHTML += `msg: ${msg}\n`;
-				tmp.innerHTML += `signature: ${sig}\n`;
-				tmp.innerHTML += `typeof sig: ${typeof(sig)}\n`;
-				const ok = ed25519Verify(kp, msg, sig);
-				tmp.innerHTML += `sig ok: ${ok}\n`
-			}
 		}
 
 		//showVaultLoadWarn(err: Error) -> void
@@ -318,8 +355,7 @@
 			token = document.getElementById("tokenForm").value;
 
 			//Check the token against the server
-			const ENDPOINT = LOCAL_EP_BASE + "/auth_test";
-			fetch(ENDPOINT, {
+			fetch(AUTH_TEST_EP, {
 				method: "GET",
 				headers: {
 					"Authorization": `Bearer ${token}`
@@ -343,12 +379,167 @@
 		}
 	</script>
 
+	<!-- Login stuff -->
+	<script type="application/javascript">
+		//Get the class lists of the login statuses to restore later; array is cloned using the spread operator
+		const s1LoginStatusClasslist = [...document.getElementById("loginS1Status").classList];
+		const s2LoginStatusClasslist = [...document.getElementById("loginS2Status").classList];
+
+		//preFlight(statusElem: HTMLElement, resContainer: HTMLElement, statusElemClassList: HTMLElement[]) -> boolean
+		function preFlight(statusElem, resContainer, statusElemClassList){
+			//Clear any errors from the status elements
+			statusElem.innerHTML = "&nbsp";
+			resContainer.innerHTML = "&nbsp";
+			statusElem.classList = statusElemClassList;
+
+			//Only proceed if the vault is present in memory
+			if(vault === null){
+				statusElem.innerHTML = `error - vault is not present in memory; try again after loading it`;
+				statusElem.classList.add("bad");
+				return false;
+			}
+
+			//No errors, so return true
+			return true;
+		}
+
+		//loginS1() -> void
+		function loginS1(){
+			//Get the login status elements
+			const s1StatusElem = document.getElementById("loginS1Status");
+			const s1TokContainer = document.getElementById("loginTokContainer");
+
+			//Run the pre-flight checks
+			loginTok = "";
+			if(!preFlight(s1StatusElem, s1TokContainer, s1LoginStatusClasslist)){
+				loginS1Success = false;
+				return;
+			}
+
+			//Compose a login form using the loaded vault
+			const loginReq = {
+				"id": `${vault.subject}`,
+				"pk": vault.kstore.pkString()
+			}
+
+			//Send the form to the server
+			fetch(LOGIN_S1_EP, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify(loginReq)
+			})
+
+			//Display the data back to the webpage
+			.then(async response => {
+				//Get the response data
+				const resp = JSON.parse(await response.text());
+				const ok = await response.ok;
+
+				//Check for errors
+				loginS1Success = ok;
+
+				//Echo the status back to the user in the token status
+				s1StatusElem.classList.add(ok ? "good" : "bad");
+				if(ok){
+					s1StatusElem.innerHTML = `${resp.status}; token can be found below`;
+					loginTok = resp.desc;
+					s1TokContainer.innerHTML = `${loginTok}`;
+				}
+				else {
+					s1StatusElem.innerHTML = splitErrors(resp.status, resp.desc);
+				}
+			});
+		}
+
+		//loginS2() -> void
+		function loginS2(){
+			//Get the login status elements
+			const s2StatusElem = document.getElementById("loginS2Status");
+			const s2TokContainer = document.getElementById("loginTokSigContainer");
+			const s2SeshTokenContainer = document.getElementById("seshTokContainer");
+
+			//Run the pre-flight checks
+			loginTokSignature = "";
+			if(!preFlight(s2StatusElem, s2TokContainer, s2LoginStatusClasslist)){
+				loginS2Success = false;
+				return;
+			}
+
+			//Ensure a login token is available
+			if(loginTok === ""){
+				s2StatusElem.innerHTML = `error - login token is not available; try again after requesting one`;
+				s2StatusElem.classList.add("bad");
+				loginS2Success = false;
+				return;
+			}
+
+			//Sign the login token with the vault's private key
+			const signature = ed25519Sign(vault.kstore.toString(), loginTok);
+			s2TokContainer.innerHTML = signature;
+
+			//Compose a login verification form using the loaded vault
+			const loginReq = {
+				"id": `${vault.subject}`,
+				"pk": vault.kstore.pkString(),
+				"token": loginTok,
+				"signature": signature
+			}
+
+			//Send the form to the server
+			fetch(LOGIN_S2_EP, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify(loginReq)
+			})
+
+			//Display the data back to the webpage
+			.then(async response => {
+				//Get the response data
+				const resp = JSON.parse(await response.text());
+				const ok = await response.ok;
+
+				//Check for errors
+				loginS2Success = ok;
+
+				//Echo the status back to the user in the token status
+				s2StatusElem.classList.add(ok ? "good" : "bad");
+				if(ok){
+					s2StatusElem.innerHTML = `${resp.status}; token can be found below`;
+					let seshTok = resp.desc;
+					s2SeshTokenContainer.innerHTML = `${seshTok}`;
+				}
+				else {
+					s2StatusElem.innerHTML = splitErrors(resp.status, resp.desc);
+				}
+			});
+		}
+	</script>
+
 	<!-- Misc -->
 	<script type="application/javascript">
-		function log(msg){
-			const output = document.getElementById("output");
-			output.prepend(`${new Date()}\n${msg}\n`);
-			//console.log(msg);
+		//splitErrors(status: string, errs: [string | string[]]) -> string
+		function splitErrors(status, errs){
+			//Create the output string
+			let out = `${status}:`;
+
+			//Check if the errs object is an array
+			if(Array.isArray(errs)){
+				//Add all of the errors to the output string
+				for(let i = 0; i < errs.length; i++){
+					out += `\n\t${errs[i]}`;
+				}
+			}
+			else {
+				//Add just the one error
+				out += ` - ${errs}`;
+			}
+
+			//Return the error string
+			return out;
 		}
 	</script>
 </body>

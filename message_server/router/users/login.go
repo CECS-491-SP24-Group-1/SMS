@@ -123,12 +123,13 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Decrypt and validate the public key challenge
 	//After this point, the user is considered fully authenticated; a token may now be issued
-	loginTok, err := c.DecryptStrict(
+	loginTok, err := c.DecryptPKStrict(
 		loginVReq.Token,
 		env.SK,
 		env.ID,
 		loginVReq.ID,
 		loginVReq.PK,
+		c.CPurposeLOGIN,
 	)
 	if err != nil {
 		httpu.HttpErrorAsJson(w, err, http.StatusForbidden)
