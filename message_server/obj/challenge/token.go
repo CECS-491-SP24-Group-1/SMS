@@ -86,29 +86,31 @@ func (t CToken) Encrypt(key ccrypto.Privkey) string {
 }
 
 // Decodes an encrypted v4 Paseto token into a challenge payload.
-func Decrypt(token string, key ccrypto.Privkey, issuer mongoutil.UUID) (*CToken, error) {
-	return decryptBackend(token, key, issuer)
+func Decrypt(token string, key ccrypto.Privkey, issuer mongoutil.UUID, purpose CPurpose) (*CToken, error) {
+	return decryptBackend(token, key, issuer, purpose)
 }
 
 // Decodes an encrypted v4 Paseto token into a challenge payload, with stricter checks.
-func DecryptPKStrict(token string, key ccrypto.Privkey, issuer mongoutil.UUID, subject mongoutil.UUID, pubkey ccrypto.Pubkey, purpose CPurpose) (*CToken, error) {
+func DecryptPKStrict(token string, key ccrypto.Privkey, issuer mongoutil.UUID, purpose CPurpose, subject mongoutil.UUID, pubkey ccrypto.Pubkey) (*CToken, error) {
 	//Create a list of additional rules
 	rules := []paseto.Rule{
 		paseto.Subject(subject.String()), //Token subject and input subject must match
 		subjectHasPK(pubkey.String()),    //Token subject PK and input subject PK must match
-		matchingPurpose(purpose),         //Token purpose and input purpose must match
 	}
 
 	//Decrypt the token and add the extra rules
-	return decryptBackend(token, key, issuer, rules...)
+	return decryptBackend(token, key, issuer, purpose, rules...)
 }
 
 // Performs token decryption and ensures it matches against a rule-set.
-func decryptBackend(token string, key ccrypto.Privkey, issuer mongoutil.UUID, rules ...paseto.Rule) (*CToken, error) {
+func decryptBackend(token string, key ccrypto.Privkey, issuer mongoutil.UUID, purpose CPurpose, rules ...paseto.Rule) (*CToken, error) {
 	//Create a new token parser and add basic rules
 	parser := paseto.NewParser()
-	parser.AddRule(paseto.ValidAt(time.Now()))       //Checks nbf, iat, and exp in one fell-swoop
-	parser.AddRule(paseto.IssuedBy(issuer.String())) //Ensures this server issued the token
+	parser.AddRule(
+		paseto.ValidAt(time.Now()),       //Checks nbf, iat, and exp in one fell-swoop
+		paseto.IssuedBy(issuer.String()), //Ensures this server issued the token
+		matchingPurpose(purpose),         //Token purpose and input purpose must match
+	)
 
 	//Add additional rules from the rules array
 	parser.AddRule(rules...)

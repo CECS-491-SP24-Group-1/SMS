@@ -127,9 +127,9 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 		loginVReq.Token,
 		env.SK,
 		env.ID,
+		c.CPurposeLOGIN,
 		loginVReq.ID,
 		loginVReq.PK,
-		c.CPurposeLOGIN,
 	)
 	if err != nil {
 		httpu.HttpErrorAsJson(w, err, http.StatusForbidden)
