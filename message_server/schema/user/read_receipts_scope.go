@@ -1,6 +1,6 @@
 //go:generate go-enum --marshal --forceupper --mustparse --nocomments --names --values
 
-package obj
+package user
 
 //
 //-- ENUM: ReadReceiptsScope

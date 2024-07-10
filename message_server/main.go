@@ -12,7 +12,7 @@ import (
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/email"
 	"wraith.me/message_server/mw"
-	"wraith.me/message_server/obj"
+	"wraith.me/message_server/obj/token"
 	cr "wraith.me/message_server/redis"
 	"wraith.me/message_server/router"
 	"wraith.me/message_server/router/challenges"
@@ -140,13 +140,13 @@ func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 
 	//Challenge routes; protected by auth middleware (post_signup and users only)
 	r.Group(func(r chi.Router) {
-		authScopes := []obj.TokenScope{obj.TokenScopePOSTSIGNUP, obj.TokenScopeUSER}
+		authScopes := []token.TokenScope{token.TokenScopePOSTSIGNUP, token.TokenScopeUSER}
 		r.Use(mw.NewAuthMiddleware(authScopes))
 		r.Mount("/challenges", challenges.ChallengeRoutes(env))
 	})
 
 	//AUTH TEST START
-	authTest := router.NewAuthTestRouter("", obj.TokenScopeValues())
+	authTest := router.NewAuthTestRouter("", token.TokenScopeValues())
 	r.Group(authTest.Router())
 	//AUTH TEST END
 

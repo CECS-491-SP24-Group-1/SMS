@@ -7,51 +7,52 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"wraith.me/message_server/obj"
 	"wraith.me/message_server/obj/ip_addr"
+	"wraith.me/message_server/obj/token"
+	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
 )
 
-var user = obj.NewUserSimple(
+var usr = user.NewUserSimple(
 	"johndoe123",
 	"johndoeismyname@example.com",
 )
 
 func TestUser2BSON(t *testing.T) {
 	//Add a test token
-	tok := obj.NewToken(
+	tok := token.NewToken(
 		util.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
-		obj.TokenScopeUSER, time.Now().Add(5*time.Minute),
+		token.TokenScopeUSER, time.Now().Add(5*time.Minute),
 	)
-	user.Tokens = append(user.Tokens, *tok)
+	usr.Tokens = append(usr.Tokens, *tok)
 
 	//Marshal to BSON
-	bb, err := bson.Marshal(user)
+	bb, err := bson.Marshal(usr)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	//Unmarshal the BSON back to an object
-	var out obj.User
+	var out user.User
 	if err := bson.Unmarshal(bb, &out); err != nil {
 		t.Fatal(err)
 	}
 
 	//Print the input and output objects
-	fmt.Printf("IN:  %v\n", *user)
+	fmt.Printf("IN:  %v\n", *usr)
 	fmt.Printf("OUT: %v\n", out)
 }
 
 func TestUser2JSON(t *testing.T) {
 	//Add a test token
-	tok := obj.NewToken(
+	tok := token.NewToken(
 		util.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
-		obj.TokenScopeUSER, time.Now().Add(5*time.Minute),
+		token.TokenScopeUSER, time.Now().Add(5*time.Minute),
 	)
-	user.Tokens = append(user.Tokens, *tok)
+	usr.Tokens = append(usr.Tokens, *tok)
 
 	//Marshal to JSON
-	jb, err := json.Marshal(user)
+	jb, err := json.Marshal(usr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,12 +60,12 @@ func TestUser2JSON(t *testing.T) {
 	fmt.Printf("JSON: %s\n", jb) //Tokens are not marshaled with the JSON
 
 	//Unmarshal the JSON back to an object
-	var out obj.User
+	var out user.User
 	if err := json.Unmarshal(jb, &out); err != nil {
 		t.Fatal(err)
 	}
 
 	//Print the input and output objects
-	fmt.Printf("IN:  %v\n", *user)
+	fmt.Printf("IN:  %v\n", *usr)
 	fmt.Printf("OUT: %v\n", out)
 }

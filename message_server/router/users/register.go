@@ -27,8 +27,10 @@ import (
 	"wraith.me/message_server/obj"
 	"wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/obj/ip_addr"
+	"wraith.me/message_server/obj/token"
 	cr "wraith.me/message_server/redis"
 	schema "wraith.me/message_server/schema/json"
+	"wraith.me/message_server/schema/user"
 	remailt "wraith.me/message_server/template/registration_email"
 	"wraith.me/message_server/util"
 	"wraith.me/message_server/util/httpu"
@@ -124,7 +126,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Fill in the rest of the details
 	uuid := util.MustNewUUID7()
-	user := obj.NewUser(
+	user := user.NewUser(
 		uuid,
 		crypto.NilPubkey(),
 		strings.ToLower(iuser.Username),
@@ -132,8 +134,8 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 		strings.ToLower(iuser.Email),
 		util.NowMillis(),
 		ip_addr.HttpIP2NetIP(r.RemoteAddr),
-		obj.DefaultUserFlags(),
-		obj.DefaultUserOptions(),
+		user.DefaultUserFlags(),
+		user.DefaultUserOptions(),
 	)
 	copy(user.Pubkey[:], decodedPK[:])
 
@@ -236,15 +238,15 @@ func (iu intermediateUser) validate(strictEmail bool) (bool, []error) {
 Performs post-signup operations on the newly created user object, such
 as persistence to the database and generation of challenges.
 */
-func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *mongo.Collection) error {
+func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User, ucoll *mongo.Collection) error {
 	//Step 1: Issue a token that's good for the duration of the challenge window; otherwise the routes won't be allowed
-	tempToken := obj.NewToken(user.ID, ip_addr.HttpIP2NetIP(r.RemoteAddr), obj.TokenScopePOSTSIGNUP, user.Flags.PurgeBy)
+	tempToken := token.NewToken(usr.ID, ip_addr.HttpIP2NetIP(r.RemoteAddr), token.TokenScopePOSTSIGNUP, usr.Flags.PurgeBy)
 	fmt.Printf("TOK: '%s'\n", tempToken.ToB64())
 
 	//Step 2a: Push the token to the user's list of tokens and add the user to the database
 	//TODO: use CRUD operations here
-	user.Tokens = append(user.Tokens, *tempToken)
-	userBson, jerr := bson.Marshal(user)
+	usr.Tokens = append(usr.Tokens, *tempToken)
+	userBson, jerr := bson.Marshal(usr)
 	_, ierr := ucoll.InsertOne(r.Context(), userBson)
 	if jerr != nil {
 		return jerr
@@ -254,12 +256,12 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	}
 
 	//Set 2b: Cache the access tokens
-	cr.CreateSA(rcl, r.Context(), user.ID.UUID, tempToken.String())
+	cr.CreateSA(rcl, r.Context(), usr.ID.UUID, tempToken.String())
 
 	//Step 3a: Create challenges for email and public key verification
 	srvIdent := obj.Identifiable{ID: env.ID, Type: obj.IdTypeSERVER}
-	usrIdent := obj.Identifiable{ID: user.ID, Type: user.Type}
-	expiry := user.Flags.PurgeBy
+	usrIdent := obj.Identifiable{ID: usr.ID, Type: usr.Type}
+	expiry := usr.Flags.PurgeBy
 	emailChall := challenge.NewChallenge(challenge.ChallengeScopeEMAIL, srvIdent, usrIdent, expiry)
 	pubkeyChall := challenge.NewChallenge(challenge.ChallengeScopePUBKEY, srvIdent, usrIdent, expiry)
 
@@ -274,16 +276,16 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	//Step 3c: Compose the challenge email to send to the user
 	emsg := mail.NewMSG()
 	emsg.SetFrom(cfg.Email.Username)
-	emsg.AddTo(user.Email)
+	emsg.AddTo(usr.Email)
 	emsg.SetSubject("Your Wraith Account")
 
 	//Step 3d: Create the body of the email
 	tmplFields := remailt.Template{
-		UUID:          user.ID.String(),
-		UName:         user.Username,
-		Email:         user.Email,
-		PKFingerprint: user.Pubkey.Fingerprint(),
-		PurgeTime:     util.Time2OffsetReq(user.Flags.PurgeBy, r).Format(time.RFC1123Z),
+		UUID:          usr.ID.String(),
+		UName:         usr.Username,
+		Email:         usr.Email,
+		PKFingerprint: usr.Pubkey.Fingerprint(),
+		PurgeTime:     util.Time2OffsetReq(usr.Flags.PurgeBy, r).Format(time.RFC1123Z),
 		ChallengeLink: echallUrl.String(),
 	}
 	var ebody bytes.Buffer
@@ -305,8 +307,8 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 
 	//Step 5: Write the response back to the user
 	psu := postsignupUser{
-		ID:              user.ID,
-		RedactedEmail:   util.RedactEmail(user.Email),
+		ID:              usr.ID,
+		RedactedEmail:   util.RedactEmail(usr.Email),
 		Challenges:      []util.UUID{emailChall.ID, pubkeyChall.ID},
 		TempAccessToken: tempToken.ToB64(),
 	}

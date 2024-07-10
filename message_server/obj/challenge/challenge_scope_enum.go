@@ -12,22 +12,19 @@ import (
 )
 
 const (
-	// The type of the challenge is unknown.
-	ChallengeScopeUNKNOWN ChallengeScope = iota
 	// This type of challenge is issued to verify a user owns an email address.
-	ChallengeScopeEMAIL
+	ChallengeScopeEMAIL ChallengeScope = iota
 	// This type of challenge is issued to verify a user owns a private key corresponding to the given public key.
 	ChallengeScopePUBKEY
 )
 
 var ErrInvalidChallengeScope = fmt.Errorf("not a valid ChallengeScope, try [%s]", strings.Join(_ChallengeScopeNames, ", "))
 
-const _ChallengeScopeName = "UNKNOWNEMAILPUBKEY"
+const _ChallengeScopeName = "EMAILPUBKEY"
 
 var _ChallengeScopeNames = []string{
-	_ChallengeScopeName[0:7],
-	_ChallengeScopeName[7:12],
-	_ChallengeScopeName[12:18],
+	_ChallengeScopeName[0:5],
+	_ChallengeScopeName[5:11],
 }
 
 // ChallengeScopeNames returns a list of possible string values of ChallengeScope.
@@ -40,16 +37,14 @@ func ChallengeScopeNames() []string {
 // ChallengeScopeValues returns a list of the values for ChallengeScope
 func ChallengeScopeValues() []ChallengeScope {
 	return []ChallengeScope{
-		ChallengeScopeUNKNOWN,
 		ChallengeScopeEMAIL,
 		ChallengeScopePUBKEY,
 	}
 }
 
 var _ChallengeScopeMap = map[ChallengeScope]string{
-	ChallengeScopeUNKNOWN: _ChallengeScopeName[0:7],
-	ChallengeScopeEMAIL:   _ChallengeScopeName[7:12],
-	ChallengeScopePUBKEY:  _ChallengeScopeName[12:18],
+	ChallengeScopeEMAIL:  _ChallengeScopeName[0:5],
+	ChallengeScopePUBKEY: _ChallengeScopeName[5:11],
 }
 
 // String implements the Stringer interface.
@@ -68,9 +63,8 @@ func (x ChallengeScope) IsValid() bool {
 }
 
 var _ChallengeScopeValue = map[string]ChallengeScope{
-	_ChallengeScopeName[0:7]:   ChallengeScopeUNKNOWN,
-	_ChallengeScopeName[7:12]:  ChallengeScopeEMAIL,
-	_ChallengeScopeName[12:18]: ChallengeScopePUBKEY,
+	_ChallengeScopeName[0:5]:  ChallengeScopeEMAIL,
+	_ChallengeScopeName[5:11]: ChallengeScopePUBKEY,
 }
 
 // ParseChallengeScope attempts to convert a string to a ChallengeScope.

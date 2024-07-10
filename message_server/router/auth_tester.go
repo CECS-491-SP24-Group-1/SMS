@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"wraith.me/message_server/mw"
-	"wraith.me/message_server/obj"
+	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/util/httpu"
 )
 
@@ -20,11 +20,11 @@ type AuthTestRouter struct {
 	Path string
 
 	//The token scopes that are valid for the router.
-	Scopes []obj.TokenScope
+	Scopes []token.TokenScope
 }
 
 // Creates a new `AuthTestRouter` object.
-func NewAuthTestRouter(path string, scopes []obj.TokenScope) AuthTestRouter {
+func NewAuthTestRouter(path string, scopes []token.TokenScope) AuthTestRouter {
 	if path == "" {
 		path = "/auth_test"
 	}

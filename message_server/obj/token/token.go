@@ -1,4 +1,4 @@
-package obj
+package token
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
+	"wraith.me/message_server/obj"
 	"wraith.me/message_server/obj/ip_addr"
 	"wraith.me/message_server/util"
 )
@@ -28,7 +29,7 @@ const (
 // Represents an opaque user login token.
 type Token struct {
 	//UserToken extends the abstract identifiable type.
-	Identifiable `bson:",inline"`
+	obj.Identifiable `bson:",inline"`
 
 	//The IP address of the client who created the token.
 	CreationIP ip_addr.IPAddr `json:"creation_ip" bson:"creation_ip"`
@@ -52,9 +53,9 @@ type Token struct {
 // Creates a new token object.
 func NewToken(subject util.UUID, creationIP ip_addr.IPAddr, scope TokenScope, expiry time.Time) *Token {
 	return &Token{
-		Identifiable: Identifiable{
+		Identifiable: obj.Identifiable{
 			ID:   util.MustNewUUID7(),
-			Type: IdTypeTOKEN,
+			Type: obj.IdTypeTOKEN,
 		},
 		Subject:    subject,
 		Scope:      scope,
@@ -161,7 +162,7 @@ func (ut Token) Validate(skipExipryCheck bool) bool {
 	}
 
 	//Check 1: Check for possible tampering of the ID and type
-	if ut.ID.Version() != 7 || ut.Type != IdTypeTOKEN || time.Unix(ut.ID.Time().UnixTime()).After(ut.GetExpiry()) {
+	if ut.ID.Version() != 7 || ut.Type != obj.IdTypeTOKEN || time.Unix(ut.ID.Time().UnixTime()).After(ut.GetExpiry()) {
 		return false
 	}
 

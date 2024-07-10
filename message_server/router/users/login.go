@@ -15,6 +15,7 @@ import (
 	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
 	c "wraith.me/message_server/obj/challenge"
+	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
 	"wraith.me/message_server/util/httpu"
 )
@@ -70,7 +71,7 @@ type existingUserResult struct {
 	obj.Entity `bson:",inline"`
 
 	//The user's flags. These mark items such as verification status, deletion, etc.
-	Flags obj.UserFlags `json:"flags" bson:"flags"`
+	Flags user.UserFlags `json:"flags" bson:"flags"`
 }
 
 /*

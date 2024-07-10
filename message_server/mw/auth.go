@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/crud"
 	"wraith.me/message_server/db"
-	"wraith.me/message_server/obj"
+	"wraith.me/message_server/obj/token"
 	cr "wraith.me/message_server/redis"
 	"wraith.me/message_server/util/httpu"
 )
@@ -46,13 +46,13 @@ var (
 )
 
 type authMiddleware struct {
-	allowedScopes []obj.TokenScope //The scopes for which the token is valid, sorted in increasing order.
-	mclient       *mongo.Client    //The MongoDB database client.
-	rclient       *redis.Client    //The Redis database client.
+	allowedScopes []token.TokenScope //The scopes for which the token is valid, sorted in increasing order.
+	mclient       *mongo.Client      //The MongoDB database client.
+	rclient       *redis.Client      //The Redis database client.
 }
 
 // Returns a new handler for the authentication middleware.
-func NewAuthMiddleware(allowedScopes []obj.TokenScope) func(next http.Handler) http.Handler {
+func NewAuthMiddleware(allowedScopes []token.TokenScope) func(next http.Handler) http.Handler {
 	//Get a struct object
 	mw := authMiddleware{
 		allowedScopes: allowedScopes,
@@ -108,34 +108,34 @@ provide a token from either a cookie (`TokenFromCookie()`), a header
 */
 func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//Attempt to get the token, starting from the URL params
-		token := TokenFromQuery(r)
+		//Attempt to get the tok, starting from the URL params
+		tok := TokenFromQuery(r)
 
 		//If the token still isn't there, try the headers
-		if token == "" {
-			token = TokenFromHeader(r)
+		if tok == "" {
+			tok = TokenFromHeader(r)
 		}
 
 		//If the token still isn't there, try the cookies
-		if token == "" {
-			token = TokenFromCookie(r)
+		if tok == "" {
+			tok = TokenFromCookie(r)
 		}
 
 		//Still no token? Deny the request since there's no token. The middleware stops here
-		if token == "" {
+		if tok == "" {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
 			return
 		}
 
 		//Get a byte array from the token and reject the token if the size is incorrect
-		tbytes, derr := obj.Base64DecodeTok(token)
-		if derr != nil || len(tbytes) != obj.TOKEN_SIZE_BYTES {
+		tbytes, derr := token.Base64DecodeTok(tok)
+		if derr != nil || len(tbytes) != token.TOKEN_SIZE_BYTES {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
 			return
 		}
 
 		//Attempt to derive a token object from the input bytes
-		tokObj := obj.TokenFromBytes(tbytes)
+		tokObj := token.TokenFromBytes(tbytes)
 		if tokObj == nil {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
 			return
@@ -199,7 +199,7 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			Check if the subject's token list includes the incoming token. If this check
 			passes, the client is let through and the middleware finishes without error.
 		*/
-		if !slices.Contains(subjectTokens, token) {
+		if !slices.Contains(subjectTokens, tok) {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
 			return
 		}
@@ -212,7 +212,7 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			r = r.WithContext(ctx)
 		*/
 		//https://go.dev/blog/context#TOC_3.2.
-		ctx := context.WithValue(r.Context(), AuthCtxUserKey, "e")
+		ctx := context.WithValue(r.Context(), AuthCtxUserKey, "e") //TODO: pass entire user object here
 		r = r.WithContext(ctx)
 
 		//Forward the request; authentication passed successfully
