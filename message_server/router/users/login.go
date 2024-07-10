@@ -37,7 +37,7 @@ match what's in the database.
 */
 type loginUser struct {
 	//The UUID of the user to login as.
-	ID mongoutil.UUID `json:"id" mapstructure:"id"`
+	ID util.UUID `json:"id" mapstructure:"id"`
 
 	//The public key of the user to login as.
 	PK ccrypto.Pubkey `json:"pk" mapstructure:"pk"`
@@ -243,7 +243,7 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 // Ensures that the user ID and public key are of the proper format
 func ensureCorrectIdAndPKFmt(id string, pk string, sig string) error {
 	//Try to parse the UUID first
-	if validId := mongoutil.IsValidUUIDv7(id); !validId {
+	if validId := util.IsValidUUIDv7(id); !validId {
 		return fmt.Errorf("invalid UUID format `%s`; expected a UUIDv7 in the form: `xxxxxxxx-xxxx-7xxx-xxxx-xxxxxxxxxxxx`", id)
 	}
 

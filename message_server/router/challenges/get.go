@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"go.mongodb.org/mongo-driver/bson"
-	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/mw"
+	"wraith.me/message_server/util"
 	"wraith.me/message_server/util/httpu"
 )
 
@@ -18,7 +18,7 @@ func GetChallengeRoute(w http.ResponseWriter, r *http.Request) {
 	cid := chi.URLParam(r, "id")
 
 	//Return a 400 if the ID is not of the proper format
-	if !mongoutil.IsValidUUIDv7(cid) {
+	if !util.IsValidUUIDv7(cid) {
 		httpu.HttpErrorAsJson(w, fmt.Errorf("incorrect ID format; must be a UUIDv7"), http.StatusBadRequest)
 		return
 	}

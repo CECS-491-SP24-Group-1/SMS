@@ -6,8 +6,8 @@ import (
 	"time"
 
 	ccrypto "wraith.me/message_server/crypto"
-	"wraith.me/message_server/db/mongoutil"
 	c "wraith.me/message_server/obj/challenge"
+	"wraith.me/message_server/util"
 )
 
 func TestCTokenClaims(t *testing.T) {
@@ -16,8 +16,8 @@ func TestCTokenClaims(t *testing.T) {
 
 	//Test the email claim functionality
 	etok := c.NewEmailChallenge(
-		mongoutil.MustNewUUID7(),
-		mongoutil.MustNewUUID7(),
+		util.MustNewUUID7(),
+		util.MustNewUUID7(),
 		c.CPurposeUNKNOWN,
 		time.Now().Add(24*time.Hour),
 		"jdoe@example.com",
@@ -32,8 +32,8 @@ func TestCTokenClaims(t *testing.T) {
 		t.Fatal(err)
 	}
 	pktok := c.NewPKChallenge(
-		mongoutil.MustNewUUID7(),
-		mongoutil.MustNewUUID7(),
+		util.MustNewUUID7(),
+		util.MustNewUUID7(),
 		c.CPurposeUNKNOWN,
 		time.Now().Add(24*time.Hour),
 		pk,

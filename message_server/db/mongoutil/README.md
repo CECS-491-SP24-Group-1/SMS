@@ -9,7 +9,7 @@ import (
 
 type example struct {
   Field1 int             `bson:"field_1"`
-  Field2 *mongoutil.UUID `bson:"field_2"`
+  Field2 *util.UUID `bson:"field_2"`
 }
 ```
 
@@ -26,7 +26,7 @@ package design
 var myType = Type("myType", func() {
     BSONMember("field_1", Integer)
     BSONMember("field_2", UUID, func() {
-        Metadata("struct:field:type", "*mongoutil.UUID", "path/of/mongoutil")
+        Metadata("struct:field:type", "*util.UUID", "path/of/mongoutil")
         // if you use Goa v2, use Meta(...) instead of Metadata
     })
 })

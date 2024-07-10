@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
-	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/util"
 )
 
@@ -22,7 +21,7 @@ const (
 Creates a key and value in the Redis database. This function is an alias of
 `Set()`. Applicable to C in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func Create[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, key K, value V) error {
+func Create[K uuid.UUID | util.UUID, V any](c *redis.Client, ctx context.Context, key K, value V) error {
 	return Set(c, ctx, key, value)
 }
 
@@ -31,7 +30,7 @@ Creates a key and array of values in the Redis database. This function is an
 alias of `SetA()`. Applicable to C in CRUD. See:
 https://stackoverflow.com/a/53697645
 */
-func CreateA[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, key K, values ...V) error {
+func CreateA[K uuid.UUID | util.UUID, V any](c *redis.Client, ctx context.Context, key K, values ...V) error {
 	return SetA(c, ctx, key, values...)
 }
 
@@ -40,7 +39,7 @@ Creates a series of keys and object values in the Redis database from a map.
 This function is an alias of `SetMany()`. Applicable to C in CRUD. See:
 https://stackoverflow.com/a/53697645
 */
-func CreateMany[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, kp map[K]V) error {
+func CreateMany[K uuid.UUID | util.UUID, V any](c *redis.Client, ctx context.Context, kp map[K]V) error {
 	return SetMany(c, ctx, kp)
 }
 
@@ -49,7 +48,7 @@ Creates a series of keys and object values in the Redis database from a map.
 This function is an alias of `SetMany()`. Applicable to C in CRUD. See:
 https://stackoverflow.com/a/53697645
 */
-func CreateManyS[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, kp map[K]string) error {
+func CreateManyS[K uuid.UUID | util.UUID](c *redis.Client, ctx context.Context, kp map[K]string) error {
 	return SetManyS(c, ctx, kp)
 }
 
@@ -58,7 +57,7 @@ Creates a key and array of strings in the Redis database. This function is an
 alias of `SetSA()`. Applicable to C in CRUD. See:
 https://stackoverflow.com/a/53697645
 */
-func CreateSA[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, key K, values ...string) error {
+func CreateSA[K uuid.UUID | util.UUID](c *redis.Client, ctx context.Context, key K, values ...string) error {
 	return SetSA(c, ctx, key, values...)
 }
 
@@ -69,7 +68,7 @@ both single value and multi-value keypairs, hence why `DelA` is  not a
 valid function. If the key doesn't exist, then this value will be 0.
 Applicable to D in CRUD.
 */
-func Del[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, keys ...K) (int64, error) {
+func Del[K uuid.UUID | util.UUID](c *redis.Client, ctx context.Context, keys ...K) (int64, error) {
 	skeys := make([]string, len(keys))
 	for i, v := range keys {
 		skeys[i] = u2s(v)
@@ -82,7 +81,7 @@ Gets the value for a key in the Redis database. If the key doesn't exist,
 then `nil` will be emitted. Applicable to R in CRUD. See:
 https://stackoverflow.com/a/53697645
 */
-func Get[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, key K, dest *V) (err error) {
+func Get[K uuid.UUID | util.UUID, V any](c *redis.Client, ctx context.Context, key K, dest *V) (err error) {
 	//Get from Redis
 	p, err := c.Get(ctx, u2s(key)).Result()
 	if err != nil {
@@ -99,7 +98,7 @@ Gets the array of values for a key in the Redis database. If the key
 doesn't exist, then an empty array will be emitted. Applicable to R in
 CRUD. See: https://stackoverflow.com/a/53697645
 */
-func GetA[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, key K) ([]V, error) {
+func GetA[K uuid.UUID | util.UUID, V any](c *redis.Client, ctx context.Context, key K) ([]V, error) {
 	//Get from Redis
 	ps, err := c.LRange(ctx, u2s(key), 0, -1).Result()
 	if err != nil {
@@ -126,7 +125,7 @@ Gets the value of a specific array item for a key in the Redis database.
 The array item must be present for this function to succeed, which is zero-
 indexed. Applicable to R in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func GetAt[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, key K, idx int64, dest *V) (err error) {
+func GetAt[K uuid.UUID | util.UUID, V any](c *redis.Client, ctx context.Context, key K, idx int64, dest *V) (err error) {
 	//Get from Redis
 	p, err := c.LIndex(ctx, u2s(key), idx).Result()
 	if err != nil {
@@ -143,7 +142,7 @@ Gets an array of objects for an array of keys in the Redis database.
 The values must be present in the database for this function to succeed.
 Applicable to R in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func GetMany[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, keys ...K) ([]V, MultiRedisErr) {
+func GetMany[K uuid.UUID | util.UUID, V any](c *redis.Client, ctx context.Context, keys ...K) ([]V, MultiRedisErr) {
 	//Create the output array, matching the size of the input key array
 	dest := make([]V, len(keys))
 
@@ -208,7 +207,7 @@ Gets an array of strings for an array of keys in the Redis database.
 The values must be present in the database for this function to succeed.
 Applicable to R in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func GetManyS[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, keys ...K) ([]string, MultiRedisErr) {
+func GetManyS[K uuid.UUID | util.UUID](c *redis.Client, ctx context.Context, keys ...K) ([]string, MultiRedisErr) {
 	//Create the output array, matching the size of the input key array
 	dest := make([]string, len(keys))
 
@@ -269,7 +268,7 @@ Gets the array of strings for a key in the Redis database. If the key
 doesn't exist, then an empty array will be emitted. Applicable to R in
 CRUD. See: https://stackoverflow.com/a/53697645
 */
-func GetSA[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, key K) ([]string, error) {
+func GetSA[K uuid.UUID | util.UUID](c *redis.Client, ctx context.Context, key K) ([]string, error) {
 	//Get from Redis
 	ps, err := c.LRange(ctx, u2s(key), 0, -1).Result()
 	if err != nil {
@@ -285,7 +284,7 @@ Sets a key and value in the Redis database. If the key already exists, its
 value is updated. If not, then a new key is created. Applicable to C, U in
 CRUD. See: https://stackoverflow.com/a/53697645
 */
-func Set[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, key K, value V) error {
+func Set[K uuid.UUID | util.UUID, V any](c *redis.Client, ctx context.Context, key K, value V) error {
 	//Marshal to bytes
 	bytes, err := util.ToGOBBytes(value)
 	if err != nil {
@@ -301,7 +300,7 @@ Sets a key and array of values in the Redis database. If the key already exists,
 its old contents are discarded and its value array is replaced with this one.
 Applicable to U in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func SetA[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, key K, values ...V) error {
+func SetA[K uuid.UUID | util.UUID, V any](c *redis.Client, ctx context.Context, key K, values ...V) error {
 	//Create a Redis pipeline
 	pl := c.TxPipeline()
 
@@ -335,7 +334,7 @@ Sets a new value of a specific array item for a key in the Redis database.
 The array item must be present for this function to succeed, which is zero-
 indexed. Applicable to U in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func SetAt[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, key K, idx int64, value V) error {
+func SetAt[K uuid.UUID | util.UUID, V any](c *redis.Client, ctx context.Context, key K, idx int64, value V) error {
 	//Marshal to bytes
 	bytes, err := util.ToGOBBytes(value)
 	if err != nil {
@@ -351,7 +350,7 @@ Sets a series of keys and object values in the Redis database from a map.
 If the key already exists, its value is updated. If not, then a new key is
 created. Applicable to C, U in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func SetMany[K uuid.UUID | mongoutil.UUID, V any](c *redis.Client, ctx context.Context, kp map[K]V) error {
+func SetMany[K uuid.UUID | util.UUID, V any](c *redis.Client, ctx context.Context, kp map[K]V) error {
 	//Create a Redis pipeline
 	pl := c.TxPipeline()
 
@@ -379,7 +378,7 @@ Sets a series of keys and string values in the Redis database from a map.
 If the key already exists, its value is updated. If not, then a new key is
 created. Applicable to C, U in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func SetManyS[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, kp map[K]string) error {
+func SetManyS[K uuid.UUID | util.UUID](c *redis.Client, ctx context.Context, kp map[K]string) error {
 	//Create a Redis pipeline
 	pl := c.TxPipeline()
 
@@ -400,7 +399,7 @@ Sets a key and array of strings in the Redis database. If the key already exists
 its old contents are discarded and its value array is replaced with this one.
 Applicable to U in CRUD. See: https://stackoverflow.com/a/53697645
 */
-func SetSA[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, key K, values ...string) error {
+func SetSA[K uuid.UUID | util.UUID](c *redis.Client, ctx context.Context, key K, values ...string) error {
 	//Create a Redis pipeline
 	pl := c.TxPipeline()
 
@@ -421,6 +420,6 @@ func SetSA[K uuid.UUID | mongoutil.UUID](c *redis.Client, ctx context.Context, k
 }
 
 // Converts a UUID-like object to a string
-func u2s[T uuid.UUID | mongoutil.UUID](uuid T) string {
+func u2s[T uuid.UUID | util.UUID](uuid T) string {
 	return fmt.Sprintf("%s", uuid)
 }

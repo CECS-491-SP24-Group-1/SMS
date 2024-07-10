@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"wraith.me/message_server/util"
 )
 
 // Returns a MongoDB ObjectID from a given UUID. Preserves timestamp info to second precision.
 // See: https://github.com/le5le-com/uuid/blob/0be35d1a92a89a0d2ffd56c5e2b0972fb1afeeee/uuid.go#L166
-func UUID2OID(uuid UUID) primitive.ObjectID {
+func UUID2OID(uuid util.UUID) primitive.ObjectID {
 	//Allocate a byte array for the object ID; 12 bytes
 	oid := primitive.ObjectID{}
 
@@ -31,7 +32,7 @@ func UUID2OID(uuid UUID) primitive.ObjectID {
 
 // Returns a UUIDv7 from a given MongoDB ObjectID. Preserves timestamp info to second precision.
 // See: https://github.com/le5le-com/uuid/blob/0be35d1a92a89a0d2ffd56c5e2b0972fb1afeeee/uuid.go#L113
-func OID2UUID(oid primitive.ObjectID) UUID {
+func OID2UUID(oid primitive.ObjectID) util.UUID {
 	//Allocate a byte array for the UUID; 16 bytes
 	uuidBytes := [16]byte{}
 
@@ -50,5 +51,5 @@ func OID2UUID(oid primitive.ObjectID) UUID {
 	copy(uuidBytes[9:16], oid[5:])
 
 	//Create a UUID from the byte array and return it
-	return UUIDFromBytes(uuidBytes[:])
+	return util.UUIDFromBytes(uuidBytes[:])
 }

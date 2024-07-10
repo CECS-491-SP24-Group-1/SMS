@@ -7,7 +7,7 @@ import (
 
 	"aidanwoods.dev/go-paseto"
 	ccrypto "wraith.me/message_server/crypto"
-	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/util"
 )
 
 const (
@@ -30,9 +30,9 @@ an email or a base64-encoded public key, and the state depends on the value
 of the `CType`field.
 */
 type CToken struct {
-	ID        mongoutil.UUID
-	Issuer    mongoutil.UUID
-	SubjectID mongoutil.UUID
+	ID        util.UUID
+	Issuer    util.UUID
+	SubjectID util.UUID
 	CType     CType
 	Purpose   CPurpose
 	Expiry    time.Time
@@ -40,9 +40,9 @@ type CToken struct {
 }
 
 // Creates a new challenge meant for validating ownership of an email.
-func NewEmailChallenge(issuer mongoutil.UUID, subjectID mongoutil.UUID, purpose CPurpose, expiry time.Time, email string) CToken {
+func NewEmailChallenge(issuer util.UUID, subjectID util.UUID, purpose CPurpose, expiry time.Time, email string) CToken {
 	return CToken{
-		ID:        mongoutil.MustNewUUID7(),
+		ID:        util.MustNewUUID7(),
 		Issuer:    issuer,
 		SubjectID: subjectID,
 		CType:     CTypeEMAIL,
@@ -53,9 +53,9 @@ func NewEmailChallenge(issuer mongoutil.UUID, subjectID mongoutil.UUID, purpose 
 }
 
 // Creates a new challenge meant for validating ownership of a private key.
-func NewPKChallenge(issuer mongoutil.UUID, subjectID mongoutil.UUID, purpose CPurpose, expiry time.Time, pubkey ccrypto.Pubkey) CToken {
+func NewPKChallenge(issuer util.UUID, subjectID util.UUID, purpose CPurpose, expiry time.Time, pubkey ccrypto.Pubkey) CToken {
 	return CToken{
-		ID:        mongoutil.MustNewUUID7(),
+		ID:        util.MustNewUUID7(),
 		Issuer:    issuer,
 		SubjectID: subjectID,
 		CType:     CTypePUBKEY,
@@ -81,17 +81,19 @@ func (t CToken) Encrypt(key ccrypto.Privkey) string {
 	token.SetString(_CHALL_CPURPOSE, t.Purpose.String()) //Challenge purpose
 	token.SetString(_CHALL_CLAIM, t.Claim)               //Challenge claim
 
+	fmt.Printf("%s\n", token.ClaimsJSON())
+
 	//Encrypt the token
 	return token.V4Encrypt(edsk2PasetoSK(key), nil)
 }
 
 // Decodes an encrypted v4 Paseto token into a challenge payload.
-func Decrypt(token string, key ccrypto.Privkey, issuer mongoutil.UUID, purpose CPurpose) (*CToken, error) {
+func Decrypt(token string, key ccrypto.Privkey, issuer util.UUID, purpose CPurpose) (*CToken, error) {
 	return decryptBackend(token, key, issuer, purpose)
 }
 
 // Decodes an encrypted v4 Paseto token into a challenge payload, with stricter checks.
-func DecryptPKStrict(token string, key ccrypto.Privkey, issuer mongoutil.UUID, purpose CPurpose, subject mongoutil.UUID, pubkey ccrypto.Pubkey) (*CToken, error) {
+func DecryptPKStrict(token string, key ccrypto.Privkey, issuer util.UUID, purpose CPurpose, subject util.UUID, pubkey ccrypto.Pubkey) (*CToken, error) {
 	//Create a list of additional rules
 	rules := []paseto.Rule{
 		paseto.Subject(subject.String()), //Token subject and input subject must match
@@ -103,7 +105,7 @@ func DecryptPKStrict(token string, key ccrypto.Privkey, issuer mongoutil.UUID, p
 }
 
 // Performs token decryption and ensures it matches against a rule-set.
-func decryptBackend(token string, key ccrypto.Privkey, issuer mongoutil.UUID, purpose CPurpose, rules ...paseto.Rule) (*CToken, error) {
+func decryptBackend(token string, key ccrypto.Privkey, issuer util.UUID, purpose CPurpose, rules ...paseto.Rule) (*CToken, error) {
 	//Create a new token parser and add basic rules
 	parser := paseto.NewParser()
 	parser.AddRule(
@@ -133,7 +135,7 @@ func edsk2PasetoSK(key ccrypto.Privkey) paseto.V4SymmetricKey {
 }
 
 // Decodes a PasetoV4 token into a valid `CToken` object.
-func pasetoDecode(tok *paseto.Token, issuer mongoutil.UUID) (*CToken, error) {
+func pasetoDecode(tok *paseto.Token, issuer util.UUID) (*CToken, error) {
 	//Get the fields of the token
 	var id string
 	var subjectID string
@@ -191,9 +193,9 @@ func pasetoDecode(tok *paseto.Token, issuer mongoutil.UUID) (*CToken, error) {
 
 	//Create a new struct and return it
 	return &CToken{
-		ID:        mongoutil.UUIDFromString(id),
+		ID:        util.UUIDFromString(id),
 		Issuer:    issuer,
-		SubjectID: mongoutil.UUIDFromString(subjectID),
+		SubjectID: util.UUIDFromString(subjectID),
 		CType:     ctype,
 		Purpose:   purpose,
 		Expiry:    expiry,

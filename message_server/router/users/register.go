@@ -28,7 +28,7 @@ import (
 	"wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/obj/ip_addr"
 	cr "wraith.me/message_server/redis"
-	"wraith.me/message_server/schema"
+	schema "wraith.me/message_server/schema/json"
 	remailt "wraith.me/message_server/template/registration_email"
 	"wraith.me/message_server/util"
 	"wraith.me/message_server/util/httpu"
@@ -52,13 +52,13 @@ is completed.
 */
 type postsignupUser struct {
 	//The ID of the user.
-	ID mongoutil.UUID `json:"id"`
+	ID util.UUID `json:"id"`
 
 	//The email of the user, but redacted.
 	RedactedEmail string `json:"redacted_email"`
 
 	//The IDs of the challenges that the user must fulfil for registration to be completed.
-	Challenges []mongoutil.UUID `json:"challenges"`
+	Challenges []util.UUID `json:"challenges"`
 
 	//A token used to allow temporary API access to solve challenges. This key is only valid for that endpoint.
 	TempAccessToken string `json:"temp_access_token"`
@@ -123,7 +123,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Fill in the rest of the details
-	uuid := mongoutil.MustNewUUID7()
+	uuid := util.MustNewUUID7()
 	user := obj.NewUser(
 		uuid,
 		crypto.NilPubkey(),
@@ -307,7 +307,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, user *obj.User, ucoll *m
 	psu := postsignupUser{
 		ID:              user.ID,
 		RedactedEmail:   util.RedactEmail(user.Email),
-		Challenges:      []mongoutil.UUID{emailChall.ID, pubkeyChall.ID},
+		Challenges:      []util.UUID{emailChall.ID, pubkeyChall.ID},
 		TempAccessToken: tempToken.ToB64(),
 	}
 	if jerr := json.NewEncoder(w).Encode(&psu); jerr != nil {

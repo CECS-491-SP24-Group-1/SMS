@@ -84,10 +84,10 @@ func GetChallengesById(
 	//Database drivers & context
 	m *mongo.Client, r *redis.Client, ctx context.Context,
 	//Challenge ID list
-	ids ...mongoutil.UUID,
+	ids ...util.UUID,
 ) ([]chall.Challenge, error) {
 	//Step 1: Check if Redis has the challenges
-	ch, rerr := cr.GetMany[mongoutil.UUID, chall.Challenge](r, ctx, ids...)
+	ch, rerr := cr.GetMany[util.UUID, chall.Challenge](r, ctx, ids...)
 	if rerr.Cause() != nil && rerr.Cause() != redis.Nil {
 		//An error occurred with Redis that isn't a null-key error; bail out
 		return nil, rerr
@@ -106,7 +106,7 @@ func GetChallengesById(
 	//fmt.Printf("1+ CACHE MISSES - err: `%s`, len: %d\n", rerr, len(ch))
 
 	//Step 2: Get the IDs of the challenges that weren't in Redis
-	missedIds := []mongoutil.UUID{}
+	missedIds := []util.UUID{}
 	missedIdxs := []int{}
 	for _, mid := range rerr.Indices() {
 		missedIdxs = append(missedIdxs, mid)
@@ -126,7 +126,7 @@ func GetChallengesById(
 	}
 
 	//Step 5a: Create a mapping of the missing challenges to their ID and add them to the output array
-	cmap := make(map[mongoutil.UUID]chall.Challenge, len(missedIds))
+	cmap := make(map[util.UUID]chall.Challenge, len(missedIds))
 	for i, mid := range missedIds {
 		ch[missedIdxs[i]] = challs[i]
 		cmap[mid] = challs[i]
@@ -151,7 +151,7 @@ func RemoveChallenges(
 	//Database drivers & context
 	m *mongo.Client, r *redis.Client, ctx context.Context,
 	//Challenge ID list
-	ids ...mongoutil.UUID,
+	ids ...util.UUID,
 ) (int, error) {
 	//Step 1a: Define the Mongo query that targets all challenges specified in the varargs by ID
 	targets := bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: ids}}}}

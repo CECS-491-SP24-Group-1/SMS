@@ -1,6 +1,6 @@
 //Adapted from: https://gist.github.com/saniales/532774ca61a17980431890fbef9438ad
 
-package mongoutil
+package util
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 )
 
-// UUID represents a UUID as saved in MongoDB
+// UUID represents a UUID as saved in MongoDB.
 type UUID struct{ uuid.UUID }
 
 // NewUUID generates a new MongoDB compatible UUID.

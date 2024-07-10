@@ -5,6 +5,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"wraith.me/message_server/util"
 )
 
 //TODO: Try to cache these function results with Redis.
@@ -78,7 +79,7 @@ func Exists(coll *mongo.Collection, filter bson.D, ctx context.Context) bool {
 }
 
 // Retrieves a list of documents by their IDs.
-func FindById[T any](coll *mongo.Collection, ctx context.Context, ids ...UUID) ([]T, error) {
+func FindById[T any](coll *mongo.Collection, ctx context.Context, ids ...util.UUID) ([]T, error) {
 	//Construct the output slice to hold the results
 	res := []T{}
 

@@ -29,7 +29,7 @@ func ChallengeRoutes(envv *config.Env) chi.Router {
 	env = envv
 
 	//Add routes
-	r.Get("/{id}/solve", SolveChallengeRoute)
+	r.Get("/{id}/solve", SolveEChallengeRoute)
 	r.Get("/{id}/status", GetChallengeRoute)
 
 	//Return the router

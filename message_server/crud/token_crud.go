@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/util"
 )
 
 /*
@@ -22,7 +23,7 @@ func GetSTokens(
 	//Database drivers & context
 	m *mongo.Client, r *redis.Client, ctx context.Context,
 	//ID of the target user
-	uid mongoutil.UUID,
+	uid util.UUID,
 ) ([]string, error) {
 	//Step 1: Check if Redis has tokens for the user
 	rt, err := r.LRange(ctx, uid.String(), 0, -1).Result()

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
 	"wraith.me/message_server/obj/ip_addr"
+	"wraith.me/message_server/util"
 )
 
 var user = obj.NewUserSimple(
@@ -20,7 +20,7 @@ var user = obj.NewUserSimple(
 func TestUser2BSON(t *testing.T) {
 	//Add a test token
 	tok := obj.NewToken(
-		mongoutil.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
+		util.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
 		obj.TokenScopeUSER, time.Now().Add(5*time.Minute),
 	)
 	user.Tokens = append(user.Tokens, *tok)
@@ -45,7 +45,7 @@ func TestUser2BSON(t *testing.T) {
 func TestUser2JSON(t *testing.T) {
 	//Add a test token
 	tok := obj.NewToken(
-		mongoutil.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
+		util.MustNewUUID7(), ip_addr.FromString("127.0.0.1"),
 		obj.TokenScopeUSER, time.Now().Add(5*time.Minute),
 	)
 	user.Tokens = append(user.Tokens, *tok)

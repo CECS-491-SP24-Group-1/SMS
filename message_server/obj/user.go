@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"wraith.me/message_server/crypto"
-	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj/ip_addr"
 	"wraith.me/message_server/util"
 )
@@ -56,7 +55,7 @@ type User struct {
 
 // Creates a new user object.
 func NewUser(
-	id mongoutil.UUID,
+	id util.UUID,
 	pubkey crypto.Pubkey,
 	username string,
 	displayName string,
@@ -88,7 +87,7 @@ func NewUser(
 // Creates a user from only a username and string. This should be used only for mocking.
 func NewUserSimple(username string, email string) *User {
 	return NewUser(
-		mongoutil.MustNewUUID7(),
+		util.MustNewUUID7(),
 		crypto.Pubkey(util.Must(util.GenRandBytes(crypto.PUBKEY_SIZE))),
 		username,
 		username,

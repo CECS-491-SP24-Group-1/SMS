@@ -1,6 +1,7 @@
 package mw
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -25,11 +26,14 @@ var (
 	//The name of the HTTP query parameter to look for.
 	AuthHttpParamName = "token"
 
-	//The name of the auth subject header to send
+	//The name of the auth subject header to send.
 	AuthHttpHeaderSubject = "X-Auth-For"
 
-	//The name of the auth scope header to send
+	//The name of the auth scope header to send.
 	AuthHttpHeaderScope = "X-Auth-Scope"
+
+	//The key of the user object that's passed via `r.Context`.
+	AuthCtxUserKey = "ReqUser"
 )
 
 // Holds the error messages.
@@ -172,6 +176,8 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		// -- BEGIN: Database Query
 		//
 
+		//TODO: get the whole user object and not just the tokens; pass down the ctx of `r`
+
 		//Query the database for user tokens; if any errors occur, report them but do not alert the client of the specifics
 		subjectTokens, dberr := crud.GetSTokens(amw.mclient, amw.rclient, r.Context(), tokSubject)
 		if dberr != nil {
@@ -201,6 +207,13 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		//Add headers to the request (auth subject and token scope)
 		r.Header.Add(AuthHttpHeaderSubject, tokSubject.String())
 		r.Header.Add(AuthHttpHeaderScope, strconv.Itoa(int(tokObj.Scope)))
+		/*
+			ctx := context.WithValue(r.Context(), AuthCtxUserKey, user)
+			r = r.WithContext(ctx)
+		*/
+		//https://go.dev/blog/context#TOC_3.2.
+		ctx := context.WithValue(r.Context(), AuthCtxUserKey, "e")
+		r = r.WithContext(ctx)
 
 		//Forward the request; authentication passed successfully
 		next.ServeHTTP(w, r)

@@ -8,7 +8,7 @@ import (
 
 	"github.com/joho/godotenv"
 	ccrypto "wraith.me/message_server/crypto"
-	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/util"
 )
 
 //
@@ -24,7 +24,7 @@ type Env struct {
 	IConfig
 
 	//The ID of the server.
-	ID mongoutil.UUID `env:"ID"`
+	ID util.UUID `env:"ID"`
 
 	//The server's private cryptographic key.
 	SK ccrypto.Privkey `env:"SK"`
@@ -90,7 +90,7 @@ func EnvInit(path string) (Env, error) {
 
 		//Set the struct fields from the map and return no error
 		*c = Env{
-			ID: mongoutil.UUIDFromString(em["ID"]),
+			ID: util.UUIDFromString(em["ID"]),
 			SK: ccrypto.Privkey(sks),
 		}
 		return nil
@@ -98,7 +98,7 @@ func EnvInit(path string) (Env, error) {
 
 	//Create a new blank env object and set defaults
 	cfg := Env{}
-	cfg.ID = mongoutil.MustNewUUID7()
+	cfg.ID = util.MustNewUUID7()
 	var err error = nil
 	_, cfg.SK, err = ccrypto.NewKeypair(nil) //`PrivateKey`` contains the public key already
 	if err != nil {

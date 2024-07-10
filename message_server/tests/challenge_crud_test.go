@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"wraith.me/message_server/crud"
-	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
 	c "wraith.me/message_server/obj/challenge"
 	cr "wraith.me/message_server/redis"
+	"wraith.me/message_server/util"
 )
 
 /*
@@ -21,7 +21,7 @@ func TestChallCRUDGet(t *testing.T) {
 	r := redisInit()
 
 	//Query for tokens by the user's ID
-	uid := mongoutil.UUIDFromStringOrNil("018eac6a-9a9d-77f2-bd4b-238b34d9c767")
+	uid := util.UUIDFromStringOrNil("018eac6a-9a9d-77f2-bd4b-238b34d9c767")
 	toks, err := crud.GetSTokens(m, r, context.Background(), uid)
 	if err != nil {
 		t.Fatal(err)
@@ -41,20 +41,20 @@ func TestRChallCRUDAddDel(t *testing.T) {
 	//Create some challenges to add
 	c1 := c.NewChallenge(
 		c.ChallengeScopeEMAIL,
-		obj.Identifiable{ID: mongoutil.MustNewUUID4(), Type: obj.IdTypeUSER},
-		obj.Identifiable{ID: mongoutil.MustNewUUID4(), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: util.MustNewUUID4(), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: util.MustNewUUID4(), Type: obj.IdTypeUSER},
 		time.Now().Add(c.DEFAULT_CHALLENGE_EXPIRY),
 	)
 	c2 := c.NewChallenge(
 		c.ChallengeScopeEMAIL,
-		obj.Identifiable{ID: mongoutil.MustNewUUID4(), Type: obj.IdTypeUSER},
-		obj.Identifiable{ID: mongoutil.MustNewUUID4(), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: util.MustNewUUID4(), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: util.MustNewUUID4(), Type: obj.IdTypeUSER},
 		time.Now().Add(c.DEFAULT_CHALLENGE_EXPIRY),
 	)
 	c3 := c.NewChallenge(
 		c.ChallengeScopeEMAIL,
-		obj.Identifiable{ID: mongoutil.MustNewUUID4(), Type: obj.IdTypeUSER},
-		obj.Identifiable{ID: mongoutil.MustNewUUID4(), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: util.MustNewUUID4(), Type: obj.IdTypeUSER},
+		obj.Identifiable{ID: util.MustNewUUID4(), Type: obj.IdTypeUSER},
 		time.Now().Add(c.DEFAULT_CHALLENGE_EXPIRY),
 	)
 
@@ -142,12 +142,12 @@ func TestChallCRUDCacheCorrectness(t *testing.T) {
 	//Get a list of challenges and fill it
 	n := 10
 	chs := make([]c.Challenge, n)
-	ids := make([]mongoutil.UUID, n)
+	ids := make([]util.UUID, n)
 	for i := 0; i < n; i++ {
 		chs[i] = c.NewChallenge(
 			c.ChallengeScopeEMAIL,
-			obj.Identifiable{ID: mongoutil.MustNewUUID4(), Type: obj.IdTypeUSER},
-			obj.Identifiable{ID: mongoutil.MustNewUUID4(), Type: obj.IdTypeUSER},
+			obj.Identifiable{ID: util.MustNewUUID4(), Type: obj.IdTypeUSER},
+			obj.Identifiable{ID: util.MustNewUUID4(), Type: obj.IdTypeUSER},
 			time.Now().Add(c.DEFAULT_CHALLENGE_EXPIRY),
 		)
 		ids[i] = chs[i].ID
@@ -160,7 +160,7 @@ func TestChallCRUDCacheCorrectness(t *testing.T) {
 	}
 
 	//Remove a random number of challenges from Redis
-	removals := []mongoutil.UUID{}
+	removals := []util.UUID{}
 	for i := 0; i < rand.Intn(n); i++ {
 		removals = append(removals, chs[rand.Intn(n)].ID)
 	}

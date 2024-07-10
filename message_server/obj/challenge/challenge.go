@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"time"
 
-	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
 	"wraith.me/message_server/util"
 )
@@ -67,12 +66,12 @@ func NewChallenge(
 	responder obj.Identifiable,
 	expiry time.Time,
 ) Challenge {
-	return NewChallengeDeterministic(mongoutil.MustNewUUID7(), scope, initiator, responder, expiry)
+	return NewChallengeDeterministic(util.MustNewUUID7(), scope, initiator, responder, expiry)
 }
 
 // Creates a new challenge from an existing UUID.
 func NewChallengeDeterministic(
-	id mongoutil.UUID,
+	id util.UUID,
 	scope ChallengeScope,
 	initiator obj.Identifiable,
 	responder obj.Identifiable,

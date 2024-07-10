@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"aidanwoods.dev/go-paseto"
-	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/util"
 )
 
 const SUBJECT_PK_KEY = "sub-pk"
@@ -23,9 +23,9 @@ func TestPaseto(t *testing.T) {
 	token.SetExpiration(time.Now().Add(10 * time.Minute))
 
 	//Set additional fields for the token
-	jtiIn := mongoutil.MustNewUUID7().String()
-	issIn := mongoutil.MustNewUUID7().String()
-	subIn := mongoutil.MustNewUUID7().String()
+	jtiIn := util.MustNewUUID7().String()
+	issIn := util.MustNewUUID7().String()
+	subIn := util.MustNewUUID7().String()
 	subpkIn := base64.StdEncoding.EncodeToString(paseto.NewV4SymmetricKey().ExportBytes())
 
 	//Add additional data to the token

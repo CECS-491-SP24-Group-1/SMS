@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/config"
@@ -16,10 +17,13 @@ import (
 	"wraith.me/message_server/router"
 	"wraith.me/message_server/router/challenges"
 	"wraith.me/message_server/router/users"
+	"wraith.me/message_server/task"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/redis/go-redis/v9"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const RQS_PER_MIN = 3
@@ -51,7 +55,7 @@ func main() {
 	defer db.GetInstance().Disconnect()
 
 	//Connect to Redis
-	_, rerr := cr.GetInstance().Connect(&cfg.Redis)
+	rclient, rerr := cr.GetInstance().Connect(&cfg.Redis)
 	if rerr != nil {
 		panic(rerr)
 	}
@@ -60,6 +64,11 @@ func main() {
 	_, eerr := email.GetInstance().Connect(&cfg.Email)
 	if eerr != nil {
 		panic(eerr)
+	}
+
+	//Setup scheduled tasks
+	if err := setupScheduledTasks(mclient, rclient); err != nil {
+		panic(err)
 	}
 
 	//Test listing
@@ -145,13 +154,25 @@ func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 	return r
 }
 
-/*
-func setupScheduledTasks() {
-	sch := gocron.NewScheduler(time.UTC)
-	sch.Every(10).Seconds().Do(func() { fmt.Println("Sponsored by https://www.fittea.com") })
-	sch.StartAsync()
+func setupScheduledTasks(mc *mongo.Client, rc *redis.Client) error {
+	//Create tasks
+	purgeTask := task.PurgeOldUsersTask{
+		TQ:  time.Minute * 5,
+		MC:  mc,
+		RC:  rc,
+		CTX: context.Background(),
+	}
+
+	//Setup the scheduler and run it
+	sch := task.Scheduler{}
+	if err := sch.Register(purgeTask); err != nil {
+		return err
+	}
+	if err := sch.Start(); err != nil {
+		return err
+	}
+	return nil
 }
-*/
 
 /*
 func BookRoutes() chi.Router {

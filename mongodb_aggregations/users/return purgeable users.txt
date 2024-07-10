@@ -9,7 +9,7 @@
   },
   {
     $project: {
-      purge_by: "$flags.purge_by",
+      flags: 1,
     },
   },
 ]

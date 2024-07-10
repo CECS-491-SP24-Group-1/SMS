@@ -9,8 +9,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
-	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj/ip_addr"
+	"wraith.me/message_server/util"
 )
 
 //
@@ -34,7 +34,7 @@ type Token struct {
 	CreationIP ip_addr.IPAddr `json:"creation_ip" bson:"creation_ip"`
 
 	//The user that this token is for by ID.
-	Subject mongoutil.UUID `json:"subject" bson:"subject"`
+	Subject util.UUID `json:"subject" bson:"subject"`
 
 	//Defines the scopes for which the token is valid. This is a bitmasked value that may hold multiple scopes on a single variable.
 	Scope TokenScope `json:"token_scope" bson:"token_scope"`
@@ -50,10 +50,10 @@ type Token struct {
 }
 
 // Creates a new token object.
-func NewToken(subject mongoutil.UUID, creationIP ip_addr.IPAddr, scope TokenScope, expiry time.Time) *Token {
+func NewToken(subject util.UUID, creationIP ip_addr.IPAddr, scope TokenScope, expiry time.Time) *Token {
 	return &Token{
 		Identifiable: Identifiable{
-			ID:   mongoutil.MustNewUUID7(),
+			ID:   util.MustNewUUID7(),
 			Type: IdTypeTOKEN,
 		},
 		Subject:    subject,

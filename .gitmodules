@@ -1,0 +1,3 @@
+[submodule "mgod"]
+	path = mgod
+	url = https://github.com/jgilman1337/mgod

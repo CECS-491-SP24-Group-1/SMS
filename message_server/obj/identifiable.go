@@ -1,8 +1,6 @@
 package obj
 
-import (
-	"wraith.me/message_server/db/mongoutil"
-)
+import "wraith.me/message_server/util"
 
 //
 //-- CLASS: Identifiable
@@ -14,7 +12,7 @@ can include users, servers, messages, challenges, and so on.
 */
 type Identifiable struct {
 	//The ID of the object.
-	ID mongoutil.UUID `json:"id" bson:"_id"`
+	ID util.UUID `json:"id" bson:"_id"`
 
 	//The type of item this object is.
 	Type IdType `json:"type" bson:"type"`

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"wraith.me/message_server/db/mongoutil"
 	cr "wraith.me/message_server/redis"
+	"wraith.me/message_server/util"
 )
 
 func TestRedisKVSetS(t *testing.T) {
@@ -66,7 +66,7 @@ func TestRedisKVSet(t *testing.T) {
 	kvs := make(map[uuid.UUID]Foo)
 	keys := make([]uuid.UUID, n)
 	for i := 0; i < n; i++ {
-		id := mongoutil.MustNewUUID4()
+		id := util.MustNewUUID4()
 		obj := Foo{id, fmt.Sprintf("Name_%d", i+1), time.Now().Round(0), []string{fmt.Sprintf("ff_%d", (i+1)*2)}}
 		kvs[obj.ID.UUID] = obj
 		keys[i] = id.UUID

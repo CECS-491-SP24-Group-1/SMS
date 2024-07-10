@@ -8,7 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/db"
-	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/util"
 )
 
 const (
@@ -18,9 +18,9 @@ const (
 
 type Test struct {
 	//ID  string `bson:"_id"`
-	ID  mongoutil.UUID `bson:"_id"`
-	Foo int            `bson:"foo"`
-	Bar string         `bson:"bar"`
+	ID  util.UUID `bson:"_id"`
+	Foo int       `bson:"foo"`
+	Bar string    `bson:"bar"`
 	Baz struct {
 		Bash float64 `bson:"bash"`
 		Ash  [5]int  `bson:"ash"`
@@ -30,7 +30,7 @@ type Test struct {
 func DefaultTest() Test {
 	obj := Test{}
 
-	obj.ID = mongoutil.MustNewUUID7()
+	obj.ID = util.MustNewUUID7()
 	obj.Foo = 500
 	obj.Bar = "hello world"
 	obj.Baz.Bash = 3.14

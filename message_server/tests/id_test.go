@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/util"
 )
 
 func TestUUIDvsOID(t *testing.T) {
@@ -24,7 +25,7 @@ func TestUUIDvsOID(t *testing.T) {
 
 func TestUUIDxOID(t *testing.T) {
 	//Generate UUID and get the timestamp
-	uuidIn, _ := mongoutil.NewUUID7()
+	uuidIn, _ := util.NewUUID7()
 	uuidiTS := time.Unix(uuidIn.Time().UnixTime()).UTC()
 
 	//Print stuff
