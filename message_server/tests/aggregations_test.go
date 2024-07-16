@@ -7,7 +7,6 @@ import (
 
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/db/agp"
-	"wraith.me/message_server/db/mongoutil"
 )
 
 func TestStringifiedMongoAgg(t *testing.T) {
@@ -24,15 +23,17 @@ func TestStringifiedMongoAgg(t *testing.T) {
 
 	//Run the query
 	ucoll := mclient.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
-	res, err := mongoutil.AggregateS(ucoll, str, context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
+	res := ucoll.Aggregate(context.Background(), str)
+	//res, err := mongoutil.AggregateS(ucoll, str, context.Background())
 
-	//Show results
-	for i := 0; i < len(res); i++ {
-		fmt.Printf("RES #%d: %+v\n", i, res[i])
-	}
+	fmt.Printf("res: %v\n", res)
+
+	/*
+		//Show results
+		for i := 0; i < len(res); i++ {
+			fmt.Printf("RES #%d: %+v\n", i, res[i])
+		}
+	*/
 }
 
 func TestAggregations(t *testing.T) {
@@ -59,21 +60,18 @@ func TestAggregations(t *testing.T) {
 
 	//Connect to the database
 	mcfg := db.DefaultMConfig()
-	mclient, merr := db.GetInstance().Connect(mcfg)
+	cli, merr := db.GetInstance().Connect(mcfg)
 	if merr != nil {
 		t.Fatal(merr)
 	}
 	defer db.GetInstance().Disconnect()
 
-	//Run the query
-	ucoll := mclient.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
-	res, err := mongoutil.Aggregate(ucoll, agg, context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
+	//Define the target collection
+	coll := cli.Database(db.ROOT_DB).Collection(db.TESTS_COLLECTION)
+
+	//Run the aggregation
+	res := coll.Aggregate(context.Background(), agg)
 
 	//Show results
-	for i := 0; i < len(res); i++ {
-		fmt.Printf("RES #%d: %+v\n", i, res[i])
-	}
+	fmt.Printf("RES: %v\n", res)
 }

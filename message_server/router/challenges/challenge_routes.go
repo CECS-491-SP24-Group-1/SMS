@@ -2,15 +2,15 @@ package challenges
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/qiniu/qmgo"
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/config"
 	"wraith.me/message_server/db"
 	cr "wraith.me/message_server/redis"
 )
 
 // Shared MongoDB client across the entire package.
-var mcl *mongo.Client
+var mcl *qmgo.Client
 
 // Shared Redis client across the entire package.
 var rcl *redis.Client

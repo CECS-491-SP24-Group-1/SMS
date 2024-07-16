@@ -17,11 +17,7 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 	mail "github.com/xhit/go-simple-mail/v2"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"wraith.me/message_server/crud"
 	"wraith.me/message_server/crypto"
-	"wraith.me/message_server/db"
-	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/email"
 	"wraith.me/message_server/mw"
 	"wraith.me/message_server/obj"
@@ -115,11 +111,8 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//Get the users collection from the database and ensure a record doesn't already exist
-	userCollection := mcl.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
-
 	//Ensure the user doesn't already exist in the database
-	if err := ensureNonexistantUser(userCollection, iuser, r.Context()); err != nil {
+	if err := ensureNonexistantUser(uc, iuser, r.Context()); err != nil {
 		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
 		return
 	}
@@ -140,7 +133,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	copy(user.Pubkey[:], decodedPK[:])
 
 	//Complete the post-signup steps, including challenge generation and issuance of a temporary token
-	if err := postSignup(w, r, user, userCollection); err != nil {
+	if err := postSignup(w, r, user, uc); err != nil {
 		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -152,7 +145,7 @@ was given by the user. A `nil` error indicates that no matching records
 were found. Checking collections for existent objects is expensive, so
 not all records are checked if one fails.
 */
-func ensureNonexistantUser(coll *mongo.Collection, usr intermediateUser, ctx context.Context) error {
+func ensureNonexistantUser(coll *user.UserCollection, usr intermediateUser, ctx context.Context) error {
 	//Parse out the public key of the incoming user
 	pubkey, _ := crypto.ParsePubkey(usr.Pubkey) //Errors should not occur here; data is already pre-validated
 
@@ -184,7 +177,8 @@ func ensureNonexistantUser(coll *mongo.Collection, usr intermediateUser, ctx con
 	}
 
 	//Run the request and collect all hits; critical errors may be reported from this function so handle appropriately
-	hits, err := mongoutil.Aggregate(coll, agg, ctx)
+	hits := make([]util.UUID, 0)
+	err := coll.Aggregate(ctx, agg).All(&hits)
 	if err != nil {
 		return err
 	}
@@ -238,7 +232,7 @@ func (iu intermediateUser) validate(strictEmail bool) (bool, []error) {
 Performs post-signup operations on the newly created user object, such
 as persistence to the database and generation of challenges.
 */
-func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User, ucoll *mongo.Collection) error {
+func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User, ucoll *user.UserCollection) error {
 	//Step 1: Issue a token that's good for the duration of the challenge window; otherwise the routes won't be allowed
 	tempToken := token.NewToken(usr.ID, ip_addr.HttpIP2NetIP(r.RemoteAddr), token.TokenScopePOSTSIGNUP, usr.Flags.PurgeBy)
 	fmt.Printf("TOK: '%s'\n", tempToken.ToB64())
@@ -303,7 +297,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User, ucoll *m
 	}
 
 	//Step 4: Push the challenges to the database for later retrieval
-	crud.AddChallenges(mcl, rcl, r.Context(), emailChall, pubkeyChall)
+	//crud.AddChallenges(mcl, rcl, r.Context(), emailChall, pubkeyChall)
 
 	//Step 5: Write the response back to the user
 	psu := postsignupUser{

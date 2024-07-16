@@ -5,15 +5,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/config"
-	"wraith.me/message_server/db"
 	cr "wraith.me/message_server/redis"
+	"wraith.me/message_server/schema/user"
 )
 
 var (
-	// Shared MongoDB client across the entire package.
-	mcl *mongo.Client
+	// Shared user collection across the entire package.
+	uc *user.UserCollection
 
 	// Shared Redis client across the entire package.
 	rcl *redis.Client
@@ -34,7 +33,7 @@ func UserRoutes(cfgg *config.Config, envv *config.Env) chi.Router {
 	r := chi.NewRouter()
 
 	//Set the singletons for the entire package
-	mcl = db.GetInstance().GetClient()
+	uc = user.InitCollection() //Init on this is called only once; this is safe to use
 	rcl = cr.GetInstance().GetClient()
 	cfg = cfgg
 	env = envv

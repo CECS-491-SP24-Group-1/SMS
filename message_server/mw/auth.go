@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/mongo"
-	"wraith.me/message_server/crud"
-	"wraith.me/message_server/db"
+	"go.mongodb.org/mongo-driver/bson"
+	"wraith.me/message_server/obj"
 	"wraith.me/message_server/obj/token"
 	cr "wraith.me/message_server/redis"
+	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util/httpu"
 )
 
@@ -33,7 +33,7 @@ var (
 	AuthHttpHeaderScope = "X-Auth-Scope"
 
 	//The key of the user object that's passed via `r.Context`.
-	AuthCtxUserKey = "ReqUser"
+	AuthCtxUserKey = obj.CtxKey{S: "ReqUser"}
 )
 
 // Holds the error messages.
@@ -47,8 +47,10 @@ var (
 
 type authMiddleware struct {
 	allowedScopes []token.TokenScope //The scopes for which the token is valid, sorted in increasing order.
-	mclient       *mongo.Client      //The MongoDB database client.
-	rclient       *redis.Client      //The Redis database client.
+	//mclient       *mongo.Client      //The MongoDB database client.
+	rclient *redis.Client //The Redis database client.
+
+	ucoll *user.UserCollection
 }
 
 // Returns a new handler for the authentication middleware.
@@ -56,8 +58,9 @@ func NewAuthMiddleware(allowedScopes []token.TokenScope) func(next http.Handler)
 	//Get a struct object
 	mw := authMiddleware{
 		allowedScopes: allowedScopes,
-		mclient:       db.GetInstance().GetClient(),
-		rclient:       cr.GetInstance().GetClient(),
+		//mclient:       db.GetInstance().GetClient(),
+		rclient: cr.GetInstance().GetClient(),
+		ucoll:   user.InitCollection(),
 	}
 
 	//Return the instance
@@ -177,17 +180,12 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		//
 
 		//TODO: get the whole user object and not just the tokens; pass down the ctx of `r`
-
-		//Query the database for user tokens; if any errors occur, report them but do not alert the client of the specifics
-		subjectTokens, dberr := crud.GetSTokens(amw.mclient, amw.rclient, r.Context(), tokSubject)
-		if dberr != nil {
+		//Query the database for a user with the token
+		var user user.User
+		query := bson.D{{Key: "tokens", Value: bson.D{{Key: "$in", Value: bson.A{tok}}}}}
+		err := amw.ucoll.Find(r.Context(), query).One(&user)
+		if err != nil {
 			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthGeneric), http.StatusUnauthorized)
-			return
-		}
-
-		//If the query returns nothing, simply bail out; the subject has no tokens to begin with
-		if len(subjectTokens) == 0 {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
 			return
 		}
 
@@ -196,23 +194,21 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		//
 
 		/*
-			Check if the subject's token list includes the incoming token. If this check
-			passes, the client is let through and the middleware finishes without error.
+				Check if the subject's token list includes the incoming token. If this check
+				passes, the client is let through and the middleware finishes without error.
+			if !slices.Contains(subjectTokens, tok) {
+				httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
+				return
+			}
 		*/
-		if !slices.Contains(subjectTokens, tok) {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
-			return
-		}
 
 		//Add headers to the request (auth subject and token scope)
 		r.Header.Add(AuthHttpHeaderSubject, tokSubject.String())
 		r.Header.Add(AuthHttpHeaderScope, strconv.Itoa(int(tokObj.Scope)))
-		/*
-			ctx := context.WithValue(r.Context(), AuthCtxUserKey, user)
-			r = r.WithContext(ctx)
-		*/
+
+		//Add the user to the request context
 		//https://go.dev/blog/context#TOC_3.2.
-		ctx := context.WithValue(r.Context(), AuthCtxUserKey, "e") //TODO: pass entire user object here
+		ctx := context.WithValue(r.Context(), AuthCtxUserKey, user) //TODO: pass entire user object here
 		r = r.WithContext(ctx)
 
 		//Forward the request; authentication passed successfully

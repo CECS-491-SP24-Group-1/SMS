@@ -50,11 +50,13 @@ func TestInit(t *testing.T) {
 	}
 	defer db.GetInstance().Disconnect()
 
-	//Test listing
-	names, _ := client.ListDatabaseNames(context.TODO(), bson.M{})
-	for i, name := range names {
-		fmt.Printf("DB #%d: %s\n", i, name)
-	}
+	/*
+		//Test listing
+		names, _ := client.ListDatabaseNames(context.TODO(), bson.M{})
+		for i, name := range names {
+			fmt.Printf("DB #%d: %s\n", i, name)
+		}
+	*/
 
 	//Create sample data
 	testobj := DefaultTest()
@@ -65,7 +67,7 @@ func TestInit(t *testing.T) {
 
 	//Push the data to the database
 	collection := client.Database(db.ROOT_DB).Collection(db.TESTS_COLLECTION)
-	insertResult, err := collection.InsertOne(context.TODO(), sample1)
+	insertResult, err := collection.InsertOne(context.Background(), sample1)
 	if err != nil {
 		panic(err)
 	}

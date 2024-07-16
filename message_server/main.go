@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/config"
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/email"
@@ -23,7 +22,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const RQS_PER_MIN = 3
@@ -48,7 +46,7 @@ func main() {
 	//setupScheduledTasks()
 
 	//Connect to MongoDB
-	mclient, merr := db.GetInstance().Connect(&cfg.MongoDB)
+	_, merr := db.GetInstance().Connect(&cfg.MongoDB)
 	if merr != nil {
 		panic(merr)
 	}
@@ -67,15 +65,17 @@ func main() {
 	}
 
 	//Setup scheduled tasks
-	if err := setupScheduledTasks(mclient, rclient); err != nil {
+	if err := setupScheduledTasks(rclient); err != nil {
 		panic(err)
 	}
 
-	//Test listing
-	names, _ := mclient.ListDatabaseNames(context.TODO(), bson.M{})
-	for i, name := range names {
-		fmt.Printf("DB #%d: %s\n", i, name)
-	}
+	/*
+		//Test listing
+		names, _ := mclient.ListDatabaseNames(context.TODO(), bson.M{})
+		for i, name := range names {
+			fmt.Printf("DB #%d: %s\n", i, name)
+		}
+	*/
 
 	//Setup Chi and start listening for connections
 	r := setupServer(&cfg, &env)
@@ -154,11 +154,10 @@ func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 	return r
 }
 
-func setupScheduledTasks(mc *mongo.Client, rc *redis.Client) error {
+func setupScheduledTasks(rc *redis.Client) error {
 	//Create tasks
 	purgeTask := task.PurgeOldUsersTask{
 		TQ:  time.Minute * 5,
-		MC:  mc,
 		RC:  rc,
 		CTX: context.Background(),
 	}

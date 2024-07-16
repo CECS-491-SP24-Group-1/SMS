@@ -6,16 +6,12 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Purges old users from the database; implements `Task`.
 type PurgeOldUsersTask struct {
 	//Defines the duration between runs.
 	TQ time.Duration
-
-	//The MongoDB client to use in transactions.
-	MC *mongo.Client
 
 	//The Redis client to use in transactions.
 	RC *redis.Client

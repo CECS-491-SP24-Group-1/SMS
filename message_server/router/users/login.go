@@ -9,10 +9,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	ccrypto "wraith.me/message_server/crypto"
-	"wraith.me/message_server/db"
-	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj"
 	c "wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/schema/user"
@@ -208,8 +205,7 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 
 	//Ensure the claims map to an existing user in the database
 	//TODO: impl caching here
-	userCollection := mcl.Database(db.ROOT_DB).Collection(db.USERS_COLLECTION)
-	tmp, err := ensureExistantUser(userCollection, lu, r.Context())
+	tmp, err := ensureExistantUser(uc, lu, r.Context())
 	if err != nil {
 		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
 		return false
@@ -274,7 +270,7 @@ func ensureCorrectIdAndPKFmt(id string, pk string, sig string) error {
 }
 
 // Ensures that a user with the given UUID and public key exists.
-func ensureExistantUser(coll *mongo.Collection, user loginUser, ctx context.Context) (*existingUserResult, error) {
+func ensureExistantUser(coll *user.UserCollection, user loginUser, ctx context.Context) (*existingUserResult, error) {
 	//Construct a Mongo aggregation pipeline to run the request; avoids making multiple round-trips to the database
 	//This aggregation was exported from MongoDB; do not edit if you don't know what you are doing!
 	agg := bson.A{
@@ -301,7 +297,7 @@ func ensureExistantUser(coll *mongo.Collection, user loginUser, ctx context.Cont
 
 	//Run the request and collect all hits; critical errors may be reported from this function so handle appropriately
 	var hits []existingUserResult
-	err := mongoutil.AggregateT(&hits, coll, agg, ctx)
+	err := coll.Aggregate(ctx, agg).All(&hits)
 	if err != nil {
 		return nil, err
 	}

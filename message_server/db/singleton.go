@@ -6,8 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/qiniu/qmgo"
 )
 
 //
@@ -15,11 +14,11 @@ import (
 //
 
 /*
-Represents a MongoDB client. This struct acts as a singleton wrapper on a
-MongoDB client.
+Represents a qmgo client. This struct acts as a singleton wrapper on a
+qmgo client.
 */
 type MClient struct {
-	client *mongo.Client
+	client *qmgo.Client
 	config *MConfig
 	// Guard mutex to ensure atomicity during connect/disconnect operations.
 	mutex *sync.Mutex
@@ -31,7 +30,7 @@ var instance *MClient
 // Guard mutex to ensure that only one singleton object is created.
 var once sync.Once
 
-// Gets the currently active MongoDB client instance.
+// Gets the currently active qmgo client instance.
 func GetInstance() *MClient {
 	once.Do(func() {
 		instance = &MClient{}
@@ -45,7 +44,7 @@ Gets the underlying client instance that's used to interact with the
 MongoDB database. If the client is not currently connected, then this
 object will be `nil`.
 */
-func (m MClient) GetClient() *mongo.Client {
+func (m MClient) GetClient() *qmgo.Client {
 	return m.client
 }
 
@@ -58,7 +57,7 @@ func (m MClient) GetConfig() *MConfig {
 }
 
 // Connects to the MongoDB server specified in the given config object.
-func (m *MClient) Connect(cfg *MConfig) (*mongo.Client, error) {
+func (m *MClient) Connect(cfg *MConfig) (*qmgo.Client, error) {
 	//Lock the mutex and defer its unlock
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -68,13 +67,15 @@ func (m *MClient) Connect(cfg *MConfig) (*mongo.Client, error) {
 		return m.client, fmt.Errorf("mongodb: cannot establish a connection that is already open")
 	}
 
-	//Set client option
-	clientOptions := options.Client().
-		//ApplyURI(fmt.Sprintf("mongodb://%s:%d", cfg.MongoDB.Host, cfg.MongoDB.Port)).
-		ApplyURI(fmt.Sprintf("mongodb://%s:%d", cfg.Host, cfg.Port))
+	//Set client options
+	clientOptions := qmgo.Config{
+		//Uri: fmt.Sprintf("mongodb://%s:%d", cfg.MongoDB.Host, cfg.MongoDB.Port),
+		Uri:              cfg.ConnStr,
+		ConnectTimeoutMS: func(i int64) *int64 { return &i }(cfg.Timeout * 1000), //This is expected to be a pointer; see: https://stackoverflow.com/a/30716481
+	}
 
 	//Connect to the database
-	client, err := mongo.Connect(context.TODO(), clientOptions)
+	client, err := qmgo.NewClient(context.Background(), &clientOptions)
 	m.client, m.config = client, cfg
 
 	//Return the client and any error that occurred
@@ -89,7 +90,7 @@ func (m *MClient) Disconnect() error {
 
 	//Disconnect from the db
 	if m.client != nil {
-		err := m.client.Disconnect(context.Background())
+		err := m.client.Close(context.Background())
 		m.client, m.config = nil, nil
 		return err
 	}
@@ -108,7 +109,7 @@ func (m MClient) Heartbeat() (int64, error) {
 
 	//Ping the server
 	bm := time.Now()
-	err := m.client.Ping(context.Background(), nil)
+	err := m.client.Ping(m.config.Timeout) //Treated in seconds
 	delta := time.Since(bm)
 
 	//Return the ping time and any errors

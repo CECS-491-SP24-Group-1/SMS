@@ -3,8 +3,8 @@ package tests
 import (
 	"reflect"
 
+	"github.com/qiniu/qmgo"
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/db"
 	cr "wraith.me/message_server/redis"
 )
@@ -29,7 +29,7 @@ func isComplexType[T any](targ T) bool {
 	return k == reflect.Struct || k == reflect.Interface
 }
 
-func mongoInit() *mongo.Client {
+func mongoInit() *qmgo.Client {
 	//Connect to MongoDB
 	mcfg := db.DefaultMConfig()
 	mclient, merr := db.GetInstance().Connect(mcfg)
