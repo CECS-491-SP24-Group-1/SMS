@@ -1,3 +1,4 @@
 tmp/
 *.env
 message_server/config.toml
+message_client/go/*.wasm
