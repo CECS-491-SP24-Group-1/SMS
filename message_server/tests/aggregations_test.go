@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"wraith.me/message_server/db"
-	"wraith.me/message_server/db/agp"
 )
 
 func TestStringifiedMongoAgg(t *testing.T) {

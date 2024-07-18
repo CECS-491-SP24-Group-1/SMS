@@ -134,6 +134,8 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//TODO: mark user as verified and issue a login token here
+
 	fmt.Printf("verif_pk: %+v\n", loginTok)
 	resp := fmt.Sprintf("REQUEST S2: %+v", loginVReq)
 	httpu.HttpOkAsJson(w, resp, http.StatusOK)
@@ -204,7 +206,6 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 	}
 
 	//Ensure the claims map to an existing user in the database
-	//TODO: impl caching here
 	tmp, err := ensureExistantUser(uc, lu, r.Context())
 	if err != nil {
 		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
@@ -270,6 +271,7 @@ func ensureCorrectIdAndPKFmt(id string, pk string, sig string) error {
 }
 
 // Ensures that a user with the given UUID and public key exists.
+// TODO: might want to return a whole user object so it can be modified later on
 func ensureExistantUser(coll *user.UserCollection, user loginUser, ctx context.Context) (*existingUserResult, error) {
 	//Construct a Mongo aggregation pipeline to run the request; avoids making multiple round-trips to the database
 	//This aggregation was exported from MongoDB; do not edit if you don't know what you are doing!

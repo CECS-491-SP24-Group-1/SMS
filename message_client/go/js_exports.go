@@ -4,7 +4,7 @@ import (
 	"strings"
 	"syscall/js"
 
-	"wraith.me/clientside_crypto/lib"
+	"wraith.me/clientside_crypto/crypto"
 	"wraith.me/clientside_crypto/util"
 
 	ccrypto "wraith.me/message_server/crypto"
@@ -41,7 +41,7 @@ func main() {
 // ed25519Keygen() -> JSONObject[Ed25519KP]
 func ed25519Keygen(_ js.Value, _ []js.Value) interface{} {
 	//Create the Go object and marshal to JSON
-	json := lib.Ed25519Keygen().JSON()
+	json := crypto.Ed25519Keygen().JSON()
 
 	//Call `JSON.parse()` on the string to derive an object usable in JS
 	return js.Global().Get("JSON").Call("parse", json)
@@ -50,11 +50,11 @@ func ed25519Keygen(_ js.Value, _ []js.Value) interface{} {
 // ed25519FromBytes(sk []byte, pk []byte) -> JSONObject[Ed25519KP]
 func ed25519FromBytes(_ js.Value, args []js.Value) interface{} {
 	//Extract the secret and public keys from the args
-	sk := util.JSArray2GoByteArray(args[0], lib.ED25519_LEN)
-	pk := util.JSArray2GoByteArray(args[1], lib.ED25519_LEN)
+	sk := util.JSArray2GoByteArray(args[0], crypto.ED25519_LEN)
+	pk := util.JSArray2GoByteArray(args[1], crypto.ED25519_LEN)
 
 	//Create an object from the bytes
-	obj := lib.Ed25519FromBytes(sk, pk)
+	obj := crypto.Ed25519FromBytes(sk, pk)
 
 	//Call `JSON.parse()` to derive an object usable in JS
 	return js.Global().Get("JSON").Call("parse", obj.JSON())
@@ -69,10 +69,10 @@ func ed25519FromJSON(_ js.Value, args []js.Value) interface{} {
 // func ed25519FromSK(sk []byte) Ed25519KP
 func ed25519FromSK(_ js.Value, args []js.Value) interface{} {
 	//Extract the secret from the args
-	barr := util.JSArray2GoByteArray(args[0], lib.ED25519_LEN)
+	barr := util.JSArray2GoByteArray(args[0], crypto.ED25519_LEN)
 
 	//Derive a keypair object from the private and return it
-	obj := lib.Ed25519FromSK(barr)
+	obj := crypto.Ed25519FromSK(barr)
 	return js.Global().Get("JSON").Call("parse", obj.JSON())
 }
 
@@ -84,8 +84,8 @@ func ed25519Equal(_ js.Value, args []js.Value) interface{} {
 	themstr := util.Val2Any[string](js.Global().Get("JSON").Call("stringify", args[1]))
 
 	//Derive Go objects from the JSON strings
-	us, erra := lib.Ed25519FromJSON(usstr)
-	them, errb := lib.Ed25519FromJSON(themstr)
+	us, erra := crypto.Ed25519FromJSON(usstr)
+	them, errb := crypto.Ed25519FromJSON(themstr)
 
 	//Ensure both objects parsed successfully before doing equality checks
 	return erra == nil && errb == nil && us.Equal(them)
@@ -132,9 +132,9 @@ func ed25519Verify(_ js.Value, args []js.Value) interface{} {
 
 /* //-- Utility functions */
 //Converts a JSONObject representation of an Ed25519 keypair to its equivalent Go counterpart.
-func ed25519ObjFromJSON(arg js.Value) lib.Ed25519KP {
+func ed25519ObjFromJSON(arg js.Value) crypto.Ed25519KP {
 	//Create a new Ed25519 keypair object
-	obj := lib.Ed25519KP{}
+	obj := crypto.Ed25519KP{}
 
 	//Ingest the incoming JSONObject and stringify it, cleaning it up in the process
 	str := util.Val2Any[string](js.Global().Get("JSON").Call("stringify", arg))
@@ -143,7 +143,7 @@ func ed25519ObjFromJSON(arg js.Value) lib.Ed25519KP {
 
 	//Attempt to derive a keypair object from the JSON
 	//Only replace the original object if there are no errors
-	parsed, err := lib.Ed25519FromJSON(strClean)
+	parsed, err := crypto.Ed25519FromJSON(strClean)
 	if err == nil {
 		obj = parsed
 	}
