@@ -3,10 +3,11 @@ package tests
 import (
 	"encoding/base64"
 	"fmt"
+	"hash"
 	"testing"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/sha3"
+	"golang.org/x/crypto/blake2b"
 	cc "wraith.me/clientside_crypto/crypto"
 )
 
@@ -17,7 +18,8 @@ func TestEd25519HKDF(t *testing.T) {
 
 	//Set a custom hash function
 	//cc.HKDFHashFunc = md5.New
-	cc.HKDFHashFunc = sha3.New256
+	//cc.HKDFHashFunc = sha3.New256
+	cc.HKDFHashFunc = func() hash.Hash { b, _ := blake2b.New384(nil); return b }
 
 	//Run HKDF
 	privkey, err := cc.Ed25519HKDF(passphrase, salt[:], nil)
