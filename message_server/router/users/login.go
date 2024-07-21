@@ -213,8 +213,8 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 	}
 
 	//Check if a valid user was returned
-	if hit == nil {
-		httpu.HttpErrorAsJson(w, fmt.Errorf("no record found"), _PF_NO_USER)
+	if tmp == nil {
+		httpu.HttpErrorAsJson(w, fmt.Errorf("no user found"), _PF_NO_USER)
 		return false
 	}
 	*hit = *tmp
