@@ -3,11 +3,11 @@ package router
 import (
 	"fmt"
 	"net/http"
-	"os/user"
 
 	"github.com/go-chi/chi/v5"
 	"wraith.me/message_server/mw"
 	"wraith.me/message_server/obj/token"
+	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util/httpu"
 )
 
@@ -38,7 +38,7 @@ func (atr AuthTestRouter) Router() func(r chi.Router) {
 	successHandler := func(w http.ResponseWriter, r *http.Request) {
 		//Get the user object from the auth middleware
 		user := r.Context().Value(mw.AuthCtxUserKey).(user.User)
-		fmt.Printf("user: %s\n", user)
+		fmt.Printf("user: %v\n", user)
 
 		httpu.HttpOkAsJson(w, fmt.Sprintf("authentication succeeded for user %s", r.Header.Get(mw.AuthHttpHeaderSubject)), http.StatusOK)
 	}
