@@ -107,24 +107,45 @@ func InRange(num int64, min int64, max int64) bool {
 	return num >= min && num <= max
 }
 
-// Adapter for `MapStructure` that hooks `TextUnmarshaller` for custom types.
-func MSTextUnmarshal[T any](input map[string]interface{}, output *T) error {
-	//Setup the decoder config
+// Backend function for `MSTextMarshal()` and `MSTextUnmarshal()`
+func msMarshaller[T any, U any](input T, output *U, tagName string, hookFunc mapstructure.DecodeHookFunc) error {
+	// Setup the decoder config
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,
 		Result:           output,
 		WeaklyTypedInput: true,
-		DecodeHook:       mapstructure.TextUnmarshallerHookFunc(),
+		TagName:          tagName,
+		DecodeHook:       hookFunc,
 	}
 
-	//Setup the decoder
+	// Setup the decoder
 	decoder, err := mapstructure.NewDecoder(config)
 	if err != nil {
 		return err
 	}
 
-	//Decode the map to the given struct
+	// Decode the input to the output pointer
 	return decoder.Decode(input)
+}
+
+// Struct -> Map adapter for `MapStructure` that recursively marshalls embedded structs.
+func MSRecursiveMarshal[T any](input T, output *map[string]interface{}, tagName string) error {
+	return msMarshaller(input, output, tagName, mapstructure.RecursiveStructToMapHookFunc())
+}
+
+// Struct -> Map adapter for `MapStructure` that hooks `TextMarshaller` for custom types.
+func MSTextMarshal[T any](input T, output *map[string]interface{}, tagName string) error {
+	return msMarshaller(input, output, tagName, mapstructure.TextUnmarshallerHookFunc())
+}
+
+// Map -> Struct adapter for `MapStructure` that recursively marshalls embedded maps.
+func MSRecursiveUnmarshal[T any](input map[string]interface{}, output *T, tagName string) error {
+	return msMarshaller(input, output, tagName, mapstructure.RecursiveStructToMapHookFunc())
+}
+
+// Map -> Struct adapter for `MapStructure` that hooks `TextUnmarshaller` for custom types.
+func MSTextUnmarshal[T any](input map[string]interface{}, output *T, tagName string) error {
+	return msMarshaller(input, output, tagName, mapstructure.TextUnmarshallerHookFunc())
 }
 
 /*

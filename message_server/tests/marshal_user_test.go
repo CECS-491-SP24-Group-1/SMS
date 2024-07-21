@@ -69,3 +69,25 @@ func TestUser2JSON(t *testing.T) {
 	fmt.Printf("IN:  %v\n", *usr)
 	fmt.Printf("OUT: %v\n", out)
 }
+
+func TestUser2MS(t *testing.T) {
+	//Create a mock user
+	user := user.NewUserSimple("johndoe", "johndoe@example.com")
+	fmt.Printf("struct: %v\n", user)
+
+	//Marshal to a map using mapstructure
+	ms := make(map[string]interface{})
+	if err := util.MSTextMarshal(*user, &ms, "bson"); err != nil {
+		t.Fatal(err)
+	}
+
+	//Redact some fields as a test
+	ms["id"] = ms["UUID"]
+	delete(ms, "UUID")
+	delete(ms, "flags")
+	delete(ms, "last_ip")
+	delete(ms, "options")
+
+	//Emit the map to stdout
+	fmt.Printf("mapstr: %v\n", ms)
+}

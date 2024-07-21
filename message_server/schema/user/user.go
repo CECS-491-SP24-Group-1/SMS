@@ -20,7 +20,7 @@ import (
 // Represents a user of the system. A user is a type of entity.
 type User struct {
 	//User extends the abstract entity type.
-	obj.Entity `bson:",inline"`
+	obj.Entity `json:",inline" bson:",inline,squash"`
 
 	/*
 		The username of the user. Can be changed at any time, but mustn't

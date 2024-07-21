@@ -95,6 +95,11 @@ func (id UUID) MarshalBSONValue() (bsontype.Type, []byte, error) {
 	return bson.TypeBinary, bsoncore.AppendBinary(nil, bson.TypeBinaryUUID, id.UUID[:]), nil
 }
 
+// MarshalText implements the text marshaller method.
+func (id UUID) MarshalText() ([]byte, error) {
+	return []byte(id.String()), nil
+}
+
 // UnmarshalBSONValue implements the bson.ValueUnmarshaler interface.
 func (id *UUID) UnmarshalBSONValue(t bsontype.Type, raw []byte) error {
 	//Ensure the incoming type is correct
@@ -110,6 +115,17 @@ func (id *UUID) UnmarshalBSONValue(t bsontype.Type, raw []byte) error {
 	copy(id.UUID[:], data)
 
 	//No errors, so return nil
+	return nil
+}
+
+// UnmarshalText implements the text unmarshaller method.
+func (id *UUID) UnmarshalText(text []byte) error {
+	val := string(text)
+	tmp, err := uuid.Parse(val)
+	if err != nil {
+		return err
+	}
+	*id = UUID{tmp}
 	return nil
 }
 

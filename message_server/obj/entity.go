@@ -12,7 +12,7 @@ server. Each entity has an ID, type flag, and a public key.
 */
 type Entity struct {
 	//Entity extends the abstract identifiable type.
-	Identifiable `bson:",inline"`
+	Identifiable `json:",inline" bson:",inline,squash"`
 
 	//The entity's public key. This must correspond to a private key held by the entity.
 	Pubkey crypto.Pubkey `json:"pubkey" bson:"pubkey"`

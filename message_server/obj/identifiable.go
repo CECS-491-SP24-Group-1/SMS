@@ -12,7 +12,7 @@ can include users, servers, messages, challenges, and so on.
 */
 type Identifiable struct {
 	//The ID of the object.
-	ID util.UUID `json:"id" bson:"_id"`
+	ID util.UUID `json:"id,inline" bson:"_id,inline,squash"`
 
 	//The type of item this object is.
 	Type IdType `json:"type" bson:"type"`

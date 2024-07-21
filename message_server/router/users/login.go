@@ -186,7 +186,7 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 	}
 
 	//Unmarshal the mapped request body into a user object
-	if err := util.MSTextUnmarshal(reqBody, user); err != nil {
+	if err := util.MSTextUnmarshal(reqBody, user, ""); err != nil {
 		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
 		return false
 	}
