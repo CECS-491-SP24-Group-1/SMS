@@ -12,10 +12,10 @@ import (
 
 // Represents a response that is sent back to the user after an API call.
 type HttpResponse[T any] struct {
-	//The HTTP code to emit; default `200`.
+	//The HTTP code to emit; default `200` for info/ok/payload, `500` for error.
 	Code int `json:"code"`
 
-	//The status message to emit; default: <http response description>.
+	//The status message to emit; default: `<http response description>`.
 	Status string `json:"status,omitempty"`
 
 	//The description of the response; default: `""`.
@@ -24,7 +24,7 @@ type HttpResponse[T any] struct {
 	//The errors of the server response, if any; default: `[]`.
 	Errors []string `json:"errors,omitempty"` //https://github.com/golang/go/issues/5161
 
-	//The payloads of the server response, if any; default: `nil`.
+	//The payloads of the server response, if any; default: `[]`.
 	Payload []T `json:"payload,omitempty"`
 }
 
