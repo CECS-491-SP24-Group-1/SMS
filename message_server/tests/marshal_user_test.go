@@ -87,6 +87,7 @@ func TestUser2MS(t *testing.T) {
 	delete(ms, "flags")
 	delete(ms, "last_ip")
 	delete(ms, "options")
+	delete(ms, "tokens")
 
 	//Emit the map to stdout
 	fmt.Printf("mapstr: %v\n", ms)

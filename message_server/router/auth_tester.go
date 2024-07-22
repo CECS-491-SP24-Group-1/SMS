@@ -1,6 +1,7 @@
 package router
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -8,7 +9,7 @@ import (
 	"wraith.me/message_server/mw"
 	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/schema/user"
-	"wraith.me/message_server/util/httpu"
+	"wraith.me/message_server/util"
 )
 
 //
@@ -38,9 +39,35 @@ func (atr AuthTestRouter) Router() func(r chi.Router) {
 	successHandler := func(w http.ResponseWriter, r *http.Request) {
 		//Get the user object from the auth middleware
 		user := r.Context().Value(mw.AuthCtxUserKey).(user.User)
-		fmt.Printf("user: %v\n", user)
 
-		httpu.HttpOkAsJson(w, fmt.Sprintf("authentication succeeded for user %s", r.Header.Get(mw.AuthHttpHeaderSubject)), http.StatusOK)
+		//Marshal to a map using mapstructure
+		ms := make(map[string]interface{})
+		if err := util.MSTextMarshal(user, &ms, "bson"); err != nil {
+			util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
+			return
+		}
+
+		//Redact some fields as a test
+		ms["id"] = ms["UUID"]
+		delete(ms, "UUID")
+		delete(ms, "flags")
+		delete(ms, "last_ip")
+		delete(ms, "options")
+		delete(ms, "tokens")
+
+		//Marshal the map to JSON
+		jsons, err := json.Marshal(&ms)
+		if err != nil {
+			util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
+		}
+
+		fmt.Printf("jsons: `%s\n", jsons)
+
+		//Respond to the user
+		util.PayloadOkResponse(
+			fmt.Sprintf("authentication succeeded for user with ID %s", user.ID),
+			string(jsons),
+		).Respond(w)
 	}
 
 	//Create the router to respond to the route

@@ -124,6 +124,29 @@ func PayloadOkResponse[T any](desc string, payloads ...T) HttpResponse[T] {
 // -- Methods
 // Emits the JSON encoding of this object, along with any errors that occurred.
 func (r HttpResponse[T]) JSON() ([]byte, error) {
+	//Get the inner type of the payload and don't escape it if it's JSON
+	stringPayloads, ok := any(r.Payloads).([]string) //This
+	if ok {
+		//Marshal the strings to raw JSON
+		jsons := make([]json.RawMessage, len(r.Payloads))
+		for i := range jsons {
+			jsons[i] = json.RawMessage(stringPayloads[i])
+		}
+
+		//Create a new object from the existing one
+		obj := HttpResponse[json.RawMessage]{
+			Code:     r.Code,
+			Status:   r.Status,
+			Desc:     r.Desc,
+			Errors:   r.Errors,
+			Payloads: jsons,
+		}
+
+		//Marshal the new object as usual
+		return json.Marshal(&obj)
+	}
+
+	//Marshal normally for every other type
 	return json.Marshal(r)
 }
 
