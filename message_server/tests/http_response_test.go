@@ -19,7 +19,21 @@ func TestHttpErrRes(t *testing.T) {
 	fmt.Printf("%s\n", resp.MustJSON())
 }
 
-func TestHttpPayloadResp(t *testing.T) {
+func TestHttpInfoRes(t *testing.T) {
+	resp := util.InfoResponse(
+		201,
+		"something was created",
+	)
+	fmt.Printf("%s\n", resp.MustJSON())
+}
+func TestHttpOkRes(t *testing.T) {
+	resp := util.OkResponse(
+		"something good happened",
+	)
+	fmt.Printf("%s\n", resp.MustJSON())
+}
+
+func TestHttpPayloadRes(t *testing.T) {
 	resp := util.PayloadResponse(200, "many foos",
 		foo1,
 		foo2,
@@ -29,7 +43,7 @@ func TestHttpPayloadResp(t *testing.T) {
 }
 
 // https://www.digitalocean.com/community/tutorials/how-to-make-an-http-server-in-go
-func TestHttpResponder(t *testing.T) {
+func TestHttpListenRes(t *testing.T) {
 	//Setup handler
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		util.PayloadResponse(0, "this is a test", foo1, foo2, foo3).Respond(w)

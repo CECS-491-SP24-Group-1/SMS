@@ -69,7 +69,7 @@ func InfoResponse(code int, desc string) HttpResponse[bool] {
 	//Construct and return the response object
 	return HttpResponse[bool]{
 		Code:   code,
-		Status: "ok",
+		Status: http.StatusText(code),
 		Desc:   desc,
 	}
 }
