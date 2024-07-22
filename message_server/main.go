@@ -138,10 +138,10 @@ func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 	//User routes
 	r.Mount("/users", users.UserRoutes(cfg, env))
 
-	//Challenge routes; protected by auth middleware (post_signup and users only)
+	//Challenge routes
 	r.Group(func(r chi.Router) {
-		authScopes := []token.TokenScope{token.TokenScopePOSTSIGNUP, token.TokenScopeUSER}
-		r.Use(mw.NewAuthMiddleware(authScopes))
+		//authScopes := []token.TokenScope{token.TokenScopePOSTSIGNUP, token.TokenScopeUSER}
+		//r.Use(mw.NewAuthMiddleware(authScopes))
 		r.Mount("/challenges", challenges.ChallengeRoutes(env))
 	})
 

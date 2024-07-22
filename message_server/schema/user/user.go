@@ -55,6 +55,8 @@ type User struct {
 	Tokens []token.Token `json:"-" bson:"tokens"`
 }
 
+//-- Constructors
+
 // Creates a new user object.
 func NewUser(
 	id util.UUID,
@@ -100,6 +102,42 @@ func NewUserSimple(username string, email string) *User {
 		DefaultUserOptions(),
 	)
 }
+
+//-- Methods
+
+// Marks a user's email as verified.
+func (u *User) MarkEmailVerified() {
+	u.Flags.EmailVerified = true
+	if u.Flags.EmailVerified && u.Flags.PubkeyVerified {
+		u.Flags.ShouldPurge = false
+	}
+}
+
+// Marks a user's public key as verified.
+func (u *User) MarkPKVerified() {
+	u.Flags.PubkeyVerified = true
+	if u.Flags.EmailVerified && u.Flags.PubkeyVerified {
+		u.Flags.ShouldPurge = false
+	}
+}
+
+// Unmarks a user's email as verified.
+func (u *User) UnmarkEmailVerified() {
+	u.Flags.EmailVerified = false
+	if !u.Flags.ShouldPurge {
+		u.Flags.ShouldPurge = true
+	}
+}
+
+// Unmarks a user's public key as verified.
+func (u *User) UnmarkPKVerified() {
+	u.Flags.PubkeyVerified = false
+	if !u.Flags.ShouldPurge {
+		u.Flags.ShouldPurge = true
+	}
+}
+
+//-- Embedded class definitions
 
 //
 //-- CLASS: UserFlags

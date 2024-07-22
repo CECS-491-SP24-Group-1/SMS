@@ -2,18 +2,12 @@ package challenges
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/qiniu/qmgo"
-	"github.com/redis/go-redis/v9"
 	"wraith.me/message_server/config"
-	"wraith.me/message_server/db"
-	cr "wraith.me/message_server/redis"
+	"wraith.me/message_server/schema/user"
 )
 
-// Shared MongoDB client across the entire package.
-var mcl *qmgo.Client
-
-// Shared Redis client across the entire package.
-var rcl *redis.Client
+// Shared user collection across the entire package.
+var uc *user.UserCollection
 
 // Shared env object across the entire package
 var env *config.Env
@@ -24,13 +18,15 @@ func ChallengeRoutes(envv *config.Env) chi.Router {
 	r := chi.NewRouter()
 
 	//Set the singletons for the entire package
-	mcl = db.GetInstance().GetClient()
-	rcl = cr.GetInstance().GetClient()
+	uc = user.InitCollection()
 	env = envv
 
 	//Add routes
-	r.Get("/{id}/solve", SolveEChallengeRoute)
-	r.Get("/{id}/status", GetChallengeRoute)
+	r.Get("/email/{ctext}", SolveEChallengeRoute)
+
+	//Add routes
+	//r.Get("/{id}/solve", SolveEChallengeRoute)
+	//r.Get("/{id}/status", GetChallengeRoute)
 
 	//Return the router
 	return r

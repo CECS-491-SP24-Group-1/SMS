@@ -232,6 +232,16 @@ Performs post-signup operations on the newly created user object, such
 as persistence to the database and generation of challenges.
 */
 func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User, ucoll *user.UserCollection) error {
+	//Issue a PASETO challenge for confirming the user's email
+	paseto := challenge.NewEmailChallenge(
+		env.ID,
+		usr.ID,
+		challenge.CPurposeCONFIRM,
+		time.Now().Add(24*time.Hour),
+		usr.Email,
+	).Encrypt(env.SK)
+	fmt.Printf("paseto: `%s`\n", paseto)
+
 	//Step 1: Issue a token that's good for the duration of the challenge window; otherwise the routes won't be allowed
 	tempToken := token.NewToken(usr.ID, ip_addr.HttpIP2NetIP(r.RemoteAddr), token.TokenScopePOSTSIGNUP, usr.Flags.PurgeBy)
 	fmt.Printf("TOK: '%s'\n", tempToken.ToB64())
