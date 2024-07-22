@@ -14,7 +14,6 @@ import (
 	c "wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
-	"wraith.me/message_server/util/httpu"
 )
 
 const (
@@ -95,7 +94,10 @@ func RequestLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	).Encrypt(env.SK)
 
 	//Send the token to the user
-	httpu.HttpOkAsJson(w, loginTok, http.StatusOK)
+	util.PayloadOkResponse(
+		"",
+		loginTok,
+	).Respond(w)
 }
 
 /*
@@ -115,7 +117,10 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Verify the signature against the token; this proves ownership of the private key
 	ok := ccrypto.Verify(loginVReq.PK, []byte(loginVReq.Token), loginVReq.Signature)
 	if !ok {
-		httpu.HttpErrorAsJson(w, fmt.Errorf("verification failure for PK %s against provided message and signature", loginVReq.PK.Fingerprint()), http.StatusForbidden)
+		util.ErrResponse(
+			http.StatusForbidden,
+			fmt.Errorf("verification failure for PK %s against provided message and signature", loginVReq.PK.Fingerprint()),
+		).Respond(w)
 		return
 	}
 
@@ -130,15 +135,14 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 		loginVReq.PK,
 	)
 	if err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusForbidden)
+		util.ErrResponse(http.StatusForbidden, err).Respond(w)
 		return
 	}
 
 	//TODO: mark user as verified and issue a login token here
 
 	fmt.Printf("verif_pk: %+v\n", loginTok)
-	resp := fmt.Sprintf("REQUEST S2: %+v", loginVReq)
-	httpu.HttpOkAsJson(w, resp, http.StatusOK)
+	util.PayloadOkResponse("", loginVReq).Respond(w)
 }
 
 // Contains the common FoC that is to be ran before any login request.
@@ -146,7 +150,7 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 	//Get the request body and attempt to parse from JSON
 	var reqBody map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
+		util.ErrResponse(_PF_PARSE_ERR, err).Respond(w)
 		return false
 	}
 
@@ -175,19 +179,19 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 
 	//Error out if any required field is missing
 	if len(missingErrors) > 0 {
-		httpu.HttpMultipleErrorsAsJson(w, missingErrors, _PF_PARSE_ERR)
+		util.ErrResponse(_PF_PARSE_ERR, missingErrors...).Respond(w)
 		return false
 	}
 
 	//Ensure the incoming data is valid
 	if err := ensureCorrectIdAndPKFmt(reqId, reqPK, reqSig); err != nil {
-		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
+		util.ErrResponse(_PF_PARSE_ERR, err).Respond(w)
 		return false
 	}
 
 	//Unmarshal the mapped request body into a user object
 	if err := util.MSTextUnmarshal(reqBody, user, ""); err != nil {
-		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
+		util.ErrResponse(_PF_PARSE_ERR, err).Respond(w)
 		return false
 	}
 
@@ -208,13 +212,16 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 	//Ensure the claims map to an existing user in the database
 	tmp, err := ensureExistantUser(uc, lu, r.Context())
 	if err != nil {
-		httpu.HttpErrorAsJson(w, err, _PF_PARSE_ERR)
+		util.ErrResponse(_PF_PARSE_ERR, err).Respond(w)
 		return false
 	}
 
 	//Check if a valid user was returned
 	if tmp == nil {
-		httpu.HttpErrorAsJson(w, fmt.Errorf("no user found"), _PF_NO_USER)
+		util.ErrResponse(
+			_PF_NO_USER,
+			fmt.Errorf("no user found for id %s", lu.ID),
+		).Respond(w)
 		return false
 	}
 	*hit = *tmp
@@ -230,7 +237,7 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 		errors = append(errors, fmt.Errorf("unverified public key"))
 	}
 	if len(errors) > 0 {
-		httpu.HttpMultipleErrorsAsJson(w, errors, _PF_UNAUTHORIZED)
+		util.ErrResponse(_PF_UNAUTHORIZED, errors...).Respond(w)
 		return false
 	}
 
@@ -298,15 +305,15 @@ func ensureExistantUser(coll *user.UserCollection, user loginUser, ctx context.C
 	}
 
 	//Run the request and collect all hits; critical errors may be reported from this function so handle appropriately
-	var hits []existingUserResult
-	err := coll.Aggregate(ctx, agg).All(&hits)
+	var hit existingUserResult
+	err := coll.Aggregate(ctx, agg).One(&hit)
 	if err != nil {
 		return nil, err
 	}
 
 	//Check if there was a hit
-	if len(hits) > 0 {
-		return &hits[0], nil
+	if hit.ID != util.NilUUID() {
+		return &hit, nil
 	}
 
 	//Return nil for both since there was no record found, but no errors otherwise

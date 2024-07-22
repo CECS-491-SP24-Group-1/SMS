@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 //
@@ -25,7 +26,7 @@ type HttpResponse[T any] struct {
 	Errors []string `json:"errors,omitempty"` //https://github.com/golang/go/issues/5161
 
 	//The payloads of the server response, if any; default: `[]`.
-	Payload []T `json:"payload,omitempty"`
+	Payloads []T `json:"payloads,omitempty"`
 }
 
 // -- Constructors
@@ -80,7 +81,7 @@ func OkResponse(desc string) HttpResponse[bool] {
 }
 
 // Creates a new payload response from a single payload object or multiple.
-func PayloadResponse[T any](code int, desc string, payload ...T) HttpResponse[T] {
+func PayloadResponse[T any](code int, desc string, payloads ...T) HttpResponse[T] {
 	//Determine the correct response code
 	if code <= 0 {
 		code = http.StatusOK
@@ -88,17 +89,22 @@ func PayloadResponse[T any](code int, desc string, payload ...T) HttpResponse[T]
 
 	//Create the status message
 	pstr := "payload"
-	if len(payload) > 1 {
+	if len(payloads) > 1 {
 		pstr += "s"
 	}
-	status := fmt.Sprintf("%s; %d %s", http.StatusText(code), len(payload), pstr)
+	status := fmt.Sprintf("%s; %d %s", http.StatusText(code), len(payloads), pstr)
+
+	//Add the description if it's missing
+	if strings.TrimSpace(desc) == "" {
+		desc = fmt.Sprintf("%T; x%d", payloads, len(payloads))
+	}
 
 	//Create the response
 	resp := HttpResponse[T]{
-		Code:    code,
-		Status:  status,
-		Desc:    desc,
-		Payload: payload,
+		Code:     code,
+		Status:   status,
+		Desc:     desc,
+		Payloads: payloads,
 	}
 
 	//Emit the full response
@@ -106,13 +112,13 @@ func PayloadResponse[T any](code int, desc string, payload ...T) HttpResponse[T]
 }
 
 // Creates a new error payload response from a single payload object or multiple.
-func PayloadErrResponse[T any](desc string, payload ...T) HttpResponse[T] {
-	return PayloadResponse[T](http.StatusInternalServerError, desc, payload...)
+func PayloadErrResponse[T any](desc string, payloads ...T) HttpResponse[T] {
+	return PayloadResponse[T](http.StatusInternalServerError, desc, payloads...)
 }
 
 // Creates a new ok payload response from a single payload object or multiple.
-func PayloadOkResponse[T any](desc string, payload ...T) HttpResponse[T] {
-	return PayloadResponse[T](http.StatusOK, desc, payload...)
+func PayloadOkResponse[T any](desc string, payloads ...T) HttpResponse[T] {
+	return PayloadResponse[T](http.StatusOK, desc, payloads...)
 }
 
 // -- Methods

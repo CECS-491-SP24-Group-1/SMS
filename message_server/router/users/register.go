@@ -29,7 +29,6 @@ import (
 	"wraith.me/message_server/schema/user"
 	remailt "wraith.me/message_server/template/registration_email"
 	"wraith.me/message_server/util"
-	"wraith.me/message_server/util/httpu"
 )
 
 /*
@@ -70,14 +69,14 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Read in the request body to a string
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
+		util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
 		return
 	}
 
 	//Validate the request body against the registration JSON schema
 	result, err := gojsonschema.Validate(schema.Register, gojsonschema.NewBytesLoader(bodyBytes))
 	if err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		util.ErrResponse(http.StatusBadRequest, err).Respond(w)
 		return
 	}
 	if !result.Valid() {
@@ -86,13 +85,13 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 		for i, err := range result.Errors() {
 			verrs[i] = fmt.Errorf(err.Description())
 		}
-		httpu.HttpMultipleErrorsAsJson(w, verrs, http.StatusBadRequest)
+		util.ErrResponse(http.StatusBadRequest, verrs...).Respond(w)
 		return
 	}
 
 	//Get the request body and attempt to parse to JSON
 	if err := json.NewDecoder(bytes.NewReader(bodyBytes)).Decode(&iuser); err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		util.ErrResponse(http.StatusBadRequest, err).Respond(w)
 		return
 	}
 
@@ -100,20 +99,20 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	//At this point, the incoming JSON was accepted, but fields may be missing or invalid
 	valid, verrs := iuser.validate(false)
 	if !valid {
-		httpu.HttpMultipleErrorsAsJson(w, verrs, http.StatusBadRequest)
+		util.ErrResponse(http.StatusBadRequest, verrs...).Respond(w)
 		return
 	}
 
 	//Decode the base64 public key to a byte array
 	decodedPK, err := base64.StdEncoding.DecodeString(iuser.Pubkey)
 	if err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		util.ErrResponse(http.StatusBadRequest, err).Respond(w)
 		return
 	}
 
 	//Ensure the user doesn't already exist in the database
 	if err := ensureNonexistantUser(uc, iuser, r.Context()); err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusBadRequest)
+		util.ErrResponse(http.StatusBadRequest, err).Respond(w)
 		return
 	}
 
@@ -134,7 +133,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Complete the post-signup steps, including challenge generation and issuance of a temporary token
 	if err := postSignup(w, r, user, uc); err != nil {
-		httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
+		util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
 		return
 	}
 }

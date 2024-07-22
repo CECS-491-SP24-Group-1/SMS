@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"wraith.me/message_server/util"
-	"wraith.me/message_server/util/httpu"
 )
 
 // Handles incoming requests made to `GET /challenges/{id}/get`.
@@ -16,7 +15,10 @@ func GetChallengeRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Return a 400 if the ID is not of the proper format
 	if !util.IsValidUUIDv7(cid) {
-		httpu.HttpErrorAsJson(w, fmt.Errorf("incorrect ID format; must be a UUIDv7"), http.StatusBadRequest)
+		util.ErrResponse(
+			http.StatusBadRequest,
+			fmt.Errorf("incorrect ID format; must be a UUIDv7"),
+		).Respond(w)
 		return
 	}
 

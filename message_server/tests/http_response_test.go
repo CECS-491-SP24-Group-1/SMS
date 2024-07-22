@@ -13,8 +13,8 @@ func TestHttpErrRes(t *testing.T) {
 	resp := util.ErrResponse(
 		0,
 		fmt.Errorf("error 1"),
-		fmt.Errorf("error 2"),
-		fmt.Errorf("error 3"),
+		//fmt.Errorf("error 2"),
+		//fmt.Errorf("error 3"),
 	)
 	fmt.Printf("%s\n", resp.MustJSON())
 }
@@ -34,7 +34,7 @@ func TestHttpOkRes(t *testing.T) {
 }
 
 func TestHttpPayloadRes(t *testing.T) {
-	resp := util.PayloadResponse(200, "many foos",
+	resp := util.PayloadResponse(200, "",
 		foo1,
 		foo2,
 		foo3,

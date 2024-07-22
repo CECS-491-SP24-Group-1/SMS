@@ -374,7 +374,7 @@
 				//Echo the status back to the user in the token status
 				const statusForm = document.getElementById("tokenStatus");
 				statusForm.classList.add(ok ? "good" : "bad");
-				statusForm.innerHTML = `${resp.status} - ${resp.desc}`;
+				statusForm.innerHTML = `${resp.status} - ${resp.errors}`;
 			});
 		}
 	</script>
@@ -444,11 +444,11 @@
 				s1StatusElem.classList.add(ok ? "good" : "bad");
 				if(ok){
 					s1StatusElem.innerHTML = `${resp.status}; token can be found below`;
-					loginTok = resp.desc;
+					loginTok = resp.payloads[0];
 					s1TokContainer.innerHTML = `${loginTok}`;
 				}
 				else {
-					s1StatusElem.innerHTML = splitErrors(resp.status, resp.desc);
+					s1StatusElem.innerHTML = splitErrors(resp.status, resp.errors);
 				}
 			});
 		}
@@ -509,11 +509,11 @@
 				s2StatusElem.classList.add(ok ? "good" : "bad");
 				if(ok){
 					s2StatusElem.innerHTML = `${resp.status}; token can be found below`;
-					let seshTok = resp.desc;
-					s2SeshTokenContainer.innerHTML = `${seshTok}`;
+					let seshTok = resp.payloads[0];
+					s2SeshTokenContainer.innerHTML = JSON.stringify(seshTok);
 				}
 				else {
-					s2StatusElem.innerHTML = splitErrors(resp.status, resp.desc);
+					s2StatusElem.innerHTML = splitErrors(resp.status, resp.errors);
 				}
 			});
 		}

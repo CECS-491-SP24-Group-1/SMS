@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"wraith.me/message_server/util"
-	"wraith.me/message_server/util/httpu"
 )
 
 /*
@@ -19,7 +18,10 @@ func SolveEChallengeRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Return a 400 if the ID is not of the proper format
 	if !util.IsValidUUIDv7(cid) {
-		httpu.HttpErrorAsJson(w, fmt.Errorf("incorrect ID format; must be a UUIDv7"), http.StatusBadRequest)
+		util.ErrResponse(
+			http.StatusBadRequest,
+			fmt.Errorf("incorrect ID format; must be a UUIDv7"),
+		).Respond(w)
 		return
 	}
 
@@ -27,14 +29,20 @@ func SolveEChallengeRoute(w http.ResponseWriter, r *http.Request) {
 		//Attempt to get the challenge from the database
 		challs, err := crud.GetChallengesById(mcl, rcl, r.Context(), util.UUIDFromString(cid))
 		if err != nil {
-			httpu.HttpErrorAsJson(w, err, http.StatusInternalServerError)
+			util.ErrResponse(
+				http.StatusInternalServerError,
+				err,
+			).Respond(w)
 			return
 		}
 		chall := challs[0]
 
 		//If the scope is not email, then reject the solve; this route is for solving email challenges only
 		if chall.Scope != ch.ChallengeScopeEMAIL {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("GET requests to the challenge solve route are for email-based challenges only"), http.StatusBadRequest)
+			util.ErrResponse(
+				http.StatusBadRequest,
+				fmt.Errorf("GET requests to the challenge solve route are for email-based challenges only"),
+			).Respond(w)
 			return
 		}
 	*/

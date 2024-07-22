@@ -16,7 +16,7 @@ import (
 	"wraith.me/message_server/obj/token"
 	cr "wraith.me/message_server/redis"
 	"wraith.me/message_server/schema/user"
-	"wraith.me/message_server/util/httpu"
+	"wraith.me/message_server/util"
 )
 
 var (
@@ -126,21 +126,30 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 
 		//Still no token? Deny the request since there's no token. The middleware stops here
 		if tok == "" {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
+			util.ErrResponse(
+				http.StatusUnauthorized,
+				fmt.Errorf("auth; %s", ErrAuthNoTokenFound),
+			).Respond(w)
 			return
 		}
 
 		//Get a byte array from the token and reject the token if the size is incorrect
 		tbytes, derr := token.Base64DecodeTok(tok)
 		if derr != nil || len(tbytes) != token.TOKEN_SIZE_BYTES {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
+			util.ErrResponse(
+				http.StatusUnauthorized,
+				fmt.Errorf("auth; %s", ErrAuthBadTokenFormat),
+			).Respond(w)
 			return
 		}
 
 		//Attempt to derive a token object from the input bytes
 		tokObj := token.TokenFromBytes(tbytes)
 		if tokObj == nil {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
+			util.ErrResponse(
+				http.StatusUnauthorized,
+				fmt.Errorf("auth; %s", ErrAuthBadTokenFormat),
+			).Respond(w)
 			return
 		}
 
@@ -151,13 +160,19 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			checks can now occur before the database is queried for the subject's tokens.
 		*/
 		if !tokObj.Validate(true) {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthBadTokenFormat), http.StatusUnauthorized)
+			util.ErrResponse(
+				http.StatusUnauthorized,
+				fmt.Errorf("auth; %s", ErrAuthBadTokenFormat),
+			).Respond(w)
 			return
 		}
 
 		//Check if the token has expired
 		if tokExp := tokObj.GetExpiry(); tokObj.Expire && time.Now().After(tokExp) {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthExpiredToken), http.StatusUnauthorized)
+			util.ErrResponse(
+				http.StatusUnauthorized,
+				fmt.Errorf("auth; %s", ErrAuthExpiredToken),
+			).Respond(w)
 			return
 		}
 
@@ -168,7 +183,10 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			ascending order just after initialization.
 		*/
 		if !(tokObj.Scope >= amw.allowedScopes[0]) {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthUnauthorized), http.StatusUnauthorized)
+			util.ErrResponse(
+				http.StatusUnauthorized,
+				fmt.Errorf("auth; %s", ErrAuthUnauthorized),
+			).Respond(w)
 			return
 		}
 
@@ -185,7 +203,10 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		query := bson.D{{Key: "tokens", Value: bson.D{{Key: "$in", Value: bson.A{tok}}}}}
 		err := amw.ucoll.Find(r.Context(), query).One(&user)
 		if err != nil {
-			httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthGeneric), http.StatusUnauthorized)
+			util.ErrResponse(
+				http.StatusUnauthorized,
+				fmt.Errorf("auth; %s", ErrAuthGeneric),
+			).Respond(w)
 			return
 		}
 
@@ -197,7 +218,9 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 				Check if the subject's token list includes the incoming token. If this check
 				passes, the client is let through and the middleware finishes without error.
 			if !slices.Contains(subjectTokens, tok) {
-				httpu.HttpErrorAsJson(w, fmt.Errorf("auth; %s", ErrAuthNoTokenFound), http.StatusUnauthorized)
+				util.ErrResponse(http.StatusUnauthorized,
+					fmt.Errorf("auth; %s", ErrAuthNoTokenFound),
+				).Respond(w)
 				return
 			}
 		*/
