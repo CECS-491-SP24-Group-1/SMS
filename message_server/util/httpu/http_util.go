@@ -8,31 +8,31 @@ import (
 	"wraith.me/message_server/obj"
 )
 
-// Deprecated: Use `obj.HttpResponse` instead.
+// Deprecated: Use `util.HttpResponse` instead.
 // Writes plaintext to an HTTP response and issues a `500` status code.
 func HttpErrorSimple(w http.ResponseWriter, msg string) {
 	TextualResponse(w, []byte(msg), http.StatusInternalServerError, "", "")
 }
 
-// Deprecated: Use `obj.HttpResponse` instead.
+// Deprecated: Use `util.HttpResponse` instead.
 // Writes JSON to a request and issues a `500` status code.
 func HttpErrorJson(w http.ResponseWriter, json string) {
 	TextualResponse(w, []byte(json), http.StatusInternalServerError, "application/json", "")
 }
 
-// Deprecated: Use `obj.HttpResponse` instead.
+// Deprecated: Use `util.HttpResponse` instead.
 // Writes plaintext to an HTTP response and issues a `200` status code.
 func HttpOkSimple(w http.ResponseWriter, msg string) {
 	TextualResponse(w, []byte(msg), http.StatusOK, "", "")
 }
 
-// Deprecated: Use `obj.HttpResponse` instead.
+// Deprecated: Use `util.HttpResponse` instead.
 // Writes JSON to a request and issues a `200` status code.
 func HttpOkJson(w http.ResponseWriter, json string) {
 	TextualResponse(w, []byte(json), http.StatusOK, "application/json", "")
 }
 
-// Deprecated: Use `obj.HttpResponse` instead.
+// Deprecated: Use `util.HttpResponse` instead.
 // Issues an HTTP error response as JSON.
 func HttpErrorAsJson(w http.ResponseWriter, err error, code int) {
 	//Ensure the code is valid
@@ -58,7 +58,7 @@ func HttpErrorAsJson(w http.ResponseWriter, err error, code int) {
 	}
 }
 
-// Deprecated: Use `obj.HttpResponse` instead.
+// Deprecated: Use `util.HttpResponse` instead.
 // Issues an HTTP error response as JSON.
 func HttpMultipleErrorsAsJson(w http.ResponseWriter, errs []error, code int) {
 	//Ensure the code is valid
@@ -90,7 +90,7 @@ func HttpMultipleErrorsAsJson(w http.ResponseWriter, errs []error, code int) {
 	}
 }
 
-// Deprecated: Use `obj.HttpResponse` instead.
+// Deprecated: Use `util.HttpResponse` instead.
 // Issues an HTTP info response as JSON.
 func HttpOkAsJson(w http.ResponseWriter, msg string, code int) {
 	//Ensure the code is valid
@@ -116,7 +116,7 @@ func HttpOkAsJson(w http.ResponseWriter, msg string, code int) {
 	}
 }
 
-// Deprecated: Use `obj.HttpResponse` instead.
+// Deprecated: Use `util.HttpResponse` instead.
 // Utility to write response text to an HTTP response object.
 func TextualResponse(w http.ResponseWriter, payload []byte, code int, mime string, encoding string) {
 	if mime == "" {

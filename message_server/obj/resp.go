@@ -4,6 +4,7 @@ package obj
 //-- CLASS: Response
 //
 
+// Deprecated: Use `util.HttpResponse` instead.
 /*
 Represents a status message that's returned to a client by the server.
 This is usually done if the server wants to send feedback along with
@@ -24,6 +25,7 @@ type Response struct {
 //-- CLASS: MultiResponse
 //
 
+// Deprecated: Use `util.HttpResponse` instead.
 /*
 Represents a status message that's returned to a client by the server.
 This response is like a regular `Response`, but allows for multiple

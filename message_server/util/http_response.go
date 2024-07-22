@@ -1,4 +1,4 @@
-package obj
+package util
 
 import (
 	"encoding/json"

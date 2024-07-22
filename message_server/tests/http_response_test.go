@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"wraith.me/message_server/obj"
+	"wraith.me/message_server/util"
 )
 
 func TestHttpErrRes(t *testing.T) {
-	resp := obj.ErrResponse(
+	resp := util.ErrResponse(
 		0,
 		fmt.Errorf("error 1"),
 		fmt.Errorf("error 2"),
@@ -20,7 +20,7 @@ func TestHttpErrRes(t *testing.T) {
 }
 
 func TestHttpPayloadResp(t *testing.T) {
-	resp := obj.PayloadResponse(200, "many foos",
+	resp := util.PayloadResponse(200, "many foos",
 		foo1,
 		foo2,
 		foo3,
@@ -32,7 +32,7 @@ func TestHttpPayloadResp(t *testing.T) {
 func TestHttpResponder(t *testing.T) {
 	//Setup handler
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		obj.PayloadResponse(0, "this is a test", foo1, foo2, foo3).Respond(w)
+		util.PayloadResponse(0, "this is a test", foo1, foo2, foo3).Respond(w)
 	}
 
 	//Setup a timeout
