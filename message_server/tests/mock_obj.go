@@ -11,10 +11,10 @@ import (
 
 // Define the object
 type Foo struct {
-	ID            util.UUID `bson:"_id"`
-	Name          string    `bson:"name"`
-	Birthday      time.Time `bson:"birthday"`
-	FavoriteFoods []string  `bson:"favorite_foods"`
+	ID            util.UUID `bson:"_id" json:"_id"`
+	Name          string    `bson:"name" json:"name"`
+	Birthday      time.Time `bson:"birthday" json:"birthday"`
+	FavoriteFoods []string  `bson:"favorite_foods" json:"favorite_foods"`
 }
 
 func fooeq(a Foo, b Foo) bool {

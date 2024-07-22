@@ -109,7 +109,7 @@ func InRange(num int64, min int64, max int64) bool {
 
 // Backend function for `MSTextMarshal()` and `MSTextUnmarshal()`
 func msMarshaller[T any, U any](input T, output *U, tagName string, hookFunc mapstructure.DecodeHookFunc) error {
-	// Setup the decoder config
+	//Setup the decoder config
 	config := &mapstructure.DecoderConfig{
 		Metadata:         nil,
 		Result:           output,
@@ -118,13 +118,13 @@ func msMarshaller[T any, U any](input T, output *U, tagName string, hookFunc map
 		DecodeHook:       hookFunc,
 	}
 
-	// Setup the decoder
+	//Setup the decoder
 	decoder, err := mapstructure.NewDecoder(config)
 	if err != nil {
 		return err
 	}
 
-	// Decode the input to the output pointer
+	//Decode the input to the output pointer
 	return decoder.Decode(input)
 }
 
