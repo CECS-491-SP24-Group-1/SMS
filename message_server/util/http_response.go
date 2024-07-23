@@ -124,8 +124,9 @@ func PayloadOkResponse[T any](desc string, payloads ...T) HttpResponse[T] {
 // -- Methods
 // Emits the JSON encoding of this object, along with any errors that occurred.
 func (r HttpResponse[T]) JSON() ([]byte, error) {
-	//Get the inner type of the payload and don't escape it if it's JSON
-	stringPayloads, ok := any(r.Payloads).([]string) //This
+	//Get the inner type of the payload and don't escape it if it's a string
+	//TODO: might want to use in conjunction with a bool and/or `json.Valid([]byte(payloads[0]))`
+	stringPayloads, ok := any(r.Payloads).([]string)
 	if ok {
 		//Marshal the strings to raw JSON
 		jsons := make([]json.RawMessage, len(r.Payloads))
