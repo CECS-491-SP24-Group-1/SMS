@@ -81,8 +81,6 @@ func (t CToken) Encrypt(key ccrypto.Privkey) string {
 	token.SetString(_CHALL_CPURPOSE, t.Purpose.String()) //Challenge purpose
 	token.SetString(_CHALL_CLAIM, t.Claim)               //Challenge claim
 
-	fmt.Printf("%s\n", token.ClaimsJSON())
-
 	//Encrypt the token
 	return token.V4Encrypt(edsk2PasetoSK(key), nil)
 }

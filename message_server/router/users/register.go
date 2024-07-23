@@ -233,7 +233,6 @@ func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User) error {
 		time.Now().Add(24*time.Hour),
 		usr.Email,
 	).Encrypt(env.SK)
-	fmt.Printf("paseto: `%s`\n", paseto)
 
 	//Compose and send a challenge email to the user
 	emailer := reg_email.NewRegEmail(
