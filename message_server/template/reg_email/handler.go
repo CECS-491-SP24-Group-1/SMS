@@ -83,11 +83,11 @@ func (t Template) Send() error {
 	emsg.SetSubject("Your Wraith Account")
 
 	//Create the body of the email from the template and add it to the email
-	var ebody bytes.Buffer
-	if err := htmlTemplate.Execute(&ebody, t); err != nil {
+	ebody, err := t.Generate()
+	if err != nil {
 		return err
 	}
-	emsg.SetBody(mail.TextHTML, ebody.String())
+	emsg.SetBody(mail.TextHTML, ebody)
 
 	//Send the email
 	if emsg.Error != nil {
@@ -97,4 +97,13 @@ func (t Template) Send() error {
 		return err
 	}
 	return nil
+}
+
+// Generates the body of the email using the HTML template.
+func (t Template) Generate() (string, error) {
+	var ebody bytes.Buffer
+	if err := htmlTemplate.Execute(&ebody, t); err != nil {
+		return "", err
+	}
+	return ebody.String(), nil
 }
