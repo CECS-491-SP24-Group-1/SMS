@@ -197,7 +197,6 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		// -- BEGIN: Database Query
 		//
 
-		//TODO: get the whole user object and not just the tokens; pass down the ctx of `r`
 		//Query the database for a user with the token
 		var user user.User
 		query := bson.D{{Key: "tokens", Value: bson.D{{Key: "$in", Value: bson.A{tok}}}}}
@@ -231,7 +230,7 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 
 		//Add the user to the request context
 		//https://go.dev/blog/context#TOC_3.2.
-		ctx := context.WithValue(r.Context(), AuthCtxUserKey, user) //TODO: pass entire user object here
+		ctx := context.WithValue(r.Context(), AuthCtxUserKey, user)
 		r = r.WithContext(ctx)
 
 		//Forward the request; authentication passed successfully

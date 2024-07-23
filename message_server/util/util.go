@@ -215,7 +215,7 @@ func RandomString(size int, charset string) string {
 Replaces n characters on either side of a string with asterisks,
 effectively redacting the contents of the string.
 */
-//TODO: redo using string slicing
+//TODO: redo using string slicing, if possible
 func Redact(str string, n int) string {
 	//Convert the string to a slice of runes
 	runes := []rune(str)
