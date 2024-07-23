@@ -29,17 +29,13 @@ var _UserCollectionInst *UserCollection
 // Guard mutex to ensure that only one singleton object is created.
 var _UserCollectionOnce sync.Once
 
-// Gets the currently active collection object instance.
-func GetCollection() *UserCollection {
-	return _UserCollectionInst
-}
-
 /*
-Initializes the `User` collection singleton. This can be safely called
-multiple times in the program to ensure a non-nil instance of the collection
-due to the usage of `sync.Once` to initialize the singleton.
+Gets the currently active collection object instance or initializes it.
+This can be safely called multiple times in the program to ensure a
+non-nil instance of the collection due to the usage of `sync.Once` to
+initialize the singleton.
 */
-func InitCollection() *UserCollection {
+func GetCollection() *UserCollection {
 	_UserCollectionOnce.Do(func() {
 		//Get the active database client instance
 		client := db.GetInstance().GetClient()

@@ -18,7 +18,7 @@ func ChallengeRoutes(envv *config.Env) chi.Router {
 	r := chi.NewRouter()
 
 	//Set the singletons for the entire package
-	uc = user.InitCollection()
+	uc = user.GetCollection()
 	env = envv
 
 	//Add routes

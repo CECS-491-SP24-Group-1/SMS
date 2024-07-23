@@ -8,26 +8,19 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/tanqiangyes/govalidator"
 	"github.com/xeipuuv/gojsonschema"
-	mail "github.com/xhit/go-simple-mail/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/crypto"
-	"wraith.me/message_server/email"
-	"wraith.me/message_server/mw"
-	"wraith.me/message_server/obj"
 	"wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/obj/ip_addr"
-	"wraith.me/message_server/obj/token"
-	cr "wraith.me/message_server/redis"
 	schema "wraith.me/message_server/schema/json"
 	"wraith.me/message_server/schema/user"
-	remailt "wraith.me/message_server/template/registration_email"
+	"wraith.me/message_server/template/reg_email"
 	"wraith.me/message_server/util"
 )
 
@@ -51,14 +44,14 @@ type postsignupUser struct {
 	//The ID of the user.
 	ID util.UUID `json:"id"`
 
+	//The username of the user.
+	Username string `json:"username"`
+
 	//The email of the user, but redacted.
 	RedactedEmail string `json:"redacted_email"`
 
-	//The IDs of the challenges that the user must fulfil for registration to be completed.
-	Challenges []util.UUID `json:"challenges"`
-
-	//A token used to allow temporary API access to solve challenges. This key is only valid for that endpoint.
-	TempAccessToken string `json:"temp_access_token"`
+	//The fingerprint of the submitted public key.
+	PKFingerprint string `json:"pk_fingerprint"`
 }
 
 // Handles incoming requests made to `POST /users/register`.
@@ -132,7 +125,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	copy(user.Pubkey[:], decodedPK[:])
 
 	//Complete the post-signup steps, including challenge generation and issuance of a temporary token
-	if err := postSignup(w, r, user, uc); err != nil {
+	if err := postSignup(w, r, user); err != nil {
 		util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
 		return
 	}
@@ -231,7 +224,7 @@ func (iu intermediateUser) validate(strictEmail bool) (bool, []error) {
 Performs post-signup operations on the newly created user object, such
 as persistence to the database and generation of challenges.
 */
-func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User, ucoll *user.UserCollection) error {
+func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User) error {
 	//Issue a PASETO challenge for confirming the user's email
 	paseto := challenge.NewEmailChallenge(
 		env.ID,
@@ -242,78 +235,29 @@ func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User, ucoll *u
 	).Encrypt(env.SK)
 	fmt.Printf("paseto: `%s`\n", paseto)
 
-	//Step 1: Issue a token that's good for the duration of the challenge window; otherwise the routes won't be allowed
-	tempToken := token.NewToken(usr.ID, ip_addr.HttpIP2NetIP(r.RemoteAddr), token.TokenScopePOSTSIGNUP, usr.Flags.PurgeBy)
-	fmt.Printf("TOK: '%s'\n", tempToken.ToB64())
-
-	//Step 2a: Push the token to the user's list of tokens and add the user to the database
-	//TODO: use CRUD operations here
-	usr.Tokens = append(usr.Tokens, *tempToken)
-	userBson, jerr := bson.Marshal(usr)
-	_, ierr := ucoll.InsertOne(r.Context(), userBson)
-	if jerr != nil {
-		return jerr
-	}
-	if ierr != nil {
-		return ierr
-	}
-
-	//Set 2b: Cache the access tokens
-	cr.CreateSA(rcl, r.Context(), usr.ID.UUID, tempToken.String())
-
-	//Step 3a: Create challenges for email and public key verification
-	srvIdent := obj.Identifiable{ID: env.ID, Type: obj.IdTypeSERVER}
-	usrIdent := obj.Identifiable{ID: usr.ID, Type: usr.Type}
-	expiry := usr.Flags.PurgeBy
-	emailChall := challenge.NewChallenge(challenge.ChallengeScopeEMAIL, srvIdent, usrIdent, expiry)
-	pubkeyChall := challenge.NewChallenge(challenge.ChallengeScopePUBKEY, srvIdent, usrIdent, expiry)
-
-	//Step 3b: Compose the challenge URL for the email
-	baseUrl := "http://127.0.0.1:8888" //TODO: change this eventually
-	echallUrl := util.Must(url.Parse(fmt.Sprintf("%s/challenges/%s/solve", baseUrl, emailChall.ID)))
-	eurlParams := echallUrl.Query()
-	eurlParams.Set(mw.AuthHttpParamName, tempToken.ToB64())
-	eurlParams.Set(challenge.ChallengeURLParamName, emailChall.Payload)
-	echallUrl.RawQuery = eurlParams.Encode()
-
-	//Step 3c: Compose the challenge email to send to the user
-	emsg := mail.NewMSG()
-	emsg.SetFrom(cfg.Email.Username)
-	emsg.AddTo(usr.Email)
-	emsg.SetSubject("Your Wraith Account")
-
-	//Step 3d: Create the body of the email
-	tmplFields := remailt.Template{
-		UUID:          usr.ID.String(),
-		UName:         usr.Username,
-		Email:         usr.Email,
-		PKFingerprint: usr.Pubkey.Fingerprint(),
-		PurgeTime:     util.Time2OffsetReq(usr.Flags.PurgeBy, r).Format(time.RFC1123Z),
-		ChallengeLink: echallUrl.String(),
-	}
-	var ebody bytes.Buffer
-	if err := emailChallTemplate.Execute(&ebody, tmplFields); err != nil {
-		return err
-	}
-	emsg.SetBody(mail.TextHTML, ebody.String())
-
-	//Step 3e: Send the email challenge to the user's email
-	if emsg.Error != nil {
-		return emsg.Error
-	}
-	if err := email.GetInstance().SendEmail(emsg); err != nil {
+	//Compose and send a challenge email to the user
+	emailer := reg_email.NewRegEmail(
+		*usr,
+		util.TZOffsetFromReq(r),
+		paseto,
+		*cfg,
+	)
+	if err := emailer.Send(); err != nil {
 		return err
 	}
 
-	//Step 4: Push the challenges to the database for later retrieval
-	//crud.AddChallenges(mcl, rcl, r.Context(), emailChall, pubkeyChall)
+	//Persist the user in the database
+	_, err := uc.InsertOne(r.Context(), usr)
+	if err != nil {
+		return err
+	}
 
-	//Step 5: Write the response back to the user
+	//Write the response back to the user
 	psu := postsignupUser{
-		ID:              usr.ID,
-		RedactedEmail:   util.RedactEmail(usr.Email),
-		Challenges:      []util.UUID{emailChall.ID, pubkeyChall.ID},
-		TempAccessToken: tempToken.ToB64(),
+		ID:            usr.ID,
+		Username:      usr.Username,
+		RedactedEmail: util.RedactEmail(usr.Email),
+		PKFingerprint: usr.Pubkey.Fingerprint(),
 	}
 	if jerr := json.NewEncoder(w).Encode(&psu); jerr != nil {
 		return jerr

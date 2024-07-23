@@ -60,7 +60,7 @@ func NewAuthMiddleware(allowedScopes []token.TokenScope) func(next http.Handler)
 		allowedScopes: allowedScopes,
 		//mclient:       db.GetInstance().GetClient(),
 		rclient: cr.GetInstance().GetClient(),
-		ucoll:   user.InitCollection(),
+		ucoll:   user.GetCollection(),
 	}
 
 	//Return the instance

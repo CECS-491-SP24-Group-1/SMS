@@ -26,7 +26,13 @@ type Config struct {
 	Server struct {
 		BindAddr   string `toml:"bind_addr" default:"127.0.0.1"`
 		ListenPort int    `toml:"listen_port" default:"8888"`
+		BaseUrl    string `toml:"base_url" default:"http://127.0.0.1:8888"`
 	} `toml:"server"`
+
+	//Client configuration
+	Client struct {
+		BaseUrl string `toml:"base_url" default:"http://127.0.0.1:8080"`
+	} `toml:"client"`
 
 	//Logging configuration
 	//Logging Logging `toml:"logging"`
