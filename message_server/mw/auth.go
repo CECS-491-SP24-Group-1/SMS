@@ -202,6 +202,7 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		query := bson.D{{Key: "tokens", Value: bson.D{{Key: "$in", Value: bson.A{tok}}}}}
 		err := amw.ucoll.Find(r.Context(), query).One(&user)
 		if err != nil {
+			fmt.Printf("auth err; %s\n", err)
 			util.ErrResponse(
 				http.StatusUnauthorized,
 				fmt.Errorf("auth; %s", ErrAuthGeneric),

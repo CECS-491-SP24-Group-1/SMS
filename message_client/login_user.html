@@ -9,6 +9,7 @@
 	<script type="application/javascript" src="./static/js/wasm_loader.js"></script>
 	<script type="application/javascript" src="./static/js/uuid.js"></script>
 	<script type="application/javascript" src="./static/js/vault_simple.js"></script>
+	<script type="application/javascript" src="./static/js/axios.min.js"></script>
 	<style>
 		/* DEBUG START */
 		table, th, td {
@@ -355,18 +356,16 @@
 			token = document.getElementById("tokenForm").value;
 
 			//Check the token against the server
-			fetch(AUTH_TEST_EP, {
-				method: "GET",
-				headers: {
-					"Authorization": `Bearer ${token}`
-				}
+			axios.get(AUTH_TEST_EP, { 
+				headers: { "Authorization": `Bearer ${token}`},
+				validateStatus: status => true //https://stackoverflow.com/a/76240990
 			})
 
 			//Display the data back to the webpage
 			.then(async response => {
 				//Get the response data
-				const resp = JSON.parse(await response.text());
-				const ok = await response.ok;
+				const resp = response.data;
+				const ok = !resp.errors;
 
 				//Check for errors
 				goodToken = ok;
@@ -374,7 +373,9 @@
 				//Echo the status back to the user in the token status
 				const statusForm = document.getElementById("tokenStatus");
 				statusForm.classList.add(ok ? "good" : "bad");
-				statusForm.innerHTML = `${resp.status} - ${resp.errors}`;
+				const errors = resp.errors ? resp.errors : `logged in as ${resp.payloads[0].id}`;
+				statusForm.innerHTML = `${resp.status} - ${errors}`;
+				console.log("token status:", resp);
 			});
 		}
 	</script>
@@ -423,19 +424,16 @@
 			}
 
 			//Send the form to the server
-			fetch(LOGIN_S1_EP, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify(loginReq)
+			//Check the token against the server
+			axios.post(LOGIN_S1_EP, loginReq, {
+				validateStatus: status => true //https://stackoverflow.com/a/76240990
 			})
 
 			//Display the data back to the webpage
 			.then(async response => {
 				//Get the response data
-				const resp = JSON.parse(await response.text());
-				const ok = await response.ok;
+				const resp = response.data;
+				const ok = !resp.errors;
 
 				//Check for errors
 				loginS1Success = ok;
@@ -488,19 +486,16 @@
 			}
 
 			//Send the form to the server
-			fetch(LOGIN_S2_EP, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify(loginReq)
+			//Check the token against the server
+			axios.post(LOGIN_S2_EP, loginReq, {
+				validateStatus: status => true //https://stackoverflow.com/a/76240990
 			})
 
 			//Display the data back to the webpage
 			.then(async response => {
 				//Get the response data
-				const resp = JSON.parse(await response.text());
-				const ok = await response.ok;
+				const resp = response.data;
+				const ok = !resp.errors;
 
 				//Check for errors
 				loginS2Success = ok;
