@@ -133,7 +133,15 @@ func (r HttpResponse[T]) JSON() ([]byte, error) {
 		//Marshal the strings to raw JSON
 		jsons := make([]json.RawMessage, len(r.Payloads))
 		for i := range jsons {
-			jsons[i] = json.RawMessage(stringPayloads[i])
+			//Get the current payload
+			pload := stringPayloads[i]
+
+			//If the payload is valid JSON, encode it normally, otherwise return it as a regular JSON string
+			if json.Valid([]byte(pload)) {
+				jsons[i] = json.RawMessage(pload)
+			} else {
+				jsons[i] = json.RawMessage(fmt.Sprintf("%q", pload))
+			}
 		}
 
 		//Create a new object from the existing one
@@ -171,7 +179,9 @@ func (r HttpResponse[T]) Respond(w http.ResponseWriter) {
 	json, err := r.JSON()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, `{"code": %d, "errors": ["failed to marshal HttpResponse to json; %s"]}`, http.StatusInternalServerError, err)
+		fmt.Fprintf(w,
+			`{"code": %d, "status": "error during JSON marshal", "errors": ["failed to marshal HttpResponse to json; %s"]}`,
+			http.StatusInternalServerError, err)
 		return
 	}
 
