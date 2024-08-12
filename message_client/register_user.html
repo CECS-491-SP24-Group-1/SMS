@@ -239,12 +239,12 @@
 				}
 			})
 			.then(response => {
-				//Log the response
-				log(JSON.stringify(response.data));
-
 				//Parse the response to JSON and add the ID to the subject field of the vault
-				const respj = response.data;
+				const respj = response.data.payloads[0];
 				vault.subject = respj.id;
+
+				//Log the response
+				log(JSON.stringify(respj));
 
 				//Bind the export method to this vault instance
 				vault.export = vault.export.bind(vault);
@@ -261,7 +261,7 @@
 				clonedBtn.style.display = "initial";
 			})
 			.catch(error => {
-				log(`${error}\n`);
+				log(`${JSON.stringify(error.response.data)}\n`);
 			});
 		//});
 		}

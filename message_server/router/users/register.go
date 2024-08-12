@@ -54,8 +54,6 @@ type postsignupUser struct {
 	PKFingerprint string `json:"pk_fingerprint"`
 }
 
-//TODO: migrate to the new response object
-
 // Handles incoming requests made to `POST /users/register`.
 func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Create a new intermediate user object
@@ -260,9 +258,11 @@ func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User) error {
 		RedactedEmail: util.RedactEmail(usr.Email),
 		PKFingerprint: usr.Pubkey.Fingerprint(),
 	}
-	if jerr := json.NewEncoder(w).Encode(&psu); jerr != nil {
-		return jerr
-	}
+	util.PayloadResponse(
+		http.StatusCreated,
+		fmt.Sprintf("created new user with ID %s", psu.ID),
+		psu,
+	).Respond(w)
 
 	//No errors so return nil
 	return nil
