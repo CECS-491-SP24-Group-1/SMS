@@ -11,6 +11,7 @@
 	<script type="application/javascript" src="./static/js/FileSaver.min.js"></script>
 	<script type="application/javascript" src="./static/js/uuid.js"></script>
 	<script type="application/javascript" src="./static/js/vault_simple.js"></script>
+	<script type="application/javascript" src="./static/js/axios.min.js"></script>
 	<style>
 		label + input {
 			margin-left: 10px;
@@ -231,38 +232,24 @@
 			data.pubkey = vault.kstore.pkString();
 
 			//Send the form to the server
-			fetch(REGISTER_EP, {
-				method: "POST",
+			axios.post(REGISTER_EP, data, {
 				headers: {
 					"Content-Type": "application/json",
 					"X-Timezone-Offset": -new Date().getTimezoneOffset() //Allows the response email to be localized to the timezone of the user
-				},
-				body: JSON.stringify(data)
-			})
-
-			//Display the data back to the webpage
-			.then(async response => {
-				//Check for errors
-				if(!response.ok){
-					rtext = await response.text();
-					throw new Error(`Network response was not ok; response: '${!rtext ? "<none>" : rtext.trim()}'`);
 				}
- 
-				//Parse the response
-				return response.text();
 			})
-			.then(async resp => {
+			.then(response => {
 				//Log the response
-				log(resp);
+				log(JSON.stringify(response.data));
 
 				//Parse the response to JSON and add the ID to the subject field of the vault
-				respj = JSON.parse(resp);
+				const respj = response.data;
 				vault.subject = respj.id;
 
 				//Bind the export method to this vault instance
 				vault.export = vault.export.bind(vault);
 
-				//Get the download and button and replace any existing instances
+				//Get the download button and replace any existing instances
 				//This prevents old vaults from being downloaded if multiple users signup using the form
 				const dlBtn = document.getElementById("dlVaultBtn");
 				const clonedBtn = dlBtn.cloneNode(true);
@@ -273,7 +260,9 @@
 				clonedBtn.addEventListener("click", vault.export);
 				clonedBtn.style.display = "initial";
 			})
-			.catch(error => log(`${error}\n`));
+			.catch(error => {
+				log(`${error}\n`);
+			});
 		//});
 		}
 

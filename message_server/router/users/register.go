@@ -54,6 +54,8 @@ type postsignupUser struct {
 	PKFingerprint string `json:"pk_fingerprint"`
 }
 
+//TODO: migrate to the new response object
+
 // Handles incoming requests made to `POST /users/register`.
 func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Create a new intermediate user object
