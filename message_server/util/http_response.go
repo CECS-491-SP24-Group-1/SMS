@@ -29,7 +29,8 @@ type HttpResponse[T any] struct {
 	Payloads []T `json:"payloads,omitempty"`
 }
 
-// -- Constructors
+//-- Constructors
+
 // Creates a new error response from a list of errors.
 func ErrResponse(code int, errs ...error) HttpResponse[bool] {
 	//Determine the correct error code
@@ -121,7 +122,8 @@ func PayloadOkResponse[T any](desc string, payloads ...T) HttpResponse[T] {
 	return PayloadResponse[T](http.StatusOK, desc, payloads...)
 }
 
-// -- Methods
+//-- Methods
+
 // Emits the JSON encoding of this object, along with any errors that occurred.
 func (r HttpResponse[T]) JSON() ([]byte, error) {
 	//Get the inner type of the payload and don't escape it if it's a string
