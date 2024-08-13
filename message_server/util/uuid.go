@@ -4,8 +4,13 @@ package util
 
 import (
 	"bytes"
+	crand "crypto/rand"
+	"encoding/binary"
 	"fmt"
 	"strings"
+	"time"
+
+	_ "unsafe"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
@@ -41,6 +46,39 @@ func NewUUID7() (res UUID, err error) {
 		return
 	}
 	return UUID{UUID: id}, nil
+}
+
+/*
+NewUUID7FromTime generates a new MongoDB compatible UUID from an existing
+time vs `time.Now()`.
+See: https://www.perplexity.ai/search/generate-a-v7-uuid-from-a-give-K1LLrJpmR7Ode.4JFw6rPQ
+*/
+func NewUUID7FromTime(tim time.Time) UUID {
+	//Get Unix timestamp in milliseconds
+	ms := uint64(tim.UnixNano() / int64(time.Millisecond))
+
+	//Create a 16-byte array for the UUID
+	uuidBytes := [16]byte{}
+
+	//Set the time_low, time_mid, and time_hi fields
+	binary.BigEndian.PutUint32(uuidBytes[0:4], uint32(ms>>16))
+	binary.BigEndian.PutUint16(uuidBytes[4:6], uint16(ms&0xFFFF))
+	binary.BigEndian.PutUint16(uuidBytes[6:8], uint16(ms>>32))
+
+	//Set the version (7)
+	uuidBytes[6] = (uuidBytes[6] & 0x0F) | 0x70
+
+	//Set the variant
+	uuidBytes[8] = (uuidBytes[8] & 0x3F) | 0x80
+
+	//Generate random bytes for the rest
+	_, err := crand.Read(uuidBytes[9:])
+	if err != nil {
+		panic(fmt.Sprintf("v7New(); failed to generate random: %s", err))
+	}
+
+	//Return the full UUIDv7
+	return UUID{uuidBytes}
 }
 
 // Generates a new version 7 UUID. Panics if an error occurs.
