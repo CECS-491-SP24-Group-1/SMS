@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	_ "unsafe"
-
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
