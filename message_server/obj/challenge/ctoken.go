@@ -30,14 +30,29 @@ an email or a base64-encoded public key, and the state depends on the value
 of the `CType`field.
 */
 type CToken struct {
-	ID        util.UUID
-	Issuer    util.UUID
+	//The ID of the token. This is the `jti` field of the PASETO token.
+	ID util.UUID
+
+	//The ID of the entity that issued the token. This is the `iss` field of the PASETO token.
+	Issuer util.UUID
+
+	//The user that this token is for by ID. This is the `sub` field of the PASETO token.
 	SubjectID util.UUID
-	CType     CType
-	Purpose   CPurpose
-	Expiry    time.Time
-	Claim     string
+
+	//The type of challenge this is.
+	CType CType
+
+	//The purpose of this challenge.
+	Purpose CPurpose
+
+	//The time at which the challenge should expire. This is the `exp` field of the PASETO token.
+	Expiry time.Time
+
+	//The subject's email if this is an email challenge or the subject's public key if this is a public key challenge.
+	Claim string
 }
+
+//-- Constructors
 
 // Creates a new challenge meant for validating ownership of an email.
 func NewEmailChallenge(issuer util.UUID, subjectID util.UUID, purpose CPurpose, expiry time.Time, email string) CToken {
@@ -65,32 +80,14 @@ func NewPKChallenge(issuer util.UUID, subjectID util.UUID, purpose CPurpose, exp
 	}
 }
 
-// Encodes a challenge payload into an encrypted v4 Paseto token.
-func (t CToken) Encrypt(key ccrypto.Privkey) string {
-	//Create a new token with expiration in 10 minutes
-	token := paseto.NewToken()
-	token.SetIssuedAt(time.Now())                         //Token "iat"
-	token.SetNotBefore(time.Now())                        //Token "nbf"
-	token.SetExpiration(time.Now().Add(10 * time.Minute)) //Token "exp"
+// -- Methods
 
-	//Add additional data to the token
-	token.SetJti(t.ID.String())                          //Token ID
-	token.SetIssuer(t.Issuer.String())                   //Issuer ID (server)
-	token.SetSubject(t.SubjectID.String())               //User ID (client)
-	token.SetString(_CHALL_CTYPE, t.CType.String())      //Challenge type
-	token.SetString(_CHALL_CPURPOSE, t.Purpose.String()) //Challenge purpose
-	token.SetString(_CHALL_CLAIM, t.Claim)               //Challenge claim
-
-	//Encrypt the token
-	return token.V4Encrypt(edsk2PasetoSK(key), nil)
-}
-
-// Decodes an encrypted v4 Paseto token into a challenge payload.
+// Decodes an encrypted v4 PASETO token into a challenge payload.
 func Decrypt(token string, key ccrypto.Privkey, issuer util.UUID, purpose CPurpose) (*CToken, error) {
 	return decryptBackend(token, key, issuer, purpose)
 }
 
-// Decodes an encrypted v4 Paseto token into a challenge payload, with stricter checks.
+// Decodes an encrypted v4 PASETO token into a challenge payload, with stricter checks.
 func DecryptPKStrict(token string, key ccrypto.Privkey, issuer util.UUID, purpose CPurpose, subject util.UUID, pubkey ccrypto.Pubkey) (*CToken, error) {
 	//Create a list of additional rules
 	rules := []paseto.Rule{
@@ -101,6 +98,39 @@ func DecryptPKStrict(token string, key ccrypto.Privkey, issuer util.UUID, purpos
 	//Decrypt the token and add the extra rules
 	return decryptBackend(token, key, issuer, purpose, rules...)
 }
+
+/*
+Encodes a challenge payload into an encrypted v4 PASETO token. The expiry
+of the token is hard-coded as 10 minutes.
+*/
+func (t CToken) Encrypt(key ccrypto.Privkey) string {
+	return t.EncryptWithExpiry(key, time.Now().Add(10*time.Minute))
+}
+
+/*
+Encodes a challenge payload into an encrypted v4 PASETO token with a user
+provided expiry.
+*/
+func (t CToken) EncryptWithExpiry(key ccrypto.Privkey, exp time.Time) string {
+	//Create a new token with expiration in x time
+	token := paseto.NewToken()
+	token.SetIssuedAt(time.Now())  //Token "iat"
+	token.SetNotBefore(time.Now()) //Token "nbf"
+	token.SetExpiration(exp)       //Token "exp"
+
+	//Add additional data to the token
+	token.SetJti(t.ID.String())                          //Token ID
+	token.SetIssuer(t.Issuer.String())                   //Issuer ID (server)
+	token.SetSubject(t.SubjectID.String())               //User ID (client)
+	token.SetString(_CHALL_CTYPE, t.CType.String())      //Challenge type
+	token.SetString(_CHALL_CPURPOSE, t.Purpose.String()) //Challenge purpose
+	token.SetString(_CHALL_CLAIM, t.Claim)               //Challenge claim
+
+	//Encrypt the token
+	return token.V4Encrypt(util.Edsk2PasetoSK(key), nil)
+}
+
+//-- Private utilities
 
 // Performs token decryption and ensures it matches against a rule-set.
 func decryptBackend(token string, key ccrypto.Privkey, issuer util.UUID, purpose CPurpose, rules ...paseto.Rule) (*CToken, error) {
@@ -116,20 +146,13 @@ func decryptBackend(token string, key ccrypto.Privkey, issuer util.UUID, purpose
 	parser.AddRule(rules...)
 
 	//Decrypt the token and validate it; due to the "v4_local" construction, any tamper attempts will auto-fail this check
-	decrypted, err := parser.ParseV4Local(edsk2PasetoSK(key), token, nil)
+	decrypted, err := parser.ParseV4Local(util.Edsk2PasetoSK(key), token, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	//Decode the token and return the payload
 	return pasetoDecode(decrypted, issuer)
-}
-
-// Converts an Ed25519 SK to a PasetoV4 SK.
-func edsk2PasetoSK(key ccrypto.Privkey) paseto.V4SymmetricKey {
-	seed := key.Seed()
-	psk, _ := paseto.V4SymmetricKeyFromBytes(seed[:])
-	return psk
 }
 
 // Decodes a PasetoV4 token into a valid `CToken` object.

@@ -12,9 +12,18 @@ import (
 	"strings"
 	"time"
 
+	"aidanwoods.dev/go-paseto"
 	"github.com/mitchellh/mapstructure"
 	"wraith.me/message_server/consts"
+	ccrypto "wraith.me/message_server/crypto"
 )
+
+// Converts an Ed25519 SK to a PasetoV4 SK.
+func Edsk2PasetoSK(key ccrypto.Privkey) paseto.V4SymmetricKey {
+	seed := key.Seed()
+	psk, _ := paseto.V4SymmetricKeyFromBytes(seed[:])
+	return psk
+}
 
 // Checks if any item in a given list is equal to one singular given item.
 func EqualsAny[T comparable](targ T, items ...T) bool {
