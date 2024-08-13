@@ -1,4 +1,4 @@
-package users
+package auth
 
 import (
 	"bytes"
@@ -54,7 +54,7 @@ type postsignupUser struct {
 	PKFingerprint string `json:"pk_fingerprint"`
 }
 
-// Handles incoming requests made to `POST /users/register`.
+// Handles incoming requests made to `POST /api/auth/register`.
 func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Create a new intermediate user object
 	iuser := intermediateUser{}

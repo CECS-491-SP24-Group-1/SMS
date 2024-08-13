@@ -4,9 +4,9 @@ const LOCAL_EP_BASE = "http://127.0.0.1:8888";
 const WASM_URL = "./static/wasm/ed25519_keygen.wasm";
 const WASM_PROD_URL = "./static/wasm/ed25519_keygen.min.wasm";
 
-const REGISTER_EP = `${LOCAL_EP_BASE}/users/register`;
+const REGISTER_EP = `${LOCAL_EP_BASE}/auth/register`;
 
-const AUTH_TEST_EP = `${LOCAL_EP_BASE}/auth_test`;
+const AUTH_TEST_EP = `${LOCAL_EP_BASE}/auth/test`;
 
-const LOGIN_S1_EP = `${LOCAL_EP_BASE}/users/login_req`;
-const LOGIN_S2_EP = `${LOCAL_EP_BASE}/users/login_verify`;
+const LOGIN_S1_EP = `${LOCAL_EP_BASE}/auth/login_req`;
+const LOGIN_S2_EP = `${LOCAL_EP_BASE}/auth/login_verify`;

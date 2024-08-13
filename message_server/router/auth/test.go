@@ -1,4 +1,4 @@
-package router
+package auth
 
 import (
 	"encoding/json"
@@ -28,7 +28,7 @@ type AuthTestRouter struct {
 // Creates a new `AuthTestRouter` object.
 func NewAuthTestRouter(path string, scopes []token.TokenScope) AuthTestRouter {
 	if path == "" {
-		path = "/auth_test"
+		path = "/test"
 	}
 	return AuthTestRouter{Path: path, Scopes: scopes}
 }

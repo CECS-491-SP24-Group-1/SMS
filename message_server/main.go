@@ -12,11 +12,10 @@ import (
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/email"
 	"wraith.me/message_server/mw"
-	"wraith.me/message_server/obj/token"
 	cr "wraith.me/message_server/redis"
 	"wraith.me/message_server/router"
+	"wraith.me/message_server/router/auth"
 	"wraith.me/message_server/router/challenges"
-	"wraith.me/message_server/router/users"
 	"wraith.me/message_server/task"
 
 	"github.com/go-chi/chi/middleware"
@@ -136,8 +135,8 @@ func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 
 	r.Post("/send_message", router.SendMessage)
 
-	//User routes
-	r.Mount("/users", users.UserRoutes(cfg, env))
+	//User auth routes
+	r.Mount("/auth", auth.AuthRoutes(cfg, env))
 
 	//Challenge routes
 	r.Group(func(r chi.Router) {
@@ -145,11 +144,6 @@ func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 		//r.Use(mw.NewAuthMiddleware(authScopes))
 		r.Mount("/challenges", challenges.ChallengeRoutes(env))
 	})
-
-	//AUTH TEST START
-	authTest := router.NewAuthTestRouter("", token.TokenScopeValues())
-	r.Group(authTest.Router())
-	//AUTH TEST END
 
 	//Return the built router for requests
 	return r

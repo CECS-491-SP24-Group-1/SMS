@@ -1,4 +1,4 @@
-package users
+package auth
 
 import (
 	"context"
@@ -73,7 +73,7 @@ type existingUserResult struct {
 }
 
 /*
-Handles incoming requests made to `POST /users/login_req`. This is stage 1
+Handles incoming requests made to `POST /api/auth/login_req`. This is stage 1
 of the login process.
 */
 func RequestLoginUserRoute(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +103,7 @@ func RequestLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
-Handles incoming requests made to `POST /users/login_verify`. This is stage
+Handles incoming requests made to `POST /api/auth/login_verify`. This is stage
 2 of the login process.
 */
 func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
