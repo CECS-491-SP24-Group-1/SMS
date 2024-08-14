@@ -243,6 +243,7 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 	//Check the user's flags to ensure they can actually sign-in
 	//Their email and public key must be verified
 	//TODO: Move this to auth if possible
+	//TODO: login verifies public key automatically
 	errors := []error{}
 	if !hit.Flags.EmailVerified {
 		errors = append(errors, fmt.Errorf("unverified email"))
