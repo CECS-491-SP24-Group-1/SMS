@@ -12,8 +12,6 @@ import (
 	ccrypto "wraith.me/message_server/crypto"
 	"wraith.me/message_server/obj"
 	c "wraith.me/message_server/obj/challenge"
-	"wraith.me/message_server/obj/ip_addr"
-	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
 )
@@ -142,15 +140,9 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//TODO: mark user as verified and issue a login token here
-	temp := token.NewToken(
-		loginTok.SubjectID,
-		ip_addr.FromString("127.0.0.1"),
-		token.TokenScopeEVERWHERE,
-		time.Now().Add(24*time.Hour),
-	).String()
 
 	fmt.Printf("verif_pk: %+v\n", loginTok)
-	util.PayloadOkResponse("", temp).Respond(w)
+	util.PayloadOkResponse("", "ok").Respond(w)
 }
 
 // Contains the common FoC that is to be ran before any login request.

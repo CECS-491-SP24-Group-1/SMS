@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"wraith.me/message_server/config"
 	"wraith.me/message_server/mw"
-	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
 )
@@ -22,15 +22,18 @@ type AuthTestRouter struct {
 	Path string
 
 	//The token scopes that are valid for the router.
-	Scopes []token.TokenScope
+	//Scopes []token.TokenScope
+
+	//The secrets of the server including ID and encryption key.
+	secrets *config.Env
 }
 
 // Creates a new `AuthTestRouter` object.
-func NewAuthTestRouter(path string, scopes []token.TokenScope) AuthTestRouter {
+func NewAuthTestRouter(path string, secrets *config.Env) AuthTestRouter {
 	if path == "" {
 		path = "/test"
 	}
-	return AuthTestRouter{Path: path, Scopes: scopes}
+	return AuthTestRouter{Path: path, secrets: secrets}
 }
 
 // Creates an authentication test route; accessible via a GET request.
@@ -73,7 +76,7 @@ func (atr AuthTestRouter) Router() func(r chi.Router) {
 	//Create the router to respond to the route
 	return func(r chi.Router) {
 		//Set the auth middleware handler and success responder
-		r.Use(mw.NewAuthMiddleware(atr.Scopes))
+		r.Use(mw.NewAuthMiddleware(atr.secrets))
 		r.Get(atr.Path, successHandler)
 	}
 }

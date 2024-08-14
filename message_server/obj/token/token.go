@@ -1,191 +1,225 @@
 package token
 
 import (
-	"bytes"
-	"encoding/base64"
+	"crypto/subtle"
 	"fmt"
+	"net"
 	"time"
-	"unsafe" //The implications of using this package are understood.
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/bsontype"
-	"wraith.me/message_server/obj"
-	"wraith.me/message_server/obj/ip_addr"
+	"aidanwoods.dev/go-paseto"
+	ccrypto "wraith.me/message_server/crypto"
 	"wraith.me/message_server/util"
 )
 
-//
-//-- CLASS: UserToken
-//
-
 const (
-	// Defines the length of the token's random bytes portion.
-	RAND_TOKEN_LEN = 8
-
-	//Defines the size of the token in bytes
-	TOKEN_SIZE_BYTES = int(unsafe.Sizeof(Token{}))
+	_TOK_TYPE = "ttype"
+	_TOK_IP   = "tipaddr"
 )
 
-// Represents an opaque user login token.
+var (
+	//The name of the access token cookie.
+	AccessTokenName = "access_token"
+
+	//The name of the access token expiration cookie.
+	AccessTokenExprName = "access_token_expr"
+
+	//The name of the refresh token cookie.
+	RefreshTokenName = "refresh_token"
+
+	//The name of the refresh token expiration cookie.
+	RefreshTokenExprName = "refresh_token_expr"
+)
+
+//
+//-- CLASS: Token
+//
+
+/*
+Represents a PASETO token that allows users to authenticate with the API
+in a semi-stateless manner after login. This class can represent either a
+fully stateless, short-lived access token or a stateful, long-refresh token.
+*/
 type Token struct {
-	//UserToken extends the abstract identifiable type.
-	obj.Identifiable `bson:",inline"`
+	//The ID of the token. This is the `jti` field of the PASETO token. This is calculated from the `iat` field.
+	ID util.UUID `json:"id"`
 
-	//The IP address of the client who created the token.
-	CreationIP ip_addr.IPAddr `json:"creation_ip" bson:"creation_ip"`
+	//The ID of the entity that issued the token. This is the `iss` field of the PASETO token.
+	Issuer util.UUID `json:"issuer"`
 
-	//The user that this token is for by ID.
-	Subject util.UUID `json:"subject" bson:"subject"`
+	//The user that this token is for by ID. This is the `sub` field of the PASETO token.
+	Subject util.UUID `json:"subject"`
 
-	//Defines the scopes for which the token is valid. This is a bitmasked value that may hold multiple scopes on a single variable.
-	Scope TokenScope `json:"token_scope" bson:"token_scope"`
+	//The time at which the token should expire. This is the `exp` field of the PASETO token.
+	Expiry time.Time `json:"expires"`
 
-	//Denotes whether the token should expire.
-	Expire bool `json:"expire" bson:"expire"`
+	//The time at which the token was issued. This is the `iat` and `nbf` fields of the PASETO token.
+	Issued time.Time `json:"issued"`
 
-	//Denotes when the token will expire, as a Unix timestamp.
-	Expiry int64 `json:"expiry" bson:"expiry"`
+	//The type of token this is.
+	Type TokenType `json:"type"`
 
-	//A array of random bytes. This field has no meaning on its own.
-	//Rand [RAND_TOKEN_LEN]byte `json:"rand" bson:"token"`
+	//The IP address of the client that the token was originally created for
+	IPAddr net.IP `json:"ip_addr"`
 }
 
-// Creates a new token object.
-func NewToken(subject util.UUID, creationIP ip_addr.IPAddr, scope TokenScope, expiry time.Time) *Token {
+//-- Constructors
+
+/*
+Constructs a new token object, which takes in the subject, issuer, type,
+expiry, and optional time to use for the `iat` and `nbf` fields.
+*/
+func NewToken(subject util.UUID, issuer util.UUID, typ TokenType, exp time.Time, now *time.Time) *Token {
+	//Check if the "now" parameter is nil
+	if now == nil {
+		n := time.Now()
+		now = &n
+	}
+
+	//Generate a `jti` value based on the "now" time
+	jti := util.NewUUID7FromTime(*now)
+
+	//Construct the object
+	//IP is added later
 	return &Token{
-		Identifiable: obj.Identifiable{
-			ID:   util.MustNewUUID7(),
-			Type: obj.IdTypeTOKEN,
-		},
-		Subject:    subject,
-		Scope:      scope,
-		CreationIP: creationIP,
-		Expire:     true,
-		Expiry:     expiry.Unix(),
-		//Rand:       [8]byte(util.MustGenRandBytes(RAND_TOKEN_LEN)),
+		ID:      jti,
+		Issuer:  issuer,
+		Subject: subject,
+		Expiry:  exp,
+		Issued:  *now,
+		Type:    typ,
 	}
 }
 
-// Creates a token from a base64 string.
-func TokenFromB64(b64 string) (*Token, error) {
-	buf, err := Base64DecodeTok(b64)
+// -- Methods
+//func (t Token) Cookie()
+
+// Decrypts a PASETO string using a given symmetric key, which creates a Token object.
+func Decrypt(token string, key ccrypto.Privkey, issuer util.UUID, typ TokenType) (*Token, error) {
+	//Create a new token parser and add basic rules
+	parser := paseto.NewParser()
+	parser.AddRule(
+		paseto.ValidAt(time.Now()),       //Checks nbf, iat, and exp in one fell-swoop
+		paseto.IssuedBy(issuer.String()), //Ensures this server issued the token
+		matchingType(typ),                //Token type and input purpose must match
+	)
+
+	//Decrypt the token and validate it; due to the "v4_local" construction, any tamper attempts will auto-fail this check
+	decrypted, err := parser.ParseV4Local(util.Edsk2PasetoSK(key), token, nil)
 	if err != nil {
 		return nil, err
 	}
-	return TokenFromBytes(buf), nil
+
+	//Decode the token and return the payload
+	return pasetoDecode(decrypted, issuer)
 }
 
-// Creates a token from a byte array. Thanks ChatGPT.
-func TokenFromBytes(data []byte) *Token {
-	//Check if the data length is not the same as the expected size of a token
-	if len(data) != TOKEN_SIZE_BYTES {
-		//Return nil instead of a struct object
+/*
+Encrypts this token using a given symmetric key, which creates a PASETO
+token string. Optionally, the token can include the expiration in the
+footer.
+*/
+func (t Token) Encrypt(key ccrypto.Privkey, expInFooter bool) string {
+	//Create a new token with expiration in x time
+	token := paseto.NewToken()
+	token.SetIssuedAt(t.Issued)   //Token "iat"
+	token.SetNotBefore(t.Issued)  //Token "nbf"
+	token.SetExpiration(t.Expiry) //Token "exp"
+
+	//Add additional data to the token
+	token.SetJti(t.ID.String())                 //Token ID
+	token.SetIssuer(t.Issuer.String())          //Issuer ID (server)
+	token.SetSubject(t.Subject.String())        //User ID (client)
+	token.SetString(_TOK_TYPE, t.Type.String()) //Token type
+	token.SetString(_TOK_IP, t.IPAddr.String()) //Subject IP
+
+	//Check if the expiration footer should be added
+	if expInFooter {
+		token.SetFooter([]byte(t.Expiry.UTC().Format(time.RFC3339)))
+	}
+
+	//Encrypt the token
+	return token.V4Encrypt(util.Edsk2PasetoSK(key), nil)
+}
+
+//-- Private utilities
+
+// Decodes a PasetoV4 token into a valid `Token` object.
+func pasetoDecode(tok *paseto.Token, issuer util.UUID) (*Token, error) {
+	//Get the fields of the token
+	var id string
+	//var issuer string
+	var subject string
+	var expiry time.Time
+	var issued time.Time
+	var typ string
+	var ipAddr string
+
+	//Early return if any conversion function fails
+	perr := func() (err error) {
+		id, err = tok.GetJti()
+		if err != nil {
+			return
+		}
+		subject, err = tok.GetSubject()
+		if err != nil {
+			return
+		}
+		expiry, err = tok.GetExpiration()
+		if err != nil {
+			return
+		}
+		issued, err = tok.GetIssuedAt()
+		if err != nil {
+			return
+		}
+		typ, err = tok.GetString(_TOK_TYPE)
+		if err != nil {
+			return
+		}
+
+		ipAddr, err = tok.GetString(_TOK_IP)
+		if err != nil {
+			return
+		}
+		return nil
+	}()
+	if perr != nil {
+		return nil, perr
+	}
+
+	//Create a new struct and return it
+	return &Token{
+		ID:      util.UUIDFromString(id),
+		Issuer:  issuer,
+		Subject: util.UUIDFromString(subject),
+		Expiry:  expiry,
+		Issued:  issued,
+		Type:    MustParseTokenType(typ),
+		IPAddr:  net.ParseIP(ipAddr),
+	}, nil
+}
+
+// Verifies that the token's purpose matches an input one.
+func matchingType(typ TokenType) paseto.Rule {
+	return func(token paseto.Token) error {
+		//Get the token type from the token
+		ttype, err := token.GetString(_TOK_TYPE)
+		if err != nil {
+			return err
+		}
+
+		//Parse the token type to a string
+		typeo, err := ParseTokenType(ttype)
+		if err != nil {
+			return err
+		}
+
+		//Check if the token purpose is appropriate
+		if subtle.ConstantTimeByteEq(uint8(typeo), uint8(typ)) == 0 {
+			return fmt.Errorf("this token's type is not appropriate; must be '%s'", typ.String())
+		}
+
+		//No error, so return `nil`
 		return nil
 	}
-	//Interpret the byte slice as a pointer to the struct type and cast it to a token
-	return (*Token)(unsafe.Pointer(&data[0]))
-}
-
-// Checks if 2 tokens are equal.
-func (ut Token) Equal(other Token) bool {
-	return ut.ID == other.ID &&
-		ut.Type == other.Type &&
-		ut.Subject == other.Subject &&
-		ut.Scope == other.Scope &&
-		ut.CreationIP == other.CreationIP &&
-		ut.Expire == other.Expire &&
-		ut.Expiry == other.Expiry
-}
-
-// Gets the expiry time of the token.
-func (ut Token) GetExpiry() time.Time {
-	return time.Unix(ut.Expiry, 0)
-}
-
-// MarshalBSONValue implements the bson.ValueMarshaler interface.
-func (ut Token) MarshalBSONValue() (bsontype.Type, []byte, error) {
-	return bson.MarshalValue(ut.ToB64())
-	//return bson.TypeString, []byte(ut.ToB64()), nil
-}
-
-// Marshals a token to text. Used downstream by JSON and BSON marshalling.
-func (ut Token) MarshalText() (text []byte, err error) {
-	return []byte(ut.ToB64()), nil
-}
-
-// Converts a token into a string.
-func (ut Token) String() string {
-	return ut.ToB64()
-}
-
-// Converts the token into a base64 string.
-func (ut Token) ToB64() string {
-	return Base64EncodeTok(ut.ToBytes())
-}
-
-// Converts a token into a byte array. See: https://stackoverflow.com/a/56272984
-func (ut Token) ToBytes() []byte {
-	return (*(*[TOKEN_SIZE_BYTES]byte)(unsafe.Pointer(&ut)))[:]
-}
-
-// UnmarshalBSONValue implements the bson.ValueUnmarshaler interface.
-func (ut *Token) UnmarshalBSONValue(t bsontype.Type, raw []byte) error {
-	//Ensure the incoming type is correct
-	if t != bson.TypeString {
-		return fmt.Errorf("(Token) invalid format on unmarshalled bson value")
-	}
-
-	//Read the data from the BSON item
-	var str string
-	if err := bson.UnmarshalValue(bson.TypeString, raw, &str); err != nil {
-		return err
-	}
-
-	//Deserialize the bytes into a struct
-	obj, err := TokenFromB64(str)
-	*ut = *obj
-	return err
-}
-
-// Unmarshals a token from a string. Used downstream by JSON and BSON marshalling.
-func (ut *Token) UnmarshalText(text []byte) error {
-	tok, err := TokenFromB64(string(text[:]))
-	*ut = *tok
-	return err
-}
-
-// Determines if a token is valid.
-func (ut Token) Validate(skipExipryCheck bool) bool {
-	//Determine if the token is expired before anything else
-	if !skipExipryCheck && ut.Expire && time.Now().After(ut.GetExpiry()) {
-		return false
-	}
-
-	//Check 1: Check for possible tampering of the ID and type
-	if ut.ID.Version() != 7 || ut.Type != obj.IdTypeTOKEN || time.Unix(ut.ID.Time().UnixTime()).After(ut.GetExpiry()) {
-		return false
-	}
-
-	//Check 2: Check for possible tampering of the subject
-	if ut.ID == ut.Subject || ut.Subject.Version() != 7 || time.Unix(ut.Subject.Time().UnixTime()).After(ut.GetExpiry()) {
-		return false
-	}
-
-	//Check 3: Check the rands of the id and subject uuids
-	if bytes.Equal(ut.ID.UUID[8:], ut.Subject.UUID[8:]) {
-		return false
-	}
-
-	//No issues, so return true
-	return true
-}
-
-// Helper function to decode a base64 string into a byte array.
-func Base64DecodeTok(str string) ([]byte, error) {
-	return base64.URLEncoding.DecodeString(str)
-}
-
-// Helper function to encode a base64 string from a byte array.
-func Base64EncodeTok(bytes []byte) string {
-	return base64.URLEncoding.EncodeToString(bytes)
 }

@@ -7,7 +7,6 @@ import (
 	"wraith.me/message_server/crypto"
 	"wraith.me/message_server/obj"
 	"wraith.me/message_server/obj/ip_addr"
-	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/util"
 )
 
@@ -48,11 +47,8 @@ type User struct {
 	//The user's global options.
 	Options UserOptions `json:"options" bson:"options"`
 
-	/*
-		The user's list of authentication tokens. This should
-		NOT be outputted if a JSON representation is requested.
-	*/
-	Tokens []token.Token `json:"-" bson:"tokens"`
+	//The user's refresh tokens, keyed by their IDs in string form.
+	Tokens map[string]string `json:"tokens" bson:"tokens"`
 }
 
 //-- Constructors
@@ -84,7 +80,7 @@ func NewUser(
 		LastIP:      lastIP,
 		Flags:       flags,
 		Options:     options,
-		Tokens:      make([]token.Token, 0),
+		Tokens:      make(map[string]string, 0),
 	}
 }
 
@@ -104,6 +100,22 @@ func NewUserSimple(username string, email string) *User {
 }
 
 //-- Methods
+
+// Checks if a user has a particular token.
+func (u User) HasToken(tok string) bool {
+	for _, token := range u.Tokens {
+		if token == tok {
+			return true
+		}
+	}
+	return false
+}
+
+// Checks if a user has a particular token by ID.
+func (u User) HasTokenById(tokId string) bool {
+	_, ok := u.Tokens[tokId]
+	return ok
+}
 
 // Marks a user's email as verified.
 func (u *User) MarkEmailVerified() {

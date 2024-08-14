@@ -4,7 +4,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
 	"wraith.me/message_server/config"
-	"wraith.me/message_server/obj/token"
 	cr "wraith.me/message_server/redis"
 	"wraith.me/message_server/schema/user"
 )
@@ -40,7 +39,7 @@ func AuthRoutes(cfgg *config.Config, envv *config.Env) chi.Router {
 	r.Post("/login_verify", VerifyLoginUserRoute)
 
 	//Add the test route
-	authTest := NewAuthTestRouter("", token.TokenScopeValues())
+	authTest := NewAuthTestRouter("", envv)
 	r.Group(authTest.Router())
 
 	//Return the router

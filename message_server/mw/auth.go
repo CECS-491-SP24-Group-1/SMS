@@ -5,13 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"slices"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
+	"wraith.me/message_server/config"
 	"wraith.me/message_server/obj"
 	"wraith.me/message_server/obj/token"
 	cr "wraith.me/message_server/redis"
@@ -21,16 +19,13 @@ import (
 
 var (
 	//The name of the cookie to look for.
-	AuthCookieName = "token"
+	AuthCookieName = token.AccessTokenName
 
 	//The name of the HTTP query parameter to look for.
-	AuthHttpParamName = "token"
+	AuthHttpParamName = token.AccessTokenName
 
 	//The name of the auth subject header to send.
 	AuthHttpHeaderSubject = "X-Auth-For"
-
-	//The name of the auth scope header to send.
-	AuthHttpHeaderScope = "X-Auth-Scope"
 
 	//The key of the user object that's passed via `r.Context`.
 	AuthCtxUserKey = obj.CtxKey{S: "ReqUser"}
@@ -38,33 +33,36 @@ var (
 
 // Holds the error messages.
 var (
-	ErrAuthUnauthorized   = errors.New("token is not authorized for this route")
-	ErrAuthExpiredToken   = errors.New("token has expired")
-	ErrAuthNoTokenFound   = errors.New("no token found")
-	ErrAuthBadTokenFormat = errors.New("token format is incorrect")
-	ErrAuthGeneric        = errors.New("authentication error")
+	ErrAuthUnauthorized = errors.New("token is not authorized for this route")
+	ErrAuthNoTokenFound = errors.New("no token found")
+	ErrAuthGeneric      = errors.New("authentication error")
 )
 
 type authMiddleware struct {
-	allowedScopes []token.TokenScope //The scopes for which the token is valid, sorted in increasing order.
+	//allowedScopes []token.TokenScope //The scopes for which the token is valid, sorted in increasing order.
 	//mclient       *mongo.Client      //The MongoDB database client.
 	rclient *redis.Client //The Redis database client.
 
+	//The user collection to use.
 	ucoll *user.UserCollection
+
+	//The secrets of the server including ID and encryption key.
+	secrets *config.Env
 }
 
 // Returns a new handler for the authentication middleware.
-func NewAuthMiddleware(allowedScopes []token.TokenScope) func(next http.Handler) http.Handler {
+func NewAuthMiddleware(secrets *config.Env) func(next http.Handler) http.Handler {
 	//Get a struct object
 	mw := authMiddleware{
-		allowedScopes: allowedScopes,
+		//allowedScopes: allowedScopes,
 		//mclient:       db.GetInstance().GetClient(),
 		rclient: cr.GetInstance().GetClient(),
 		ucoll:   user.GetCollection(),
+		secrets: secrets,
 	}
 
 	//Return the instance
-	slices.Sort(mw.allowedScopes)
+	//slices.Sort(mw.allowedScopes)
 	return mw.authMWHandler
 }
 
@@ -111,7 +109,7 @@ provide a token from either a cookie (`TokenFromCookie()`), a header
 */
 func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//Attempt to get the tok, starting from the URL params
+		//Attempt to get the token, starting from the URL params
 		tok := TokenFromQuery(r)
 
 		//If the token still isn't there, try the headers
@@ -133,62 +131,35 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		//Get a byte array from the token and reject the token if the size is incorrect
-		tbytes, derr := token.Base64DecodeTok(tok)
-		if derr != nil || len(tbytes) != token.TOKEN_SIZE_BYTES {
+		//Decrypt and validate the authentication token
+		tokObj, err := token.Decrypt(
+			tok,
+			amw.secrets.SK,
+			amw.secrets.ID,
+			token.TokenTypeACCESS,
+		)
+		if err != nil {
 			util.ErrResponse(
 				http.StatusUnauthorized,
-				fmt.Errorf("auth; %s", ErrAuthBadTokenFormat),
-			).Respond(w)
-			return
-		}
-
-		//Attempt to derive a token object from the input bytes
-		tokObj := token.TokenFromBytes(tbytes)
-		if tokObj == nil {
-			util.ErrResponse(
-				http.StatusUnauthorized,
-				fmt.Errorf("auth; %s", ErrAuthBadTokenFormat),
+				fmt.Errorf("auth; %s", err),
 			).Respond(w)
 			return
 		}
 
 		/*
-			Ensure the provided token isn't an invalid object for whatever reason. It's
-			faster and safer to pre-check validity before anything else than to query for
-			an invalid token. After this point, the token object itself is valid. Further
-			checks can now occur before the database is queried for the subject's tokens.
+				Ensure the token's scope is among those that are authorized. A token is considered
+				valid for a route if the token's scope value is greater than or equal to the auth
+				handler's lowest allowed scope. The scopes of an auth handler are pre-sorted in
+				ascending order just after initialization.
+			* /
+			if !(tokObj.Scope >= amw.allowedScopes[0]) {
+				util.ErrResponse(
+					http.StatusUnauthorized,
+					fmt.Errorf("auth; %s", ErrAuthUnauthorized),
+				).Respond(w)
+				return
+			}
 		*/
-		if !tokObj.Validate(true) {
-			util.ErrResponse(
-				http.StatusUnauthorized,
-				fmt.Errorf("auth; %s", ErrAuthBadTokenFormat),
-			).Respond(w)
-			return
-		}
-
-		//Check if the token has expired
-		if tokExp := tokObj.GetExpiry(); tokObj.Expire && time.Now().After(tokExp) {
-			util.ErrResponse(
-				http.StatusUnauthorized,
-				fmt.Errorf("auth; %s", ErrAuthExpiredToken),
-			).Respond(w)
-			return
-		}
-
-		/*
-			Ensure the token's scope is among those that are authorized. A token is considered
-			valid for a route if the token's scope value is greater than or equal to the auth
-			handler's lowest allowed scope. The scopes of an auth handler are pre-sorted in
-			ascending order just after initialization.
-		*/
-		if !(tokObj.Scope >= amw.allowedScopes[0]) {
-			util.ErrResponse(
-				http.StatusUnauthorized,
-				fmt.Errorf("auth; %s", ErrAuthUnauthorized),
-			).Respond(w)
-			return
-		}
 
 		//Get the subject of the token
 		tokSubject := tokObj.Subject
@@ -197,10 +168,15 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		// -- BEGIN: Database Query
 		//
 
-		//Query the database for a user with the token
+		//Prepare an object to hold the database result
 		var user user.User
-		query := bson.D{{Key: "tokens", Value: bson.D{{Key: "$in", Value: bson.A{tok}}}}}
-		err := amw.ucoll.Find(r.Context(), query).One(&user)
+
+		//Query the database for the token's subject
+		//After this point, assuming nothing goes wrong, the user is considered authorized to continue
+		err = amw.ucoll.Find(
+			r.Context(),
+			bson.M{"_id": tokSubject},
+		).One(&user)
 		if err != nil {
 			fmt.Printf("auth err; %s\n", err)
 			util.ErrResponse(
@@ -209,27 +185,16 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			).Respond(w)
 			return
 		}
+		//query := bson.D{{Key: "tokens", Value: bson.D{{Key: "$in", Value: bson.A{tok}}}}}
 
 		//
 		// -- END: Database Query
 		//
 
-		/*
-				Check if the subject's token list includes the incoming token. If this check
-				passes, the client is let through and the middleware finishes without error.
-			if !slices.Contains(subjectTokens, tok) {
-				util.ErrResponse(http.StatusUnauthorized,
-					fmt.Errorf("auth; %s", ErrAuthNoTokenFound),
-				).Respond(w)
-				return
-			}
-		*/
-
 		//Add headers to the request (auth subject and token scope)
 		r.Header.Add(AuthHttpHeaderSubject, tokSubject.String())
-		r.Header.Add(AuthHttpHeaderScope, strconv.Itoa(int(tokObj.Scope)))
 
-		//Add the user to the request context
+		//Add the user to the request context; TODO: might want to redact some fields
 		//https://go.dev/blog/context#TOC_3.2.
 		ctx := context.WithValue(r.Context(), AuthCtxUserKey, user)
 		r = r.WithContext(ctx)
