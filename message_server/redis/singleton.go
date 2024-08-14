@@ -56,6 +56,11 @@ func (m RClient) GetConfig() *RConfig {
 	return m.config
 }
 
+// Returns whether there is an active connection to the database.
+func (m RClient) IsConnected() bool {
+	return m.client != nil
+}
+
 // Connects to the Redis server specified in the given config object.
 func (m *RClient) Connect(cfg *RConfig) (*redis.Client, error) {
 	//Lock the mutex and defer its unlock

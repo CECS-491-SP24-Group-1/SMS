@@ -56,6 +56,11 @@ func (m MClient) GetConfig() *MConfig {
 	return m.config
 }
 
+// Returns whether there is an active connection to the database.
+func (m MClient) IsConnected() bool {
+	return m.client != nil
+}
+
 // Connects to the MongoDB server specified in the given config object.
 func (m *MClient) Connect(cfg *MConfig) (*qmgo.Client, error) {
 	//Lock the mutex and defer its unlock

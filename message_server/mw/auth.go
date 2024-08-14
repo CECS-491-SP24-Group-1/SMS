@@ -209,7 +209,7 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		//Add headers to the request (auth subject and token scope)
 		r.Header.Add(AuthHttpHeaderSubject, tokSubject.String())
 
-		//Add the user to the request context; TODO: might want to redact some fields; FoC might involve looping over redaction fields and deleting from map that struct was marshalled to
+		//Add the user to the request context
 		//https://go.dev/blog/context#TOC_3.2.
 		ctx := context.WithValue(r.Context(), AuthCtxUserKey, user)
 		r = r.WithContext(ctx)

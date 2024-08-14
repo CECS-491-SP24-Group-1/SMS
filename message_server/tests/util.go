@@ -52,10 +52,16 @@ func redisInit() *redis.Client {
 	return rclient
 }
 
+// Gets a random user from the database.
 func GetRandomUser() (*user.User, error) {
-	//Connect to the database and get the user collection
-	if _, err := db.GetInstance().Connect(db.DefaultMConfig()); err != nil {
-		return nil, err
+	//Get the database instance
+	dbc := db.GetInstance()
+
+	//Connect if not already done so
+	if !dbc.IsConnected() {
+		if _, err := dbc.Connect(db.DefaultMConfig()); err != nil {
+			return nil, err
+		}
 	}
 	ucoll := user.GetCollection()
 
