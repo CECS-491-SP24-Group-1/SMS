@@ -9,6 +9,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/config"
 	"wraith.me/message_server/obj"
 	"wraith.me/message_server/obj/token"
@@ -36,6 +37,7 @@ var (
 	ErrAuthUnauthorized = errors.New("token is not authorized for this route")
 	ErrAuthNoTokenFound = errors.New("no token found")
 	ErrAuthGeneric      = errors.New("authentication error")
+	ErrAuthNotFound     = errors.New("user not found with ID %s")
 )
 
 type authMiddleware struct {
@@ -177,11 +179,24 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			r.Context(),
 			bson.M{"_id": tokSubject},
 		).One(&user)
+
+		//Check if something went wrong during the query
 		if err != nil {
-			fmt.Printf("auth err; %s\n", err)
+			//Check if the error has to do with a lack of documents
+			code := http.StatusUnauthorized
+			desc := ErrAuthGeneric
+			if errors.Is(err, mongo.ErrNoDocuments) {
+				//Change the error to be a 404
+				code = http.StatusNotFound
+				desc = fmt.Errorf(ErrAuthNotFound.Error(), tokSubject.String())
+			} else {
+				fmt.Printf("auth err for client %s; %s\n", r.RemoteAddr, err)
+			}
+
+			//Respond back with the error
 			util.ErrResponse(
-				http.StatusUnauthorized,
-				fmt.Errorf("auth; %s", ErrAuthGeneric),
+				code,
+				fmt.Errorf("auth; %s", desc),
 			).Respond(w)
 			return
 		}

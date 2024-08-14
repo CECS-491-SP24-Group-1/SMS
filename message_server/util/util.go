@@ -112,6 +112,31 @@ func GenRandString(s int) (string, error) {
 	return base64.URLEncoding.EncodeToString(b), err
 }
 
+// Gets the first item in a map.
+func GetSingular[K comparable, V any](mp map[K]V) (*V, error) {
+	if len(mp) > 0 {
+		var first *V
+
+		//Get the first item in the map
+		for _, v := range mp {
+			first = &v
+			break
+		}
+		return first, nil
+	} else {
+		return nil, fmt.Errorf("target map is empty")
+	}
+}
+
+// Gets the first item in a map.
+func MustGetSingular[K comparable, V any](mp map[K]V) V {
+	v, err := GetSingular(mp)
+	if err != nil {
+		panic(err)
+	}
+	return *v
+}
+
 // Checks if an integer is inside of a specified range.
 func InRange(num int64, min int64, max int64) bool {
 	return num >= min && num <= max
