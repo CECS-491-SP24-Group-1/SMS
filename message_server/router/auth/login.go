@@ -12,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	ccrypto "wraith.me/message_server/crypto"
-	"wraith.me/message_server/obj"
 	c "wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
@@ -60,39 +59,26 @@ type loginVerifyUser struct {
 }
 
 /*
-Defines the structure of a user record that's returned from the database
-during the existing user check. This includes the user's ID, public key,
-and the status flags of the user.
-*/
-type existingUserResult struct {
-	//`existingUserResult` extends the abstract entity type.
-	obj.Entity `bson:",inline"`
-
-	//The user's flags. These mark items such as verification status, deletion, etc.
-	Flags user.UserFlags `json:"flags" bson:"flags"`
-}
-
-/*
 Handles incoming requests made to `POST /api/auth/login_req`. This is stage 1
 of the login process.
 */
 func RequestLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Create a new stage 1 object plus database result
 	loginReq := loginUser{}
-	hit := existingUserResult{}
+	user := user.User{}
 
 	//Run pre-flight checks
-	if !preFlight(&loginReq, &hit, w, r) {
+	if !preFlight(&loginReq, &user, w, r) {
 		return
 	}
 
 	//Create a public key challenge using the user's info
 	loginTok := c.NewPKChallenge(
 		env.ID,
-		hit.ID,
+		user.ID,
 		c.CPurposeLOGIN,
 		time.Now().Add(10*time.Minute),
-		hit.Pubkey,
+		user.Pubkey,
 	).Encrypt(env.SK)
 
 	//Send the token to the user
@@ -109,10 +95,10 @@ Handles incoming requests made to `POST /api/auth/login_verify`. This is stage
 func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Create a new stage 2 object plus database result
 	loginVReq := loginVerifyUser{}
-	hit := existingUserResult{}
+	user := user.User{}
 
 	//Run pre-flight checks
-	if !preFlight(&loginVReq, &hit, w, r) {
+	if !preFlight(&loginVReq, &user, w, r) {
 		return
 	}
 
@@ -148,7 +134,7 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 }
 
 // Contains the common FoC that is to be ran before any login request.
-func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, w http.ResponseWriter, r *http.Request) bool {
+func preFlight[T loginUser | loginVerifyUser](user *T, hit *user.User, w http.ResponseWriter, r *http.Request) bool {
 	//Get the request body and attempt to parse from JSON
 	var reqBody map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
@@ -212,14 +198,13 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 	}
 
 	//Ensure the claims map to an existing user in the database
-	//TODO: get the whole user object
 	tmp, err := ensureExistantUser(uc, lu, r.Context())
 	if err != nil {
 		//Check if the error has to do with a missing user
 		code := _PF_PARSE_ERR
 		desc := err
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			code = http.StatusNotFound
+			code = _PF_NO_USER
 			desc = fmt.Errorf("no such user with ID %s", lu.ID)
 		}
 
@@ -293,8 +278,7 @@ func ensureCorrectIdAndPKFmt(id string, pk string, sig string) error {
 }
 
 // Ensures that a user with the given UUID and public key exists.
-// TODO: might want to return a whole user object so it can be modified later on
-func ensureExistantUser(coll *user.UserCollection, user loginUser, ctx context.Context) (*existingUserResult, error) {
+func ensureExistantUser(coll *user.UserCollection, usr loginUser, ctx context.Context) (*user.User, error) {
 	//Construct a Mongo aggregation pipeline to run the request; avoids making multiple round-trips to the database
 	//This aggregation was exported from MongoDB; do not edit if you don't know what you are doing!
 	agg := bson.A{
@@ -302,25 +286,15 @@ func ensureExistantUser(coll *user.UserCollection, user loginUser, ctx context.C
 		bson.D{
 			{Key: "$match",
 				Value: bson.D{
-					{Key: "_id", Value: user.ID},
-					{Key: "pubkey", Value: user.PK},
-				},
-			},
-		},
-		//Reduce the size of the incoming BSON documents to improve performance, but leave the flags intact
-		bson.D{
-			{Key: "$project",
-				Value: bson.D{
-					{Key: "_id", Value: 1},
-					{Key: "pubkey", Value: 1},
-					{Key: "flags", Value: 1},
+					{Key: "_id", Value: usr.ID},
+					{Key: "pubkey", Value: usr.PK},
 				},
 			},
 		},
 	}
 
 	//Run the request and collect all hits; critical errors may be reported from this function so handle appropriately
-	var hit existingUserResult
+	var hit user.User
 	err := coll.Aggregate(ctx, agg).One(&hit)
 	if err != nil {
 		return nil, err
