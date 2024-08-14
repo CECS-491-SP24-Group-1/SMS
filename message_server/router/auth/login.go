@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	ccrypto "wraith.me/message_server/crypto"
 	"wraith.me/message_server/obj"
 	c "wraith.me/message_server/obj/challenge"
@@ -210,20 +212,32 @@ func preFlight[T loginUser | loginVerifyUser](user *T, hit *existingUserResult, 
 	}
 
 	//Ensure the claims map to an existing user in the database
+	//TODO: get the whole user object
 	tmp, err := ensureExistantUser(uc, lu, r.Context())
 	if err != nil {
-		util.ErrResponse(_PF_PARSE_ERR, err).Respond(w)
+		//Check if the error has to do with a missing user
+		code := _PF_PARSE_ERR
+		desc := err
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			code = http.StatusNotFound
+			desc = fmt.Errorf("no such user with ID %s", lu.ID)
+		}
+
+		//Respond back with the error
+		util.ErrResponse(code, desc).Respond(w)
 		return false
 	}
 
 	//Check if a valid user was returned
-	if tmp == nil {
-		util.ErrResponse(
-			_PF_NO_USER,
-			fmt.Errorf("no user found for id %s", lu.ID),
-		).Respond(w)
-		return false
-	}
+	/*
+		if tmp == nil {
+			util.ErrResponse(
+				_PF_NO_USER,
+				fmt.Errorf("no such user with ID %s", lu.ID),
+			).Respond(w)
+			return false
+		}
+	*/
 	*hit = *tmp
 
 	//Check the user's flags to ensure they can actually sign-in
