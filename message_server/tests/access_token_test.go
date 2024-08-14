@@ -14,7 +14,7 @@ import (
 	"wraith.me/message_server/util"
 )
 
-func TestGeneccessTok(t *testing.T) {
+func TestGenAccessTok(t *testing.T) {
 	//Get the server secrets
 	secrets, err := config.EnvInit("../secrets.env")
 	if err != nil {
