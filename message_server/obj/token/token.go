@@ -4,7 +4,9 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
+	"math"
 	"net"
+	"net/http"
 	"strings"
 	"time"
 
@@ -95,8 +97,50 @@ func NewToken(subject util.UUID, issuer util.UUID, typ TokenType, exp time.Time,
 	}
 }
 
-// -- Methods
-//func (t Token) Cookie()
+//-- Methods
+
+// Creates an HTTP cookie string to hold the PASETO token.
+func (t Token) Cookie(key ccrypto.Privkey, path, domain string, persistent bool) string {
+	_, cookie := t.CryptAndCookie(key, path, domain, persistent)
+	return cookie
+}
+
+/*
+Encrypts the PASETO token and creates an HTTP cookie string to hold the
+PASETO token, all in one step.
+*/
+func (t Token) CryptAndCookie(key ccrypto.Privkey, path, domain string, persistent bool) (token, cookie string) {
+	//Encrypt the token
+	token = t.Encrypt(key, true)
+
+	//Get the delta between the current date and the expiry; in seconds
+	timeDelta := -1
+	if persistent {
+		timeDelta = int(math.Round(time.Until(t.Expiry).Seconds()))
+	}
+
+	//Get the name based on whether this is an access or refresh token
+	name := "Untitled"
+	if t.Type == TokenTypeACCESS {
+		name = AccessTokenName
+	} else if t.Type == TokenTypeREFRESH {
+		name = RefreshTokenName
+	}
+
+	//Build the cookie
+	cookieBuilder := http.Cookie{
+		Name:     name,
+		Value:    token,
+		Path:     path,
+		Domain:   domain,
+		MaxAge:   timeDelta,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	}
+	cookie = cookieBuilder.String()
+	return
+}
 
 // Decrypts a PASETO string using a given symmetric key, which creates a Token object.
 func Decrypt(token string, key ccrypto.Privkey, issuer util.UUID, typ TokenType) (*Token, error) {
@@ -190,6 +234,7 @@ func pasetoDecode(tok *paseto.Token, issuer util.UUID) (*Token, error) {
 	var ipAddr string
 
 	//Early return if any conversion function fails
+	//TODO: might want to condense this
 	perr := func() (err error) {
 		id, err = tok.GetJti()
 		if err != nil {
