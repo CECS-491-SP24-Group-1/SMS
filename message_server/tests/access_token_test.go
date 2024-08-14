@@ -42,6 +42,7 @@ func TestGenAccessTok(t *testing.T) {
 	id := util.MustGetSingular(idres)
 
 	//Generate an access token
+	//The tokens generated should work for auth tests, but are not persisted to the db
 	tok := token.NewToken(
 		id,
 		secrets.ID,

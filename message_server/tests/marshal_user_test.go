@@ -27,6 +27,7 @@ func TestUser2BSON(t *testing.T) {
 	}
 
 	//Add a test token
+	//Decryption error will occur since the encryption key is different than prod
 	tok := token.NewToken(
 		usr.ID,
 		issuerId,
@@ -63,6 +64,7 @@ func TestUser2JSON(t *testing.T) {
 	}
 
 	//Add a test token
+	//Decryption error will occur since the encryption key is different than prod
 	tok := token.NewToken(
 		usr.ID,
 		issuerId,
