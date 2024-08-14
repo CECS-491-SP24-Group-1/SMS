@@ -1,12 +1,15 @@
 package tests
 
 import (
+	"context"
 	"reflect"
 
 	"github.com/qiniu/qmgo"
 	"github.com/redis/go-redis/v9"
+	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/db"
 	cr "wraith.me/message_server/redis"
+	"wraith.me/message_server/schema/user"
 )
 
 const (
@@ -47,4 +50,25 @@ func redisInit() *redis.Client {
 		panic(rerr)
 	}
 	return rclient
+}
+
+func GetRandomUser() (*user.User, error) {
+	//Connect to the database and get the user collection
+	if _, err := db.GetInstance().Connect(db.DefaultMConfig()); err != nil {
+		return nil, err
+	}
+	ucoll := user.GetCollection()
+
+	//Construct a query to get a random user
+	query := bson.A{
+		bson.D{{Key: "$sample", Value: bson.D{{Key: "size", Value: 1}}}},
+	}
+
+	//Get a random user; the result is deserialized to a map; qmgo doesn't like deserializing to raw objects
+	var res user.User
+	err := ucoll.Aggregate(context.Background(), query).One(&res)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
