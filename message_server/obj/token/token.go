@@ -2,8 +2,10 @@ package token
 
 import (
 	"crypto/subtle"
+	"encoding/base64"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"aidanwoods.dev/go-paseto"
@@ -28,6 +30,9 @@ var (
 
 	//The name of the refresh token expiration cookie.
 	RefreshTokenExprName = "refresh_token_expr"
+
+	//The format of the times in the token.
+	TimeFmt = time.RFC3339
 )
 
 //
@@ -134,11 +139,41 @@ func (t Token) Encrypt(key ccrypto.Privkey, expInFooter bool) string {
 
 	//Check if the expiration footer should be added
 	if expInFooter {
-		token.SetFooter([]byte(t.Expiry.UTC().Format(time.RFC3339)))
+		token.SetFooter([]byte(t.Expiry.UTC().Format(TimeFmt)))
 	}
 
 	//Encrypt the token
 	return token.V4Encrypt(util.Edsk2PasetoSK(key), nil)
+}
+
+//-- Public utilities
+
+// Gets the expiration from a token that has it in the footer
+func GetExprFromFooter(tok string) (time.Time, error) {
+	//Split the token at every period and get the last piece
+	pieces := strings.Split(tok, ".")
+	exprB64 := pieces[len(pieces)-1]
+
+	/*
+		Ensure this token has a timestamp; expected size of the split pieces is 4:
+		- v4
+		- local
+		- <token>
+		- <footer>
+	*/
+	const expectedSize = 4
+	if len(pieces) != expectedSize {
+		return time.Time{}, fmt.Errorf("token doesn't have a valid footer; got size %d expected %d", len(pieces), expectedSize)
+	}
+
+	//Decode the expiration from base64
+	exprBytes, err := base64.RawURLEncoding.DecodeString(exprB64)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	//Parse the timestamp to a `time.Time`
+	return time.Parse(TimeFmt, string(exprBytes))
 }
 
 //-- Private utilities

@@ -50,6 +50,14 @@ func TestGenAccessTok(t *testing.T) {
 		time.Now().Add(30*time.Minute),
 		nil,
 	).Encrypt(secrets.SK, true)
+
+	//Get the expiration
+	expr, err := token.GetExprFromFooter(tok)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	fmt.Printf("User UUID:  %s\n", id)
 	fmt.Printf("User Token: %s\n", tok)
+	fmt.Printf("Token Expr: %s\n", expr.Format(token.TimeFmt))
 }
