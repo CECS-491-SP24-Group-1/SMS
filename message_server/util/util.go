@@ -250,7 +250,7 @@ Replaces n characters on either side of a string with asterisks,
 effectively redacting the contents of the string.
 */
 //TODO: redo using string slicing, if possible
-func Redact(str string, n int) string {
+func RedactString(str string, n int) string {
 	//Convert the string to a slice of runes
 	runes := []rune(str)
 
@@ -282,8 +282,8 @@ func RedactEmail(email string) string {
 	dname, tld := SplitAtLastRune(domain, '.')
 
 	//Redact the email and domain names
-	name = RedactCenter(name, 1)
-	dname = RedactCenter(dname, 1)
+	name = RedactStringCenter(name, 1)
+	dname = RedactStringCenter(dname, 1)
 
 	//Recombine the redacted name and domain
 	return name + "@" + dname + "." + tld
@@ -293,7 +293,7 @@ func RedactEmail(email string) string {
 Replaces n characters from the center of a string with asterisks,
 effectively redacting the contents of the string.
 */
-func RedactCenter(str string, n int) string {
+func RedactStringCenter(str string, n int) string {
 	if len(str) <= n*2 {
 		return strings.Repeat("*", len(str))
 	} else {
