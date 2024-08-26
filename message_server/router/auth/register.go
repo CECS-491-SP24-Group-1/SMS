@@ -10,17 +10,14 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 
-	"github.com/tanqiangyes/govalidator"
 	"github.com/xeipuuv/gojsonschema"
 	"go.mongodb.org/mongo-driver/bson"
+	"wraith.me/message_server/controller/csolver"
 	"wraith.me/message_server/crypto"
-	"wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/obj/ip_addr"
 	schema "wraith.me/message_server/schema/json"
 	"wraith.me/message_server/schema/user"
-	"wraith.me/message_server/template/reg_email"
 	"wraith.me/message_server/util"
 )
 
@@ -195,17 +192,10 @@ func (iu intermediateUser) validate(strictEmail bool) (bool, []error) {
 		errors = append(errors, fmt.Errorf("username '%s' is invalid. It must be 4-16 characters in length and only consist of alphanumeric characters and underscores", strings.ToLower(iu.Username)))
 	}
 
-	//Pick the appropriate email validator
-	//`strictEmail` also ensures the email maps to an existing domain name
-	emailValidator := govalidator.IsEmail[string]
-	if strictEmail {
-		emailValidator = govalidator.IsExistingEmail[string]
-	}
-
 	//Step 2: Check the validity of the email
-	validEmail := emailValidator(strings.ToLower(iu.Email))
-	if !validEmail {
-		errors = append(errors, fmt.Errorf("email '%s' is invalid; it must be of the form 'foo@example.com'", strings.ToLower(iu.Email)))
+	evErr := csolver.IsValidEmail(iu.Email, strictEmail)
+	if evErr != nil {
+		errors = append(errors, evErr)
 	}
 
 	//Step 3: Check the validity of the base64'ed public key by attempting to convert to a byte array
@@ -217,7 +207,7 @@ func (iu intermediateUser) validate(strictEmail bool) (bool, []error) {
 	}
 
 	//Return the validity status and any errors that occurred
-	return validUname && validEmail && validPubkey, errors
+	return validUname && (evErr == nil) && validPubkey, errors
 }
 
 /*
@@ -225,23 +215,8 @@ Performs post-signup operations on the newly created user object, such
 as persistence to the database and generation of challenges.
 */
 func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User) error {
-	//Issue a PASETO challenge for confirming the user's email
-	paseto := challenge.NewEmailChallenge(
-		env.ID,
-		usr.ID,
-		challenge.CPurposeCONFIRM,
-		time.Now().Add(24*time.Hour),
-		usr.Email,
-	).Encrypt(env.SK)
-
-	//Compose and send a challenge email to the user
-	emailer := reg_email.NewRegEmail(
-		*usr,
-		util.TZOffsetFromReq(r),
-		paseto,
-		*cfg,
-	)
-	if err := emailer.Send(); err != nil {
+	//Issue an email challenge for the user
+	if err := csolver.IssueEmailChallenge(usr, cfg, env, r); err != nil {
 		return err
 	}
 
