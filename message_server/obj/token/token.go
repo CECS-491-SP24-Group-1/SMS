@@ -113,12 +113,6 @@ func (t Token) CryptAndCookie(key ccrypto.Privkey, path, domain string, persiste
 	//Encrypt the token
 	token = t.Encrypt(key, true)
 
-	//Get the delta between the current date and the expiry; in seconds
-	timeDelta := -1
-	if persistent {
-		timeDelta = int(math.Round(time.Until(t.Expiry).Seconds()))
-	}
-
 	//Get the name based on whether this is an access or refresh token
 	name := "Untitled"
 	if t.Type == TokenTypeACCESS {
@@ -133,9 +127,9 @@ func (t Token) CryptAndCookie(key ccrypto.Privkey, path, domain string, persiste
 		Value:    token,
 		Path:     path,
 		Domain:   domain,
-		MaxAge:   timeDelta,
+		MaxAge:   t.MaxAge(persistent),
 		Secure:   true,
-		HttpOnly: true,
+		HttpOnly: true, //This must be true to ensure it remains inaccessible by clientside JS
 		SameSite: http.SameSiteStrictMode,
 	}
 	cookie = cookieBuilder.String()
@@ -188,6 +182,40 @@ func (t Token) Encrypt(key ccrypto.Privkey, expInFooter bool) string {
 
 	//Encrypt the token
 	return token.V4Encrypt(util.Edsk2PasetoSK(key), nil)
+}
+
+// Creates an HTTP cookie string to hold the expiration of this token.
+func (t Token) ExprCookie(path, domain string, exprMultiplier int, persistent bool) string {
+	//Get the name based on whether this is an access or refresh token
+	name := "Untitled"
+	if t.Type == TokenTypeACCESS {
+		name = AccessTokenExprName
+	} else if t.Type == TokenTypeREFRESH {
+		name = RefreshTokenExprName
+	}
+
+	//Build the cookie
+	cookieBuilder := http.Cookie{
+		Name:     name,
+		Value:    t.Expiry.Format(TimeFmt),
+		Path:     path,
+		Domain:   domain,
+		MaxAge:   t.MaxAge(persistent) * exprMultiplier,
+		Secure:   true,
+		HttpOnly: false, //This must be false so clientside JS can access it
+		SameSite: http.SameSiteStrictMode,
+	}
+	return cookieBuilder.String()
+}
+
+// Gets the "Max Age" of the token in seconds.
+func (t Token) MaxAge(persistent bool) int {
+	// Get the delta between the current date and the expiry; in seconds
+	timeDelta := -1
+	if persistent {
+		timeDelta = int(math.Round(time.Until(t.Expiry).Seconds()))
+	}
+	return timeDelta
 }
 
 //-- Public utilities

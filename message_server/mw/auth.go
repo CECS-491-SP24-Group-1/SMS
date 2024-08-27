@@ -69,18 +69,6 @@ func NewAuthMiddleware(secrets *config.Env) func(next http.Handler) http.Handler
 }
 
 /*
-TokenFromCookie tries to retrieve the token string from a cookie named "token".
-See: https://github.com/go-chi/jwtauth/blob/1ff608193a049433794670a8c18fd739c5b2f236/jwtauth.go#L256
-*/
-func TokenFromCookie(r *http.Request) string {
-	cookie, err := r.Cookie(AuthCookieName)
-	if err != nil {
-		return ""
-	}
-	return cookie.Value
-}
-
-/*
 TokenFromHeader tries to retrieve the token string from the "Authorization"
 request header: "Authorization: BEARER T".
 See: https://github.com/go-chi/jwtauth/blob/1ff608193a049433794670a8c18fd739c5b2f236/jwtauth.go#L266
@@ -95,16 +83,6 @@ func TokenFromHeader(r *http.Request) string {
 }
 
 /*
-TokenFromQuery tries to retrieve the token string from the "token" URI
-query parameter.
-See: https://github.com/go-chi/jwtauth/blob/1ff608193a049433794670a8c18fd739c5b2f236/jwtauth.go#L285
-*/
-func TokenFromQuery(r *http.Request) string {
-	//Get token from query param named "jwt"
-	return r.URL.Query().Get(AuthHttpParamName)
-}
-
-/*
 This middleware is responsible for authenticating clients. A client can
 provide a token from either a cookie (`TokenFromCookie()`), a header
 (`TokenFromHeader()`), or from a URL parameter (`TokenFromQuery()`).
@@ -112,7 +90,7 @@ provide a token from either a cookie (`TokenFromCookie()`), a header
 func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//Attempt to get the token, starting from the URL params
-		tok := TokenFromQuery(r)
+		tok := util.StringFromQuery(r, AuthHttpParamName)
 
 		//If the token still isn't there, try the headers
 		if tok == "" {
@@ -121,7 +99,7 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 
 		//If the token still isn't there, try the cookies
 		if tok == "" {
-			tok = TokenFromCookie(r)
+			tok = util.StringFromCookie(r, AuthCookieName)
 		}
 
 		//Still no token? Deny the request since there's no token. The middleware stops here

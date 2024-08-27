@@ -7,14 +7,11 @@ import (
 	"encoding/gob"
 	"fmt"
 	"math/rand"
-	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"aidanwoods.dev/go-paseto"
 	"github.com/mitchellh/mapstructure"
-	"wraith.me/message_server/consts"
 	ccrypto "wraith.me/message_server/crypto"
 )
 
@@ -125,6 +122,15 @@ func GetSingular[K comparable, V any](mp map[K]V) (*V, error) {
 		return first, nil
 	} else {
 		return nil, fmt.Errorf("target map is empty")
+	}
+}
+
+// Mimics a ternary operator found in other languages.
+func If[T any](cond bool, tval, fval T) T {
+	if cond {
+		return tval
+	} else {
+		return fval
 	}
 }
 
@@ -338,39 +344,6 @@ func Time2Offset(tin time.Time, off int) time.Time {
 	//Calculate the offset from UTC of the given offset and get the input time's new value
 	loc := time.FixedZone("", off*60)
 	return tin.UTC().In(loc)
-}
-
-/*
-Calculates the offset from UTC based on the value of the `X-Timezone-Offset`
-HTTP header.
-*/
-func Time2OffsetReq(tin time.Time, r *http.Request) time.Time {
-	return Time2Offset(tin, TZOffsetFromReq(r))
-}
-
-// Gets the timezone offset from a request; returns 0 if not present.
-func TZOffsetFromReq(r *http.Request) int {
-	//Get the timezone from the HTTP headers
-	off := r.Header.Get(consts.TIMEZONE_OFFSET_HEADER)
-	ioff, err := strconv.Atoi(off)
-	if err != nil {
-		return 0
-	}
-
-	/*
-		Ensure the offset is in the range +/- 720 since `Date.prototype.getTimezoneOffset()`
-		returns the offset from UTC in minutes and 60 * 12 = 720. See the following webpage
-		for more info: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset
-	*/
-	if ioff > 720 {
-		ioff = 720
-	}
-	if ioff < -720 {
-		ioff = -720
-	}
-
-	//Return the truncated timezone offset
-	return ioff
 }
 
 // Marshals an object to a GOB byte stream.

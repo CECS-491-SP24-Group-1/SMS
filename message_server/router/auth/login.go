@@ -9,6 +9,8 @@ import (
 	"wraith.me/message_server/util"
 )
 
+//TODO: attempt to read and verify a refresh token in the first step; verification is deemed unnecessary if this is the case
+
 /*
 Handles incoming requests made to `POST /api/auth/login_req`. This is stage 1
 of the login process.

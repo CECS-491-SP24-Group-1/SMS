@@ -7,6 +7,7 @@ import (
 	"github.com/pelletier/go-toml"
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/email"
+	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/redis"
 )
 
@@ -47,6 +48,9 @@ type Config struct {
 
 	//SMTP configuration
 	Email email.EConfig `toml:"email"`
+
+	//Token configuration
+	Token token.TConfig `toml:"token"`
 }
 
 // Overrides the `defaultPathName()` method in `IConfig`.
