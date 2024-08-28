@@ -76,7 +76,7 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 
 // Runs the logic after a successful login verification.
 func PostLogin(w http.ResponseWriter, ctx context.Context, usr *user.User, persistent bool, newToken bool) {
-	//Issue an access and refresh token
+	//Issue an access and refresh token; this also updates the user in the database
 	cauth.IssueAccessToken(w, usr, env, &cfg.Token, persistent)
 	err := cauth.IssueRefreshToken(w, usr, uc, ctx, env, &cfg.Token, persistent)
 	if err != nil {

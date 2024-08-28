@@ -1,6 +1,7 @@
 package user
 
 import (
+	"crypto/subtle"
 	"net"
 	"time"
 
@@ -116,7 +117,7 @@ func (u *User) AddToken(tid, token string, exp time.Time) {
 // Checks if a user has a particular token.
 func (u User) HasToken(tok string) bool {
 	for _, token := range u.Tokens {
-		if token.Token == tok {
+		if subtle.ConstantTimeCompare([]byte(token.Token), []byte(tok)) == 1 {
 			return true
 		}
 	}

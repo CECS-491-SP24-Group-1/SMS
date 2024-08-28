@@ -35,7 +35,7 @@ func SolveEChallengeRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Mark the user's email as verified and upsert the user into the collection
 	user.MarkEmailVerified()
-	_, err = uc.Upsert(r.Context(), bson.M{"_id": user.ID}, &user)
+	_, err = uc.UpsertId(r.Context(), user.ID, &user)
 	if err != nil {
 		util.ErrResponse(http.StatusForbidden, err).Respond(w)
 		return
