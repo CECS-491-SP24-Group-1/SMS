@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -19,8 +18,9 @@ of the login process.
 */
 func RequestLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Skip straight to the post-login process if the user possesses a refresh token
-	if user, err := cauth.AttemptRefresh(w, r, true); user != nil && err == nil {
-		PostLogin(w, r.Context(), user, true, false)
+	if user, err := cauth.AttemptRefresh(w, r, env, uc, true); user != nil && err == nil {
+		fmt.Println("post auth in stage1")
+		cauth.PostAuth(w, r.Context(), user, uc, &cfg.Token, env, true, false)
 		return
 	}
 
@@ -59,8 +59,9 @@ Handles incoming requests made to `POST /api/auth/login_verify`. This is stage
 */
 func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Skip straight to the post-login process if the user possesses a refresh token
-	if user, err := cauth.AttemptRefresh(w, r, true); user != nil && err == nil {
-		PostLogin(w, r.Context(), user, true, false)
+	if user, err := cauth.AttemptRefresh(w, r, env, uc, true); user != nil && err == nil {
+		fmt.Println("post auth in stage2")
+		cauth.PostAuth(w, r.Context(), user, uc, &cfg.Token, env, true, false)
 		return
 	}
 
@@ -83,30 +84,5 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Mark the user as PK verified and run post-login stuff
 	user.MarkPKVerified()
-	PostLogin(w, r.Context(), &user, true, true)
-}
-
-// Runs the logic after a successful login verification.
-func PostLogin(w http.ResponseWriter, ctx context.Context, usr *user.User, persistent bool, newToken bool) {
-	//Issue an access and refresh token; this also updates the user in the database
-	cauth.IssueAccessToken(w, usr, env, &cfg.Token, persistent)
-	err := cauth.IssueRefreshToken(w, usr, uc, ctx, env, &cfg.Token, persistent)
-	if err != nil {
-		util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
-	}
-
-	//Serialize the user's username and ID to a map
-	payload := make(map[string]string)
-	payload["id"] = usr.ID.String()
-	payload["username"] = usr.Username
-
-	//Respond back with the user's ID and username
-	msg := "successfully logged in as"
-	if !newToken {
-		msg = "successfully refreshed token for"
-	}
-	util.PayloadOkResponse(
-		fmt.Sprintf("%s %s <id: %s>", msg, usr.Username, usr.ID.String()),
-		payload,
-	).Respond(w)
+	cauth.PostAuth(w, r.Context(), &user, uc, &cfg.Token, env, true, true)
 }

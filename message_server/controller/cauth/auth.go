@@ -1,9 +1,12 @@
 package cauth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"wraith.me/message_server/config"
 	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
@@ -33,29 +36,82 @@ to bypass the whole login process. If any errors occur during the login process,
 they should occur silently and without disturbance to the process. Token
 refreshes, on the other hand, should not fail silently.
 */
-func AttemptRefresh(w http.ResponseWriter, r *http.Request, failSilently bool) (usr *user.User, err error) {
+func AttemptRefresh(w http.ResponseWriter, r *http.Request, env *config.Env,
+	ucoll *user.UserCollection, failSilently bool) (usr *user.User, err error,
+) {
 	//Rethrow errors into the HTTP response if any occur
 	defer func() {
-		if !failSilently && err != nil {
-			util.ErrResponse(http.StatusUnauthorized, err).Respond(w)
+		if err != nil {
+			if !failSilently {
+				util.ErrResponse(http.StatusUnauthorized, err).Respond(w)
+			} else {
+				fmt.Printf(
+					"error during refresh attempt for IP %s: %s\n",
+					r.Host,
+					err.Error(),
+				)
+			}
 		}
 	}()
 
 	//Check if a user has a refresh token in the cookies
-	rtoken := GetRefreshTokFromCookie(w, r, false)
-	if rtoken == "" {
+	rcookie := GetRefreshTokFromCookie(w, r, false)
+	if rcookie == "" {
 		err = fmt.Errorf("refresh token is required")
 		return
 	}
 
-	fmt.Printf("has refresh token %s\n", rtoken)
-	return nil, nil
+	//Decrypt the refresh token
+	rtoken, err := token.Decrypt(rcookie, env.SK, env.ID, token.TokenTypeREFRESH)
+	if err != nil {
+		return
+	}
+
+	//Attempt to fetch a user from the database using the token subject field
+	err = ucoll.Find(r.Context(), bson.M{"_id": rtoken.Subject}).One(&usr)
+	if err != nil {
+		return
+	}
+
+	//Nothing went wrong, so return normally
+	return
 }
 
 /*
-Attempts to decrypt and validate a refresh token. This is the first step
-to run when attempting to reissue a refresh token.
+Issues new access and refresh tokens for the user. This function ought to
+run once the user has successfully authenticated either via a refresh token
+or by solving a public key challenge.
 */
-func DecodeRefreshToken() {
+func PostAuth(
+	w http.ResponseWriter, ctx context.Context,
+	usr *user.User, ucoll *user.UserCollection,
+	cfg *token.TConfig, env *config.Env,
+	persistent bool, newToken bool,
+) {
+	//TODO: delete existing token here
+	if !newToken {
+	}
 
+	//Issue an access and refresh token; this also updates the user in the database
+	IssueAccessToken(w, usr, env, cfg, persistent)
+	err := IssueRefreshToken(w, usr, ucoll, ctx, env, cfg, persistent)
+	if err != nil {
+		util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
+	}
+
+	//Serialize the user's username and ID to a map
+	payload := make(map[string]string)
+	payload["id"] = usr.ID.String()
+	payload["username"] = usr.Username
+
+	//Respond back with the user's ID and username
+	msg := "successfully logged in as"
+	if !newToken {
+		fmt.Println("dshahahda")
+		msg = "successfully refreshed token for"
+	}
+	util.PayloadOkResponse(
+		fmt.Sprintf("%s %s <id: %s>", msg, usr.Username, usr.ID.String()),
+		payload,
+	).Respond(w)
 }

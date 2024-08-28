@@ -502,7 +502,7 @@
 				//Echo the status back to the user in the token status
 				s2StatusElem.classList.add(ok ? "good" : "bad");
 				if(ok){
-					s2StatusElem.innerHTML = `${resp.status}; token can be found below`;
+					s2StatusElem.innerHTML = `${resp.status}; ${resp.desc}`;
 					let seshTok = resp.payloads[0];
 					s2SeshTokenContainer.innerHTML = JSON.stringify(seshTok);
 				}
@@ -515,7 +515,7 @@
 		//checkRT() -> void
 		function checkRT(){
 			//Check the token against the server
-			taxios.get(REFRESH_EP)
+			taxios.post(REFRESH_EP)
 
 			//Display the data back to the webpage
 			.then(async response => {
