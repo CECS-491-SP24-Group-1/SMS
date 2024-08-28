@@ -10,3 +10,5 @@ const AUTH_TEST_EP = `${LOCAL_EP_BASE}/auth/test`;
 
 const LOGIN_S1_EP = `${LOCAL_EP_BASE}/auth/login_req`;
 const LOGIN_S2_EP = `${LOCAL_EP_BASE}/auth/login_verify`;
+
+const REFRESH_EP = `${LOCAL_EP_BASE}/auth/refresh`;

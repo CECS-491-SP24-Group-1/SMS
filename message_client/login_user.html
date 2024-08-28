@@ -10,6 +10,7 @@
 	<script type="application/javascript" src="./static/js/uuid.js"></script>
 	<script type="application/javascript" src="./static/js/vault_simple.js"></script>
 	<script type="application/javascript" src="./static/js/axios.min.js"></script>
+	<script type="application/javascript" src="./static/js/axios_mw.js"></script>
 	<style>
 		/* DEBUG START */
 		table, th, td {
@@ -144,7 +145,7 @@
 			<tbody>
 				<tr>
 					<td class="tokenEntry headerCell">Access Token:</td>
-					<td colspan="2" class="bigCell"><input type="text" placeholder="Token" class="monoFont" id="tokenForm"></td>
+					<td colspan="2" class="bigCell"><input type="text" placeholder="Token (optional)" class="monoFont" id="tokenForm"></td>
 				</tr>
 				<tr>
 					<td class="headerCell"><button type="button" id="checkTokenBtn" class="formBtn" onclick="checkToken()">Check Token</button></td>
@@ -193,8 +194,13 @@
 					<td class="bigCell monoFont"><pre class="breakWrap" id="loginS2Status">&nbsp;</pre></td>
 				</tr>
 				<tr>
-					<td class="headerCell">Access Token:</td>
+					<td class="headerCell">Verify Result:</td>
 					<td colspan="2"><pre class="breakWrap interData" id="seshTokContainer">&nbsp;</pre></td>
+				</tr>
+				<tr>
+					<td class="headerCell">Refresh Token:</td>
+					<td class="headerCell50"><button type="button" id="checkRTBtn" class="formBtn" onclick="checkRT()">Submit</button></td>
+					<td class="bigCell"><pre class="breakWrap" id="checkRTStatus">&nbsp;</pre></td>
 				</tr>
 			</tbody>
 		</table>
@@ -356,10 +362,7 @@
 			token = document.getElementById("tokenForm").value;
 
 			//Check the token against the server
-			axios.get(AUTH_TEST_EP, { 
-				headers: { "Authorization": `Bearer ${token}`},
-				validateStatus: status => true //https://stackoverflow.com/a/76240990
-			})
+			taxios.get(AUTH_TEST_EP)
 
 			//Display the data back to the webpage
 			.then(async response => {
@@ -425,10 +428,7 @@
 
 			//Send the form to the server
 			//Check the token against the server
-			axios.post(LOGIN_S1_EP, loginReq, {
-				withCredentials: true,
-				validateStatus: status => true //https://stackoverflow.com/a/76240990
-			})
+			taxios.post(LOGIN_S1_EP, loginReq)
 
 			//Display the data back to the webpage
 			.then(response => {
@@ -488,10 +488,7 @@
 
 			//Send the form to the server
 			//Check the token against the server
-			axios.post(LOGIN_S2_EP, loginReq, {
-				withCredentials: true,
-				validateStatus: status => true //https://stackoverflow.com/a/76240990
-			})
+			taxios.post(LOGIN_S2_EP, loginReq)
 
 			//Display the data back to the webpage
 			.then(response => {
@@ -512,6 +509,29 @@
 				else {
 					s2StatusElem.innerHTML = splitErrors(resp.status, resp.errors);
 				}
+			});
+		}
+
+		//checkRT() -> void
+		function checkRT(){
+			//Check the token against the server
+			taxios.get(REFRESH_EP)
+
+			//Display the data back to the webpage
+			.then(async response => {
+				//Get the response data
+				const resp = response.data;
+				const ok = !resp.errors;
+
+				//Check for errors
+				goodToken = ok;
+
+				//Echo the status back to the user in the token status
+				const statusForm = document.getElementById("tokenStatus");
+				statusForm.classList.add(ok ? "good" : "bad");
+				const errors = resp.errors ? resp.errors : `logged in as ${resp.payloads[0].id}`;
+				statusForm.innerHTML = `${resp.status} - ${errors}`;
+				console.log("token status:", resp);
 			});
 		}
 	</script>

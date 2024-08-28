@@ -18,6 +18,12 @@ Handles incoming requests made to `POST /api/auth/login_req`. This is stage 1
 of the login process.
 */
 func RequestLoginUserRoute(w http.ResponseWriter, r *http.Request) {
+	//Skip straight to the post-login process if the user possesses a refresh token
+	if user, err := cauth.AttemptRefresh(w, r, true); user != nil && err == nil {
+		PostLogin(w, r.Context(), user, true, false)
+		return
+	}
+
 	//Create a new stage 1 object plus database result
 	loginReq := csolver.LoginUser{}
 	user := user.User{}
@@ -52,6 +58,12 @@ Handles incoming requests made to `POST /api/auth/login_verify`. This is stage
 2 of the login process.
 */
 func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
+	//Skip straight to the post-login process if the user possesses a refresh token
+	if user, err := cauth.AttemptRefresh(w, r, true); user != nil && err == nil {
+		PostLogin(w, r.Context(), user, true, false)
+		return
+	}
+
 	//Create a new stage 2 object plus database result
 	loginVReq := csolver.LoginVerifyUser{}
 	user := user.User{}
