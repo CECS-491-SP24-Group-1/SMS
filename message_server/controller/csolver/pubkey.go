@@ -2,6 +2,7 @@ package csolver
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -57,6 +58,13 @@ func VerifyPKChallenge(vreq LoginVerifyUser, env *config.Env) (*c.CToken, error)
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	//Double check to ensure the challenge PK and the user PK match up
+	if subtle.ConstantTimeCompare(
+		[]byte(vreq.PK.String()), []byte(loginTok.Claim),
+	) == 0 {
+		return nil, fmt.Errorf("token claim and user key mismatch")
 	}
 
 	//Return the login token

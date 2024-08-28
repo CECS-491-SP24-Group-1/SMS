@@ -100,7 +100,7 @@ func NewToken(subject util.UUID, issuer util.UUID, typ TokenType, exp time.Time,
 //-- Methods
 
 // Creates an HTTP cookie string to hold the PASETO token.
-func (t Token) Cookie(key ccrypto.Privkey, path, domain string, persistent bool) string {
+func (t Token) Cookie(key ccrypto.Privkey, path, domain string, persistent bool) http.Cookie {
 	_, cookie := t.CryptAndCookie(key, path, domain, persistent)
 	return cookie
 }
@@ -109,7 +109,7 @@ func (t Token) Cookie(key ccrypto.Privkey, path, domain string, persistent bool)
 Encrypts the PASETO token and creates an HTTP cookie string to hold the
 PASETO token, all in one step.
 */
-func (t Token) CryptAndCookie(key ccrypto.Privkey, path, domain string, persistent bool) (token, cookie string) {
+func (t Token) CryptAndCookie(key ccrypto.Privkey, path, domain string, persistent bool) (token string, cookie http.Cookie) {
 	//Encrypt the token
 	token = t.Encrypt(key, true)
 
@@ -132,7 +132,7 @@ func (t Token) CryptAndCookie(key ccrypto.Privkey, path, domain string, persiste
 		HttpOnly: true, //This must be true to ensure it remains inaccessible by clientside JS
 		SameSite: http.SameSiteStrictMode,
 	}
-	cookie = cookieBuilder.String()
+	cookie = cookieBuilder
 	return
 }
 
@@ -185,7 +185,7 @@ func (t Token) Encrypt(key ccrypto.Privkey, expInFooter bool) string {
 }
 
 // Creates an HTTP cookie string to hold the expiration of this token.
-func (t Token) ExprCookie(path, domain string, exprMultiplier int, persistent bool) string {
+func (t Token) ExprCookie(path, domain string, exprMultiplier int, persistent bool) http.Cookie {
 	//Get the name based on whether this is an access or refresh token
 	name := "Untitled"
 	if t.Type == TokenTypeACCESS {
@@ -205,7 +205,7 @@ func (t Token) ExprCookie(path, domain string, exprMultiplier int, persistent bo
 		HttpOnly: false, //This must be false so clientside JS can access it
 		SameSite: http.SameSiteStrictMode,
 	}
-	return cookieBuilder.String()
+	return cookieBuilder
 }
 
 // Gets the "Max Age" of the token in seconds.

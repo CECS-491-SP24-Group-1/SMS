@@ -48,7 +48,7 @@ type User struct {
 	Options UserOptions `json:"options" bson:"options"`
 
 	//The user's refresh tokens, keyed by their IDs in string form.
-	Tokens map[string]string `json:"tokens" bson:"tokens"`
+	Tokens map[string]UserToken `json:"tokens" bson:"tokens"`
 }
 
 //-- Constructors
@@ -80,7 +80,7 @@ func NewUser(
 		LastIP:      lastIP,
 		Flags:       flags,
 		Options:     options,
-		Tokens:      make(map[string]string, 0),
+		Tokens:      make(map[string]UserToken, 0),
 	}
 }
 
@@ -101,10 +101,22 @@ func NewUserSimple(username string, email string) *User {
 
 //-- Methods
 
+// Adds a new refresh token to this user object.
+func (u *User) AddToken(tid, token string, exp time.Time) {
+	//Create the token map if it doesn't already exist
+	if u.Tokens == nil {
+		u.Tokens = make(map[string]UserToken)
+	}
+
+	//Add the token to the list of the user's tokens
+	tok := UserToken{Token: token, Expiry: exp}
+	(*u).Tokens[tid] = tok
+}
+
 // Checks if a user has a particular token.
 func (u User) HasToken(tok string) bool {
 	for _, token := range u.Tokens {
-		if token == tok {
+		if token.Token == tok {
 			return true
 		}
 	}
@@ -131,6 +143,11 @@ func (u *User) MarkPKVerified() {
 	if u.Flags.EmailVerified && u.Flags.PubkeyVerified {
 		u.Flags.ShouldPurge = false
 	}
+}
+
+// Removes a refresh token from this user object.
+func (u *User) RemoveToken(tid string) {
+	delete(u.Tokens, tid)
 }
 
 // Unmarks a user's email as verified.
@@ -203,4 +220,17 @@ func DefaultUserOptions() UserOptions {
 		ReadReceipts:        ReadReceiptsScopeFRIENDS, //Users should send read receipts only to their friends by default.
 		UnsolicitedMessages: false,                    //Users should not be able to be messaged without their consent by random, non-friends.
 	}
+}
+
+//
+//-- CLASS: UserToken
+//
+
+// Represents a single refresh token.
+type UserToken struct {
+	//The token itself.
+	Token string `json:"token" bson:"token"`
+
+	//The expiry of the token.
+	Expiry time.Time `json:"expiry" bson:"expiry"`
 }

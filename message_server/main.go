@@ -105,11 +105,15 @@ func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 	//Add CORS
 	//For more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*", "http://*"}, //Localhost and domain only
+		AllowedOrigins: []string{
+			"https://*",
+			"http://*",
+			//cfg.Client.BaseUrl,
+		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"X-PINGOTHER", "Accept", "Authorization", "Content-Type", "X-CSRF-Token", consts.TIMEZONE_OFFSET_HEADER}, // Ensure headers match client requests
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
+		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
@@ -128,6 +132,8 @@ func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 		limiter.Debug = true
 		r.Use(limiter.Impose)
 	*/
+
+	//TODO: maybe group under an API route
 
 	//Health route
 	r.Get("/", router.Index)

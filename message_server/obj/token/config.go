@@ -10,10 +10,19 @@ type TConfig struct {
 	AccessLifetime int `toml:"access_lifetime" default:"86400"`
 
 	//The lifetime of refresh tokens (in seconds). Default: 604800 (7 days).
-	RefreshLifetime int `toml:"access_lifetime" default:"604800"`
+	RefreshLifetime int `toml:"refresh_lifetime" default:"604800"`
 
 	//The time multiplier for the lifetime of expiry tokens.
 	ExprMultiplier int `toml:"expr_multiplier" default:"4"`
+
+	//The domain to use for tokens.
+	Domain string `toml:"domain" default:"localhost"`
+
+	//The path at which access token cookies are valid.
+	AccessCookiePath string `toml:"access_cookie_path" default:"/"`
+
+	//The path at which refresh token cookies are valid.
+	RefreshCookiePath string `toml:"refresh_cookie_path" default:"/auth"`
 }
 
 func DefaultTConfig() *TConfig {

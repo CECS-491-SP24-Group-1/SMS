@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"wraith.me/message_server/obj/token"
-	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
 )
 
@@ -29,10 +28,6 @@ func GetRefreshTokFromCookie(w http.ResponseWriter, r *http.Request, failOnMissi
 		return ""
 	}
 	return stok
-}
-
-func IssueRefreshToken(user *user.User, ucoll *user.UserCollection, w http.ResponseWriter, persistent bool) {
-
 }
 
 /*

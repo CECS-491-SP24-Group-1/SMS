@@ -1,9 +1,11 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
+	"wraith.me/message_server/controller/cauth"
 	"wraith.me/message_server/controller/csolver"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
@@ -61,14 +63,38 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Verify the public key challenge
 	//After this point, it is safe to assume that a user is authorized to login
-	tok, err := csolver.VerifyPKChallenge(loginVReq, env)
+	_, err := csolver.VerifyPKChallenge(loginVReq, env)
 	if err != nil {
 		util.ErrResponse(http.StatusForbidden, err)
 		return
 	}
 
-	//TODO: mark user as verified and issue a login token here
+	//Mark the user as PK verified and run post-login stuff
+	user.MarkPKVerified()
+	PostLogin(w, r.Context(), &user, true, true)
+}
 
-	fmt.Printf("verif_pk: %+v\n", tok)
-	util.PayloadOkResponse("", "ok").Respond(w)
+// Runs the logic after a successful login verification.
+func PostLogin(w http.ResponseWriter, ctx context.Context, usr *user.User, persistent bool, newToken bool) {
+	//Issue an access and refresh token
+	cauth.IssueAccessToken(w, usr, env, &cfg.Token, persistent)
+	err := cauth.IssueRefreshToken(w, usr, uc, ctx, env, &cfg.Token, persistent)
+	if err != nil {
+		util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
+	}
+
+	//Serialize the user's username and ID to a map
+	payload := make(map[string]string)
+	payload["id"] = usr.ID.String()
+	payload["username"] = usr.Username
+
+	//Respond back with the user's ID and username
+	msg := "successfully logged in as"
+	if !newToken {
+		msg = "successfully refreshed token for"
+	}
+	util.PayloadOkResponse(
+		fmt.Sprintf("%s %s <id: %s>", msg, usr.Username, usr.ID.String()),
+		payload,
+	).Respond(w)
 }

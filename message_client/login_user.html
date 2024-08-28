@@ -426,11 +426,12 @@
 			//Send the form to the server
 			//Check the token against the server
 			axios.post(LOGIN_S1_EP, loginReq, {
+				withCredentials: true,
 				validateStatus: status => true //https://stackoverflow.com/a/76240990
 			})
 
 			//Display the data back to the webpage
-			.then(async response => {
+			.then(response => {
 				//Get the response data
 				const resp = response.data;
 				const ok = !resp.errors;
@@ -488,11 +489,12 @@
 			//Send the form to the server
 			//Check the token against the server
 			axios.post(LOGIN_S2_EP, loginReq, {
+				withCredentials: true,
 				validateStatus: status => true //https://stackoverflow.com/a/76240990
 			})
 
 			//Display the data back to the webpage
-			.then(async response => {
+			.then(response => {
 				//Get the response data
 				const resp = response.data;
 				const ok = !resp.errors;

@@ -11,7 +11,10 @@ DEFAULT_PORT = 8080
 
 class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 	def end_headers(self):
-		self.send_header("Access-Control-Allow-Origin", "*")
+		self.send_header("Access-Control-Allow-Origin", f"http://localhost:{DEFAULT_PORT}")
+		self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Authorization")
+		self.send_header("Access-Control-Allow-Credentials", "true")
 		http.server.SimpleHTTPRequestHandler.end_headers(self)
 
 def server(port):
