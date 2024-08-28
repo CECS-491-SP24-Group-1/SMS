@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/config"
+	"wraith.me/message_server/controller/cauth"
 	ccrypto "wraith.me/message_server/crypto"
 	c "wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/schema/user"
@@ -78,6 +79,12 @@ func PreFlight[T LoginUser | LoginVerifyUser](user *T, hit *user.User, uc *user.
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		util.ErrResponse(_PF_PARSE_ERR, err).Respond(w)
 		return false
+	}
+
+	//Check if a refresh token is present
+	rtoken := cauth.GetRefreshTokFromCookie(w, r, false)
+	if rtoken != "" {
+		fmt.Printf("has refresh token %s\n", rtoken)
 	}
 
 	//Ensure all request fields are present and are the correct type
