@@ -444,7 +444,7 @@
 				if(ok){
 					s1StatusElem.innerHTML = `${resp.status}; token can be found below`;
 					loginTok = resp.payloads[0];
-					s1TokContainer.innerHTML = `${loginTok}`;
+					s1TokContainer.innerHTML = JSON.stringify(loginTok);
 				}
 				else {
 					s1StatusElem.innerHTML = splitErrors(resp.status, resp.errors);
@@ -523,13 +523,10 @@
 				const resp = response.data;
 				const ok = !resp.errors;
 
-				//Check for errors
-				goodToken = ok;
-
 				//Echo the status back to the user in the token status
-				const statusForm = document.getElementById("tokenStatus");
+				const statusForm = document.getElementById("checkRTStatus");
 				statusForm.classList.add(ok ? "good" : "bad");
-				const errors = resp.errors ? resp.errors : `logged in as ${resp.payloads[0].id}`;
+				const errors = resp.errors ? resp.errors : `${resp.desc} - ${JSON.stringify(resp.payloads[0])}`;
 				statusForm.innerHTML = `${resp.status} - ${errors}`;
 				console.log("token status:", resp);
 			});

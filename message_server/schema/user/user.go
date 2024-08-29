@@ -146,7 +146,10 @@ func (u *User) MarkPKVerified() {
 	}
 }
 
-// Removes a refresh token from this user object.
+/*
+Removes a refresh token from this user object. If the token doesn't exist,
+then this function is a NOP.
+*/
 func (u *User) RemoveToken(tid string) {
 	delete(u.Tokens, tid)
 }

@@ -38,6 +38,7 @@ func AuthRoutes(cfgg *config.Config, envv *config.Env) chi.Router {
 	r.Post("/login_req", RequestLoginUserRoute)
 	r.Post("/login_verify", VerifyLoginUserRoute)
 	r.Post("/refresh", RefreshTokenRoute)
+	r.Post("/logout", LogoutRoute)
 
 	//Add the test route
 	authTest := NewAuthTestRouter("", envv)

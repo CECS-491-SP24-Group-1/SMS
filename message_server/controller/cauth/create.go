@@ -8,6 +8,7 @@ import (
 	"wraith.me/message_server/config"
 	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/schema/user"
+	"wraith.me/message_server/util"
 )
 
 const (
@@ -54,7 +55,7 @@ Issues a refresh token for a user and writes it to the outgoing response
 cookies along with the user object in the database. It is assumed that the
 user in question already exists in the database.
 */
-func IssueRefreshToken(w http.ResponseWriter, usr *user.User, ucoll *user.UserCollection, ctx context.Context, env *config.Env, cfg *token.TConfig, persistent bool) error {
+func IssueRefreshToken(w http.ResponseWriter, usr *user.User, ucoll *user.UserCollection, ctx context.Context, env *config.Env, cfg *token.TConfig, persistent bool) (util.UUID, error) {
 	//Get the current and expiry times
 	now := time.Now()
 	exp := now.Add(time.Duration(cfg.AccessLifetime) * time.Second)
@@ -88,5 +89,5 @@ func IssueRefreshToken(w http.ResponseWriter, usr *user.User, ucoll *user.UserCo
 
 	//Upsert the corresponding document in the database
 	_, err := ucoll.UpsertId(ctx, usr.ID, usr)
-	return err
+	return rtoken.ID, err
 }

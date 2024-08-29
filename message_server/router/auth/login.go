@@ -10,17 +10,16 @@ import (
 	"wraith.me/message_server/util"
 )
 
-//TODO: attempt to read and verify a refresh token in the first step; verification is deemed unnecessary if this is the case
-
 /*
 Handles incoming requests made to `POST /api/auth/login_req`. This is stage 1
 of the login process.
 */
 func RequestLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Skip straight to the post-login process if the user possesses a refresh token
-	if user, err := cauth.AttemptRefresh(w, r, env, uc, true); user != nil && err == nil {
+	if user, tid, err :=
+		cauth.AttemptRefreshAuth(w, r, env, uc, true); user != nil && err == nil {
 		fmt.Println("post auth in stage1")
-		cauth.PostAuth(w, r.Context(), user, uc, &cfg.Token, env, true, false)
+		cauth.PostAuth(w, r.Context(), user, uc, &cfg.Token, env, true, tid)
 		return
 	}
 
@@ -59,9 +58,10 @@ Handles incoming requests made to `POST /api/auth/login_verify`. This is stage
 */
 func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Skip straight to the post-login process if the user possesses a refresh token
-	if user, err := cauth.AttemptRefresh(w, r, env, uc, true); user != nil && err == nil {
+	if user, tid, err :=
+		cauth.AttemptRefreshAuth(w, r, env, uc, true); user != nil && err == nil {
 		fmt.Println("post auth in stage2")
-		cauth.PostAuth(w, r.Context(), user, uc, &cfg.Token, env, true, false)
+		cauth.PostAuth(w, r.Context(), user, uc, &cfg.Token, env, true, tid)
 		return
 	}
 
@@ -84,5 +84,5 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Mark the user as PK verified and run post-login stuff
 	user.MarkPKVerified()
-	cauth.PostAuth(w, r.Context(), &user, uc, &cfg.Token, env, true, true)
+	cauth.PostAuth(w, r.Context(), &user, uc, &cfg.Token, env, true, nil)
 }

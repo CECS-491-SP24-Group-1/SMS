@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/config"
@@ -36,9 +37,8 @@ to bypass the whole login process. If any errors occur during the login process,
 they should occur silently and without disturbance to the process. Token
 refreshes, on the other hand, should not fail silently.
 */
-func AttemptRefresh(w http.ResponseWriter, r *http.Request, env *config.Env,
-	ucoll *user.UserCollection, failSilently bool) (usr *user.User, err error,
-) {
+func AttemptRefreshAuth(w http.ResponseWriter, r *http.Request, env *config.Env,
+	ucoll *user.UserCollection, failSilently bool) (usr *user.User, tid *util.UUID, err error) {
 	//Rethrow errors into the HTTP response if any occur
 	defer func() {
 		if err != nil {
@@ -73,7 +73,15 @@ func AttemptRefresh(w http.ResponseWriter, r *http.Request, env *config.Env,
 		return
 	}
 
+	//Ensure the user actually owns the token
+	if !usr.HasTokenById(rtoken.ID.String()) {
+		err = fmt.Errorf("none of the refresh tokens on-file match")
+		return
+	}
+
 	//Nothing went wrong, so return normally
+	//After this point, it is safe to assume that the user has proper auth
+	tid = &rtoken.ID
 	return
 }
 
@@ -86,18 +94,24 @@ func PostAuth(
 	w http.ResponseWriter, ctx context.Context,
 	usr *user.User, ucoll *user.UserCollection,
 	cfg *token.TConfig, env *config.Env,
-	persistent bool, newToken bool,
+	persistent bool, tid *util.UUID,
 ) {
-	//TODO: delete existing token here
-	if !newToken {
+	//Delete the token from the user's list if one exists
+	//The refresh token may also be "reused" at this step, but only a limited number of times
+	if tid != nil {
+		usr.RemoveToken(tid.String())
 	}
 
+	//Update the last login field of the user
+	//TODO: update last IP too
+	usr.LastLogin = time.Now()
+
 	//Issue an access and refresh token; this also updates the user in the database
-	IssueAccessToken(w, usr, env, cfg, persistent)
-	err := IssueRefreshToken(w, usr, ucoll, ctx, env, cfg, persistent)
+	_, err := IssueRefreshToken(w, usr, ucoll, ctx, env, cfg, persistent)
 	if err != nil {
 		util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
 	}
+	IssueAccessToken(w, usr, env, cfg, persistent) //This should happen second; might want to tie access and refresh tokens together
 
 	//Serialize the user's username and ID to a map
 	payload := make(map[string]string)
@@ -106,8 +120,7 @@ func PostAuth(
 
 	//Respond back with the user's ID and username
 	msg := "successfully logged in as"
-	if !newToken {
-		fmt.Println("dshahahda")
+	if tid != nil {
 		msg = "successfully refreshed token for"
 	}
 	util.PayloadOkResponse(
