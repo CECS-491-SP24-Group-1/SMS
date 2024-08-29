@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+var (
+	//Controls whether singular errors and payloads should be marshalled as arrays (default: true).
+	MarshalSingularAsArrays = true
+)
+
 //
 //-- CLASS: HttpResponse
 //
@@ -153,11 +158,11 @@ func (r HttpResponse[T]) JSON() ([]byte, error) {
 		}
 
 		//Marshal the new object as usual
-		return json.Marshal(&obj)
+		return backendMarshal(&obj)
 	}
 
 	//Marshal normally for every other type
-	return json.Marshal(r)
+	return backendMarshal(&r)
 }
 
 // Emits the JSON encoding of this object, panicking if any errors occur.
@@ -190,4 +195,47 @@ func (r HttpResponse[T]) Respond(w http.ResponseWriter) {
 	if err != nil {
 		panic(fmt.Sprintf("HttpResponse::Respond(); %s", err))
 	}
+}
+
+//-- Private utilities
+
+// Handles the backend of the JSON marshalling operation.
+func backendMarshal[T any](obj *HttpResponse[T]) ([]byte, error) {
+	//Create an alias of the object
+	type Alias HttpResponse[T]
+	aux := struct {
+		*Alias
+		Error    interface{} `json:"error,omitempty"`
+		Errors   interface{} `json:"errors,omitempty"`
+		Payload  interface{} `json:"payload,omitempty"`
+		Payloads interface{} `json:"payloads,omitempty"`
+	}{
+		Alias: (*Alias)(obj),
+	}
+
+	//Marshal singular items into an array or separately in singular fields
+	if MarshalSingularAsArrays {
+		//Add the errors and payloads only if they are non-empty
+		if len(obj.Errors) > 0 {
+			aux.Errors = obj.Errors
+		}
+		if len(obj.Payloads) > 0 {
+			aux.Payloads = obj.Payloads
+		}
+	} else {
+		//Add the errors and payloads only if they are non-empty
+		if len(obj.Errors) == 1 {
+			aux.Error = obj.Errors[0]
+		} else if len(obj.Errors) > 1 {
+			aux.Errors = obj.Errors
+		}
+		if len(obj.Payloads) == 1 {
+			aux.Payload = obj.Payloads[0]
+		} else if len(obj.Payloads) > 1 {
+			aux.Payloads = obj.Payloads
+		}
+	}
+
+	//Marshal the alias
+	return json.Marshal(&aux)
 }
