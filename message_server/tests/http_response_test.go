@@ -13,6 +13,17 @@ func TestHttpErrRes(t *testing.T) {
 	resp := util.ErrResponse(
 		0,
 		fmt.Errorf("error 1"),
+		fmt.Errorf("error 2"),
+		//fmt.Errorf("error 3"),
+	)
+	fmt.Printf("%s\n", resp.MustJSON())
+}
+
+func TestHttpErrResSingle(t *testing.T) {
+	util.MarshalSingularAsArrays = false
+	resp := util.ErrResponse(
+		0,
+		fmt.Errorf("error 1"),
 		//fmt.Errorf("error 2"),
 		//fmt.Errorf("error 3"),
 	)
