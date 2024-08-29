@@ -36,7 +36,7 @@ func TestUser2BSON(t *testing.T) {
 		nil,
 	)
 	tstr := tok.Encrypt(issuerKey, true)
-	usr.Tokens[tok.ID.String()] = tstr
+	usr.AddToken(tok.ID.String(), tstr, tok.Expiry)
 
 	//Marshal to BSON
 	bb, err := bson.Marshal(usr)
@@ -73,7 +73,7 @@ func TestUser2JSON(t *testing.T) {
 		nil,
 	)
 	tstr := tok.Encrypt(issuerKey, true)
-	usr.Tokens[tok.ID.String()] = tstr
+	usr.AddToken(tok.ID.String(), tstr, tok.Expiry)
 
 	//Marshal to JSON
 	jb, err := json.Marshal(usr)
