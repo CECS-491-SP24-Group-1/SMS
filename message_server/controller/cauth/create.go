@@ -21,7 +21,7 @@ var (
 Issues an access token for a user and writes it to the outgoing response
 cookies.
 */
-func IssueAccessToken(w http.ResponseWriter, r *http.Request, usr *user.User, env *config.Env, cfg *token.TConfig, persistent bool) {
+func IssueAccessToken(w http.ResponseWriter, r *http.Request, usr *user.User, env *config.Env, cfg *token.TConfig, parent *util.UUID, persistent bool) {
 	//Get the current and expiry times
 	now := time.Now()
 	exp := now.Add(time.Duration(cfg.AccessLifetime) * time.Second)
@@ -32,6 +32,7 @@ func IssueAccessToken(w http.ResponseWriter, r *http.Request, usr *user.User, en
 		env.ID,
 		token.TokenTypeACCESS,
 		exp,
+		parent,
 		&now,
 	)
 	atoken.IPAddr = ip_addr.HttpIP2NetIP(r.RemoteAddr)
@@ -69,6 +70,7 @@ func IssueRefreshToken(w http.ResponseWriter, r *http.Request, usr *user.User, u
 		env.ID,
 		token.TokenTypeREFRESH,
 		exp,
+		nil,
 		&now,
 	)
 	rtoken.IPAddr = ip_addr.HttpIP2NetIP(r.RemoteAddr)

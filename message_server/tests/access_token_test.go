@@ -30,6 +30,7 @@ func TestGenAccessTok(t *testing.T) {
 		token.TokenTypeACCESS,
 		time.Now().Add(30*time.Minute),
 		nil,
+		nil,
 	).Encrypt(secrets.SK, true)
 
 	//Get the expiration

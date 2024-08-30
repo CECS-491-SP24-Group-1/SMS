@@ -31,6 +31,9 @@ var (
 	//The ID of the access token used to authenticate the user.
 	AuthAccessTokID = "X-Auth-TID"
 
+	//The ID of the access token's parent.
+	AuthAccessParentTokID = "X-Auth-PTID"
+
 	//The key of the user object that's passed via `r.Context`.
 	AuthCtxUserKey = obj.CtxKey{S: "ReqUser"}
 )
@@ -41,6 +44,7 @@ var (
 	ErrAuthNoTokenFound = errors.New("no token found")
 	ErrAuthGeneric      = errors.New("authentication error")
 	ErrAuthNotFound     = errors.New("user not found with ID %s")
+	ErrAuthNoOwnership  = errors.New("access token doesn't map to a known refresh token")
 )
 
 type authMiddleware struct {
@@ -187,9 +191,17 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		// -- END: Database Query
 		//
 
+		//Ensure the access token claims one of the user's refresh tokens as a parent
+		_, ok := user.Tokens[tokObj.Parent.String()]
+		if !ok {
+			util.ErrResponse(http.StatusUnauthorized, ErrAuthNoOwnership).Respond(w)
+			return
+		}
+
 		//Add headers to the request (auth subject and token scope)
 		r.Header.Add(AuthHttpHeaderSubject, tokSubject.String())
 		r.Header.Add(AuthAccessTokID, tokObj.ID.String())
+		r.Header.Add(AuthAccessParentTokID, tokObj.Parent.String())
 
 		//Add the user to the request context
 		//https://go.dev/blog/context#TOC_3.2.

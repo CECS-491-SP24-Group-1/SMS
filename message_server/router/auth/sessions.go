@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"net/http"
 	"time"
@@ -13,7 +14,7 @@ import (
 
 // Defines the structure of a session.
 type session struct {
-	//IsCurrent bool      `json:"is_current"` //TODO: add when parent token functionality is added
+	IsCurrent bool      `json:"is_current"` //TODO: add when parent token functionality is added
 	Created   time.Time `json:"created"`
 	Expires   time.Time `json:"expires"`
 	IP        string    `json:"ip"`
@@ -22,12 +23,13 @@ type session struct {
 
 // Handles incoming requests made to `GET /api/auth/sessions`.
 func SessionsRoute(w http.ResponseWriter, r *http.Request) {
-	//Get the user from the auth middleware
+	//Get the user from the auth middleware and the auth token ID
 	user := r.Context().Value(mw.AuthCtxUserKey).(user.User)
+	ptid := r.Header.Get(mw.AuthAccessParentTokID)
 
 	//Collect the tokens into a map; select attributes are added, but not the whole token
 	sessions := make(map[string]session)
-	for tid, tok := range user.Tokens {
+	for rtid, tok := range user.Tokens {
 		//Decrypt the current refresh token
 		dtok, err := token.Decrypt(
 			tok.Token, env.SK, env.ID, token.TokenTypeREFRESH,
@@ -44,7 +46,8 @@ func SessionsRoute(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//Add the session
-		sessions[tid] = session{
+		sessions[rtid] = session{
+			IsCurrent: subtle.ConstantTimeCompare([]byte(ptid), []byte(rtid)) == 1,
 			Created:   dtok.Issued,
 			Expires:   dtok.Expiry,
 			IP:        dtok.IPAddr.String(),

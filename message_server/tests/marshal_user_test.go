@@ -34,6 +34,7 @@ func TestUser2BSON(t *testing.T) {
 		token.TokenTypeREFRESH,
 		time.Now().Add(5*time.Minute),
 		nil,
+		nil,
 	)
 	tstr := tok.Encrypt(issuerKey, true)
 	usr.AddToken(tok.ID.String(), tstr, tok.Expiry)
@@ -70,6 +71,7 @@ func TestUser2JSON(t *testing.T) {
 		issuerId,
 		token.TokenTypeREFRESH,
 		time.Now().Add(5*time.Minute),
+		nil,
 		nil,
 	)
 	tstr := tok.Encrypt(issuerKey, true)

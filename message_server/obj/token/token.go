@@ -20,6 +20,7 @@ const (
 	_TOK_TYPE = "ttype"
 	_TOK_IP   = "tipaddr"
 	_TOK_UA   = "tuagent"
+	_TOK_PAR  = "tparent"
 )
 
 var (
@@ -57,6 +58,9 @@ type Token struct {
 	//The ID of the token. This is the `jti` field of the PASETO token. This is calculated from the `iat` field.
 	ID util.UUID `json:"id"`
 
+	//The ID of the parent token. This will be a nil UUID if this is a refresh token.
+	Parent util.UUID `json:"parent"`
+
 	//The ID of the entity that issued the token. This is the `iss` field of the PASETO token.
 	Issuer util.UUID `json:"issuer"`
 
@@ -85,11 +89,17 @@ type Token struct {
 Constructs a new token object, which takes in the subject, issuer, type,
 expiry, and optional time to use for the `iat` and `nbf` fields.
 */
-func NewToken(subject util.UUID, issuer util.UUID, typ TokenType, exp time.Time, now *time.Time) *Token {
+func NewToken(subject util.UUID, issuer util.UUID, typ TokenType, exp time.Time, parent *util.UUID, now *time.Time) *Token {
 	//Check if the "now" parameter is nil
 	if now == nil {
 		n := time.Now()
 		now = &n
+	}
+
+	//Check if the parent parameter is nil
+	if parent == nil {
+		p := util.NilUUID()
+		parent = &p
 	}
 
 	//Generate a `jti` value based on the "now" time
@@ -99,6 +109,7 @@ func NewToken(subject util.UUID, issuer util.UUID, typ TokenType, exp time.Time,
 	//IP is added later
 	return &Token{
 		ID:      jti,
+		Parent:  *parent,
 		Issuer:  issuer,
 		Subject: subject,
 		Expiry:  exp,
@@ -179,12 +190,13 @@ func (t Token) Encrypt(key ccrypto.Privkey, expInFooter bool) string {
 	token.SetExpiration(t.Expiry) //Token "exp"
 
 	//Add additional data to the token
-	token.SetJti(t.ID.String())                 //Token ID
-	token.SetIssuer(t.Issuer.String())          //Issuer ID (server)
-	token.SetSubject(t.Subject.String())        //User ID (client)
-	token.SetString(_TOK_TYPE, t.Type.String()) //Token type
-	token.SetString(_TOK_IP, t.IPAddr.String()) //Subject IP
-	token.SetString(_TOK_UA, t.UserAgent)       //Subject UA
+	token.SetJti(t.ID.String())                  //Token ID
+	token.SetString(_TOK_PAR, t.Parent.String()) //Parent ID
+	token.SetIssuer(t.Issuer.String())           //Issuer ID (server)
+	token.SetSubject(t.Subject.String())         //User ID (client)
+	token.SetString(_TOK_TYPE, t.Type.String())  //Token type
+	token.SetString(_TOK_IP, t.IPAddr.String())  //Subject IP
+	token.SetString(_TOK_UA, t.UserAgent)        //Subject UA
 
 	//Check if the expiration footer should be added
 	if expInFooter {
@@ -265,6 +277,7 @@ func GetExprFromFooter(tok string) (time.Time, error) {
 func pasetoDecode(tok *paseto.Token, issuer util.UUID) (*Token, error) {
 	//Get the fields of the token
 	var id string
+	var parent string
 	//var issuer string
 	var subject string
 	var expiry time.Time
@@ -282,6 +295,7 @@ func pasetoDecode(tok *paseto.Token, issuer util.UUID) (*Token, error) {
 		typ = try.ThrowOnError(tok.GetString(_TOK_TYPE))
 		ipAddr = try.ThrowOnError(tok.GetString(_TOK_IP))
 		userAgent = try.ThrowOnError(tok.GetString(_TOK_UA))
+		parent = try.ThrowOnError(tok.GetString(_TOK_PAR))
 		return nil
 	})
 	if perr != nil {
@@ -291,6 +305,7 @@ func pasetoDecode(tok *paseto.Token, issuer util.UUID) (*Token, error) {
 	//Create a new struct and return it
 	return &Token{
 		ID:        util.UUIDFromString(id),
+		Parent:    util.UUIDFromString(parent),
 		Issuer:    issuer,
 		Subject:   util.UUIDFromString(subject),
 		Expiry:    expiry.UTC(),
