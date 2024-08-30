@@ -25,7 +25,14 @@ func LogoutRoute(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
 		} else {
-			//"Delete" the tokens
+			/*
+				"Delete" the tokens by replacing them with empty & expired copies.
+				The web browser will vacuum up these cookies automatically, but only
+				if the domain and path match exactly. Go has no in-built function to
+				do this, so each cookie is replaced instead. Research into Express's
+				method reveals a similar approach, so this way is most likely the
+				correct way to handle deletion of cookies.
+			*/
 			util.DeleteCookie(w, token.AccessTokenName, cfg.Token.Domain, cfg.Token.AccessCookiePath)
 			util.DeleteCookie(w, token.AccessTokenExprName, cfg.Token.Domain, cauth.ExprCookiePath)
 			util.DeleteCookie(w, token.RefreshTokenName, cfg.Token.Domain, cfg.Token.RefreshCookiePath)
