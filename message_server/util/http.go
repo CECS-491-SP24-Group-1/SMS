@@ -8,6 +8,24 @@ import (
 	"wraith.me/message_server/consts"
 )
 
+/*
+"Deletes" a cookie by setting the max age and expiry to times in the past.
+Per the Express docs, the domain and path must match for this to work, but
+the age can differ. See: https://expressjs.com/en/api.html#res.clearCookie
+*/
+func DeleteCookie(w http.ResponseWriter, name, domain, path string) {
+	// Attempt to delete the cookie with common defaults
+	cookie := &http.Cookie{
+		Name:    name,
+		Value:   "",
+		Path:    path,
+		Domain:  domain,
+		MaxAge:  -1,                             // Set MaxAge to -1 to delete the cookie
+		Expires: time.Now().Add(-1 * time.Hour), // Set expiration to the past
+	}
+	http.SetCookie(w, cookie)
+}
+
 // Gets a cookie value from a request by its key.
 func StringFromCookie(r *http.Request, key string) string {
 	cookie, err := r.Cookie(key)

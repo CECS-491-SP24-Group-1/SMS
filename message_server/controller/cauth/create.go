@@ -11,9 +11,9 @@ import (
 	"wraith.me/message_server/util"
 )
 
-const (
-	//Controls whether to add the token expiry to the footer.
-	AddExpToFooter = true
+var (
+	//Controls the path used for expiration cookies.
+	ExprCookiePath = "/"
 )
 
 /*
@@ -41,7 +41,7 @@ func IssueAccessToken(w http.ResponseWriter, usr *user.User, env *config.Env, cf
 		domain, persistent,
 	)
 	ateCookie := atoken.ExprCookie(
-		"/", domain,
+		ExprCookiePath, domain,
 		cfg.ExprMultiplier, persistent,
 	)
 
@@ -76,7 +76,7 @@ func IssueRefreshToken(w http.ResponseWriter, usr *user.User, ucoll *user.UserCo
 		domain, persistent,
 	)
 	rteCookie := rtoken.ExprCookie(
-		"/", domain,
+		ExprCookiePath, domain,
 		cfg.ExprMultiplier, persistent,
 	)
 

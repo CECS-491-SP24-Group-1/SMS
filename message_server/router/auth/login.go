@@ -78,7 +78,7 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	//After this point, it is safe to assume that a user is authorized to login
 	_, err := csolver.VerifyPKChallenge(loginVReq, env)
 	if err != nil {
-		util.ErrResponse(http.StatusForbidden, err)
+		util.ErrResponse(http.StatusForbidden, err).Respond(w)
 		return
 	}
 

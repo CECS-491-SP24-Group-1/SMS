@@ -27,6 +27,9 @@ var (
 	//The name of the access token expiration cookie.
 	AccessTokenExprName = "access_token_expr"
 
+	//Controls whether to add the token expiry to the footer.
+	ExprInFooter = true
+
 	//The name of the refresh token cookie.
 	RefreshTokenName = "refresh_token"
 
@@ -111,7 +114,7 @@ PASETO token, all in one step.
 */
 func (t Token) CryptAndCookie(key ccrypto.Privkey, path, domain string, persistent bool) (token string, cookie http.Cookie) {
 	//Encrypt the token
-	token = t.Encrypt(key, true)
+	token = t.Encrypt(key, ExprInFooter)
 
 	//Get the name based on whether this is an access or refresh token
 	name := "Untitled"

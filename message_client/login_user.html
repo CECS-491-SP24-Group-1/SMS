@@ -202,6 +202,11 @@
 					<td class="headerCell50"><button type="button" id="checkRTBtn" class="formBtn" onclick="checkRT()">Submit</button></td>
 					<td class="bigCell"><pre class="breakWrap" id="checkRTStatus">&nbsp;</pre></td>
 				</tr>
+				<tr>
+					<td class="headerCell">Logout:</td>
+					<td class="headerCell50"><button type="button" id="logoutBtn" class="formBtn" onclick="logout()">Submit</button></td>
+					<td class="bigCell"><pre class="breakWrap" id="logoutStatus">&nbsp;</pre></td>
+				</tr>
 			</tbody>
 		</table>
 		<!--
@@ -375,7 +380,7 @@
 
 				//Echo the status back to the user in the token status
 				const statusForm = document.getElementById("tokenStatus");
-				statusForm.classList.add(ok ? "good" : "bad");
+				setColor(statusForm, ok);
 				const errors = resp.errors ? resp.errors : `logged in as ${resp.payloads[0].id}`;
 				statusForm.innerHTML = `${resp.status} - ${errors}`;
 				console.log("token status:", resp);
@@ -518,17 +523,38 @@
 			taxios.post(REFRESH_EP)
 
 			//Display the data back to the webpage
-			.then(async response => {
+			.then(response => {
 				//Get the response data
 				const resp = response.data;
 				const ok = !resp.errors;
 
 				//Echo the status back to the user in the token status
 				const statusForm = document.getElementById("checkRTStatus");
-				statusForm.classList.add(ok ? "good" : "bad");
+				setColor(statusForm, ok);
 				const errors = resp.errors ? resp.errors : `${resp.desc} - ${JSON.stringify(resp.payloads[0])}`;
 				statusForm.innerHTML = `${resp.status} - ${errors}`;
 				console.log("token status:", resp);
+			});
+		}
+
+		//logout() -> void
+		function logout(){
+			//Check the token against the server
+			taxios.post(LOGOUT_EP)
+
+			//Display the data back to the webpage
+			.then(response => {
+				//Get the response data
+				const resp = response.data;
+				const ok = !resp.errors;
+
+				console.log("ok status:", ok)
+
+				//Echo the status back to the user in the token status
+				const statusForm = document.getElementById("logoutStatus");
+				setColor(statusForm, ok);
+				const errors = resp.errors ? resp.errors : `${resp.desc}`;
+				statusForm.innerHTML = `${resp.status} - ${errors}`;
 			});
 		}
 	</script>
@@ -554,6 +580,12 @@
 
 			//Return the error string
 			return out;
+		}
+
+		//setColor(elem: HTMLElement, good: boolean) -> void
+		function setColor(elem, good){
+			elem.classList.remove("good", "bad");
+			elem.classList.add(good ? "good" : "bad");
 		}
 	</script>
 </body>

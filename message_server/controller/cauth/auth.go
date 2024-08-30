@@ -124,7 +124,7 @@ func PostAuth(
 		msg = "successfully refreshed token for"
 	}
 	util.PayloadOkResponse(
-		fmt.Sprintf("%s %s <id: %s>", msg, usr.Username, usr.ID.String()),
+		fmt.Sprintf("%s %s (id: %s)", msg, usr.Username, usr.ID.String()),
 		payload,
 	).Respond(w)
 }
