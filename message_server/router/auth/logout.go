@@ -25,18 +25,6 @@ func LogoutRoute(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
 		} else {
-			//Delete the auth cookies by name
-			/*
-				e := util.ClearCookiesByName(w, r,
-					token.AccessTokenName, token.AccessTokenExprName,
-					token.RefreshTokenName, token.RefreshTokenExprName,
-				)
-				fmt.Printf("cookies: %v\n", e)
-			*/
-			for _, cookie := range r.Cookies() {
-				fmt.Printf("%s::%s\n", cookie.Name, cookie.Path)
-			}
-
 			//"Delete" the tokens
 			util.DeleteCookie(w, token.AccessTokenName, cfg.Token.Domain, cfg.Token.AccessCookiePath)
 			util.DeleteCookie(w, token.AccessTokenExprName, cfg.Token.Domain, cauth.ExprCookiePath)
