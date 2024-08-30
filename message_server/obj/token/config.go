@@ -13,7 +13,7 @@ type TConfig struct {
 	RefreshLifetime int `toml:"refresh_lifetime" default:"604800"`
 
 	//The time multiplier for the lifetime of expiry tokens.
-	ExprMultiplier int `toml:"expr_multiplier" default:"4"`
+	ExprMultiplier int `toml:"expr_multiplier" default:"2"`
 
 	//The domain to use for tokens.
 	Domain string `toml:"domain" default:"localhost"`

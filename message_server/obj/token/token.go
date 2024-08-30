@@ -42,6 +42,8 @@ var (
 	TimeFmt = time.RFC3339
 )
 
+//TODO: add parent field for access tokens and validate that an access token actually pairs to a refresh token
+
 //
 //-- CLASS: Token
 //
@@ -206,7 +208,7 @@ func (t Token) ExprCookie(path, domain string, exprMultiplier int, persistent bo
 	//Build the cookie
 	cookieBuilder := http.Cookie{
 		Name:     name,
-		Value:    t.Expiry.Format(TimeFmt),
+		Value:    t.Expiry.UTC().Format(TimeFmt),
 		Path:     path,
 		Domain:   domain,
 		MaxAge:   t.MaxAge(persistent) * exprMultiplier,

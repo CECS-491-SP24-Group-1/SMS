@@ -61,7 +61,7 @@ user in question already exists in the database.
 func IssueRefreshToken(w http.ResponseWriter, r *http.Request, usr *user.User, ucoll *user.UserCollection, ctx context.Context, env *config.Env, cfg *token.TConfig, persistent bool) (util.UUID, error) {
 	//Get the current and expiry times
 	now := time.Now()
-	exp := now.Add(time.Duration(cfg.AccessLifetime) * time.Second)
+	exp := now.Add(time.Duration(cfg.RefreshLifetime) * time.Second)
 
 	//Create a refresh token object and add additional fields
 	rtoken := token.NewToken(
