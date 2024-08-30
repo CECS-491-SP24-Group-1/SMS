@@ -28,6 +28,9 @@ var (
 	//The name of the auth subject header to send.
 	AuthHttpHeaderSubject = "X-Auth-For"
 
+	//The ID of the access token used to authenticate the user.
+	AuthAccessTokID = "X-Auth-TID"
+
 	//The key of the user object that's passed via `r.Context`.
 	AuthCtxUserKey = obj.CtxKey{S: "ReqUser"}
 )
@@ -186,6 +189,7 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 
 		//Add headers to the request (auth subject and token scope)
 		r.Header.Add(AuthHttpHeaderSubject, tokSubject.String())
+		r.Header.Add(AuthAccessTokID, tokObj.ID.String())
 
 		//Add the user to the request context
 		//https://go.dev/blog/context#TOC_3.2.

@@ -25,7 +25,7 @@ func SessionsRoute(w http.ResponseWriter, r *http.Request) {
 	//Get the user from the auth middleware
 	user := r.Context().Value(mw.AuthCtxUserKey).(user.User)
 
-	//Collect the sessions into a map
+	//Collect the tokens into a map; select attributes are added, but not the whole token
 	sessions := make(map[string]session)
 	for tid, tok := range user.Tokens {
 		//Decrypt the current refresh token
