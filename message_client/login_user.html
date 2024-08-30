@@ -217,6 +217,21 @@
 			Complete login
 		-->
 	</div>
+	<br>
+
+	<!-- Login stuff -->
+	<div id="sessions">
+		<h3 class="header">Sessions</h3>
+		<table class="infoTable">
+			<tbody>
+				<tr>
+					<td class="headerCell">Get Sessions:</td>
+					<td class="headerCell50"><button type="button" id="sessionsBtn" class="formBtn" onclick="sessions()">Submit</button></td>
+					<td class="bigCell"><pre class="breakWrap" id="sessionsStatus">&nbsp;</pre></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
 	<!-- Scripts -->
 	<!-- Singletons -->
@@ -379,7 +394,7 @@
 				//Echo the status back to the user in the token status
 				const statusForm = document.getElementById("tokenStatus");
 				setColor(statusForm, ok);
-				const errors = resp.errors ? resp.errors : `logged in as ${resp.payloads[0].id}`;
+				const errors = !ok ? resp.errors : `logged in as ${resp.payloads[0].id}`;
 				statusForm.innerHTML = `${resp.status} - ${errors}`;
 				console.log("token status:", resp);
 			});
@@ -529,7 +544,7 @@
 				//Echo the status back to the user in the token status
 				const statusForm = document.getElementById("checkRTStatus");
 				setColor(statusForm, ok);
-				const errors = resp.errors ? resp.errors : `${resp.desc} - ${JSON.stringify(resp.payloads[0])}`;
+				const errors = !ok ? resp.errors : `${resp.desc} - ${JSON.stringify(resp.payloads[0])}`;
 				statusForm.innerHTML = `${resp.status} - ${errors}`;
 				console.log("token status:", resp);
 			});
@@ -537,7 +552,7 @@
 
 		//logout() -> void
 		function logout(){
-			//Check the token against the server
+			//Logout
 			taxios.post(LOGOUT_EP)
 
 			//Display the data back to the webpage
@@ -546,12 +561,33 @@
 				const resp = response.data;
 				const ok = !resp.errors;
 
-				console.log("ok status:", ok)
-
 				//Echo the status back to the user in the token status
 				const statusForm = document.getElementById("logoutStatus");
 				setColor(statusForm, ok);
-				const errors = resp.errors ? resp.errors : `${resp.desc}`;
+				const errors = !ok ? resp.errors : `${resp.desc}`;
+				statusForm.innerHTML = `${resp.status} - ${errors}`;
+			});
+		}
+	</script>
+
+	<!-- Sessions stuff -->
+	<script type="application/javascript">
+		//sessions() -> void
+		function sessions(){
+			//Get the serverside sessions for the user
+			taxios.get(SESSIONS_EP)
+
+			//Display the data back to the webpage
+			.then(response => {
+				//Get the response data
+				const resp = response.data;
+				const ok = !resp.errors;
+				const sessions = resp.payloads ? resp.payloads[0] : null;
+
+				//Echo the status back to the user in the token status
+				const statusForm = document.getElementById("sessionsStatus");
+				setColor(statusForm, ok);
+				const errors = !ok ? resp.errors : `${resp.desc}\n${JSON.stringify(sessions, null, 4)}`;
 				statusForm.innerHTML = `${resp.status} - ${errors}`;
 			});
 		}
