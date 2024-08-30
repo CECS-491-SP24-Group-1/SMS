@@ -198,6 +198,8 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 			return
 		}
 
+		//TODO: count access token usages via Redis
+
 		//Add headers to the request (auth subject and token scope)
 		r.Header.Add(AuthHttpHeaderSubject, tokSubject.String())
 		r.Header.Add(AuthAccessTokID, tokObj.ID.String())

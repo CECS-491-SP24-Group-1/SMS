@@ -14,7 +14,7 @@ import (
 
 // Defines the structure of a session.
 type session struct {
-	IsCurrent bool      `json:"is_current"` //TODO: add when parent token functionality is added
+	IsCurrent bool      `json:"is_current"`
 	Created   time.Time `json:"created"`
 	Expires   time.Time `json:"expires"`
 	IP        string    `json:"ip"`

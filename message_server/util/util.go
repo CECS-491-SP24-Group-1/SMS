@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"aidanwoods.dev/go-paseto"
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 	ccrypto "wraith.me/message_server/crypto"
 )
 
