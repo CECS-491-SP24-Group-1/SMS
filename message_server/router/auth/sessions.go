@@ -33,10 +33,14 @@ func SessionsRoute(w http.ResponseWriter, r *http.Request) {
 			tok.Token, env.SK, env.ID, token.TokenTypeREFRESH,
 		)
 		if err != nil {
-			util.ErrResponse(http.StatusInternalServerError,
-				fmt.Errorf("failed to decrypt refresh tok with id %s: %s", tid, err),
-			).Respond(w)
-			return
+			/*
+				util.ErrResponse(http.StatusInternalServerError,
+					fmt.Errorf("failed to decrypt refresh tok with id %s: %s", tid, err),
+				).Respond(w)
+				return
+			*/
+			//Skip this session since it failed to decrypt
+			continue
 		}
 
 		//Add the session
