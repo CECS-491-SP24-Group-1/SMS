@@ -60,6 +60,8 @@ func VerifyPKChallenge(vreq LoginVerifyUser, env *config.Env) (*c.CToken, error)
 		return nil, err
 	}
 
+	//TODO: Reject signed tokens that were already submitted to prevent replay attacks
+
 	//Double check to ensure the challenge PK and the user PK match up
 	if subtle.ConstantTimeCompare(
 		[]byte(vreq.PK.String()), []byte(loginTok.Claim),

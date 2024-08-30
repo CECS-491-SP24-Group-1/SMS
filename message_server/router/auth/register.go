@@ -115,7 +115,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 		iuser.Username,
 		strings.ToLower(iuser.Email),
 		util.NowMillis(),
-		ip_addr.HttpIP2NetIP(r.RemoteAddr),
+		ip_addr.HttpIP2IPAddr(r.RemoteAddr),
 		user.DefaultUserFlags(),
 		user.DefaultUserOptions(),
 	)

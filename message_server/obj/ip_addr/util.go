@@ -5,10 +5,15 @@ import (
 	"strings"
 )
 
+// Converts a string IP from `http.Request` to an `IPAddr` object.
+func HttpIP2IPAddr(ip string) IPAddr {
+	return FromNetIP(HttpIP2NetIP(ip))
+}
+
 // Converts a string IP from `http.Request` to a `net.IP` object.
-func HttpIP2NetIP(ip string) IPAddr {
+func HttpIP2NetIP(ip string) net.IP {
 	rawIP := ip[0:strings.LastIndex(ip, ":")] //Get just the IP; last colon indicates the port
-	return FromNetIP(net.ParseIP(rawIP))
+	return net.ParseIP(rawIP)
 }
 
 // Determines the type of a `net.IP` address.

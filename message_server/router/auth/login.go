@@ -19,7 +19,7 @@ func RequestLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	if user, tid, err :=
 		cauth.AttemptRefreshAuth(w, r, env, uc, true); user != nil && err == nil {
 		fmt.Println("post auth in stage1")
-		cauth.PostAuth(w, r.Context(), user, uc, &cfg.Token, env, true, tid)
+		cauth.PostAuth(w, r, user, uc, &cfg.Token, env, true, tid)
 		return
 	}
 
@@ -61,7 +61,7 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	if user, tid, err :=
 		cauth.AttemptRefreshAuth(w, r, env, uc, true); user != nil && err == nil {
 		fmt.Println("post auth in stage2")
-		cauth.PostAuth(w, r.Context(), user, uc, &cfg.Token, env, true, tid)
+		cauth.PostAuth(w, r, user, uc, &cfg.Token, env, true, tid)
 		return
 	}
 
@@ -84,5 +84,5 @@ func VerifyLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Mark the user as PK verified and run post-login stuff
 	user.MarkPKVerified()
-	cauth.PostAuth(w, r.Context(), &user, uc, &cfg.Token, env, true, nil)
+	cauth.PostAuth(w, r, &user, uc, &cfg.Token, env, true, nil)
 }

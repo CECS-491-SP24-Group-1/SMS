@@ -13,11 +13,13 @@ import (
 	"aidanwoods.dev/go-paseto"
 	ccrypto "wraith.me/message_server/crypto"
 	"wraith.me/message_server/util"
+	"wraith.me/message_server/util/try"
 )
 
 const (
 	_TOK_TYPE = "ttype"
 	_TOK_IP   = "tipaddr"
+	_TOK_UA   = "tuagent"
 )
 
 var (
@@ -70,6 +72,9 @@ type Token struct {
 
 	//The IP address of the client that the token was originally created for
 	IPAddr net.IP `json:"ip_addr"`
+
+	//The identifier of the browser that the token was issued for.
+	UserAgent string `json:"user_agent"`
 }
 
 //-- Constructors
@@ -177,6 +182,7 @@ func (t Token) Encrypt(key ccrypto.Privkey, expInFooter bool) string {
 	token.SetSubject(t.Subject.String())        //User ID (client)
 	token.SetString(_TOK_TYPE, t.Type.String()) //Token type
 	token.SetString(_TOK_IP, t.IPAddr.String()) //Subject IP
+	token.SetString(_TOK_UA, t.UserAgent)       //Subject UA
 
 	//Check if the expiration footer should be added
 	if expInFooter {
@@ -263,50 +269,33 @@ func pasetoDecode(tok *paseto.Token, issuer util.UUID) (*Token, error) {
 	var issued time.Time
 	var typ string
 	var ipAddr string
+	var userAgent string
 
 	//Early return if any conversion function fails
-	//TODO: might want to condense this
-	perr := func() (err error) {
-		id, err = tok.GetJti()
-		if err != nil {
-			return
-		}
-		subject, err = tok.GetSubject()
-		if err != nil {
-			return
-		}
-		expiry, err = tok.GetExpiration()
-		if err != nil {
-			return
-		}
-		issued, err = tok.GetIssuedAt()
-		if err != nil {
-			return
-		}
-		typ, err = tok.GetString(_TOK_TYPE)
-		if err != nil {
-			return
-		}
-
-		ipAddr, err = tok.GetString(_TOK_IP)
-		if err != nil {
-			return
-		}
+	_, perr := try.Try(func() interface{} {
+		id = try.ThrowOnError(tok.GetJti())
+		subject = try.ThrowOnError(tok.GetSubject())
+		expiry = try.ThrowOnError(tok.GetExpiration())
+		issued = try.ThrowOnError(tok.GetIssuedAt())
+		typ = try.ThrowOnError(tok.GetString(_TOK_TYPE))
+		ipAddr = try.ThrowOnError(tok.GetString(_TOK_IP))
+		userAgent = try.ThrowOnError(tok.GetString(_TOK_UA))
 		return nil
-	}()
+	})
 	if perr != nil {
 		return nil, perr
 	}
 
 	//Create a new struct and return it
 	return &Token{
-		ID:      util.UUIDFromString(id),
-		Issuer:  issuer,
-		Subject: util.UUIDFromString(subject),
-		Expiry:  expiry,
-		Issued:  issued,
-		Type:    MustParseTokenType(typ),
-		IPAddr:  net.ParseIP(ipAddr),
+		ID:        util.UUIDFromString(id),
+		Issuer:    issuer,
+		Subject:   util.UUIDFromString(subject),
+		Expiry:    expiry,
+		Issued:    issued,
+		Type:      MustParseTokenType(typ),
+		IPAddr:    net.ParseIP(ipAddr),
+		UserAgent: userAgent,
 	}, nil
 }
 

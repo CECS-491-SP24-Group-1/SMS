@@ -1,13 +1,12 @@
 package cauth
 
 import (
-	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/config"
+	"wraith.me/message_server/obj/ip_addr"
 	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
@@ -91,7 +90,7 @@ run once the user has successfully authenticated either via a refresh token
 or by solving a public key challenge.
 */
 func PostAuth(
-	w http.ResponseWriter, ctx context.Context,
+	w http.ResponseWriter, r *http.Request,
 	usr *user.User, ucoll *user.UserCollection,
 	cfg *token.TConfig, env *config.Env,
 	persistent bool, tid *util.UUID,
@@ -102,16 +101,16 @@ func PostAuth(
 		usr.RemoveToken(tid.String())
 	}
 
-	//Update the last login field of the user
-	//TODO: update last IP too
-	usr.LastLogin = time.Now()
+	//Update the last IP and login fields of the user
+	usr.LastIP = ip_addr.HttpIP2IPAddr(r.RemoteAddr)
+	usr.LastLogin = util.NowMillis()
 
 	//Issue an access and refresh token; this also updates the user in the database
-	_, err := IssueRefreshToken(w, usr, ucoll, ctx, env, cfg, persistent)
+	_, err := IssueRefreshToken(w, r, usr, ucoll, r.Context(), env, cfg, persistent)
 	if err != nil {
 		util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
 	}
-	IssueAccessToken(w, usr, env, cfg, persistent) //This should happen second; might want to tie access and refresh tokens together
+	IssueAccessToken(w, r, usr, env, cfg, persistent) //This should happen second; might want to tie access and refresh tokens together
 
 	//Serialize the user's username and ID to a map
 	payload := make(map[string]string)

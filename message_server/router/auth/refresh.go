@@ -14,7 +14,7 @@ func RefreshTokenRoute(w http.ResponseWriter, r *http.Request) {
 	//Run post-auth if the process succeeded
 	//The refresh attempt will auto-respond if something goes wrong
 	if user != nil && err == nil {
-		cauth.PostAuth(w, r.Context(), user, uc, &cfg.Token, env, true, tid)
+		cauth.PostAuth(w, r, user, uc, &cfg.Token, env, true, tid)
 		return
 	}
 }

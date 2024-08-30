@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"wraith.me/message_server/config"
+	"wraith.me/message_server/obj/ip_addr"
 	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
@@ -20,12 +21,12 @@ var (
 Issues an access token for a user and writes it to the outgoing response
 cookies.
 */
-func IssueAccessToken(w http.ResponseWriter, usr *user.User, env *config.Env, cfg *token.TConfig, persistent bool) {
+func IssueAccessToken(w http.ResponseWriter, r *http.Request, usr *user.User, env *config.Env, cfg *token.TConfig, persistent bool) {
 	//Get the current and expiry times
 	now := time.Now()
 	exp := now.Add(time.Duration(cfg.AccessLifetime) * time.Second)
 
-	//Create an access token object
+	//Create an access token object and add additional fields
 	atoken := token.NewToken(
 		usr.ID,
 		env.ID,
@@ -33,6 +34,8 @@ func IssueAccessToken(w http.ResponseWriter, usr *user.User, env *config.Env, cf
 		exp,
 		&now,
 	)
+	atoken.IPAddr = ip_addr.HttpIP2NetIP(r.RemoteAddr)
+	atoken.UserAgent = r.UserAgent()
 
 	//Encrypt the access token and generate the cookie strings
 	domain := cfg.Domain
@@ -55,12 +58,12 @@ Issues a refresh token for a user and writes it to the outgoing response
 cookies along with the user object in the database. It is assumed that the
 user in question already exists in the database.
 */
-func IssueRefreshToken(w http.ResponseWriter, usr *user.User, ucoll *user.UserCollection, ctx context.Context, env *config.Env, cfg *token.TConfig, persistent bool) (util.UUID, error) {
+func IssueRefreshToken(w http.ResponseWriter, r *http.Request, usr *user.User, ucoll *user.UserCollection, ctx context.Context, env *config.Env, cfg *token.TConfig, persistent bool) (util.UUID, error) {
 	//Get the current and expiry times
 	now := time.Now()
 	exp := now.Add(time.Duration(cfg.AccessLifetime) * time.Second)
 
-	//Create a refresh token object
+	//Create a refresh token object and add additional fields
 	rtoken := token.NewToken(
 		usr.ID,
 		env.ID,
@@ -68,6 +71,8 @@ func IssueRefreshToken(w http.ResponseWriter, usr *user.User, ucoll *user.UserCo
 		exp,
 		&now,
 	)
+	rtoken.IPAddr = ip_addr.HttpIP2NetIP(r.RemoteAddr)
+	rtoken.UserAgent = r.UserAgent()
 
 	//Encrypt the refresh token and generate the cookie strings
 	domain := cfg.Domain
