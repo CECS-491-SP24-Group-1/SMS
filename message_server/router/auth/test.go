@@ -10,6 +10,7 @@ import (
 	"wraith.me/message_server/mw"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
+	"wraith.me/message_server/util/ms"
 )
 
 //
@@ -44,22 +45,24 @@ func (atr AuthTestRouter) Router() func(r chi.Router) {
 		user := r.Context().Value(mw.AuthCtxUserKey).(user.User)
 
 		//Marshal to a map using mapstructure
-		ms := make(map[string]interface{})
-		if err := util.MSTextMarshal(user, &ms, "bson"); err != nil {
+		um := make(map[string]interface{})
+		if err := ms.MSTextMarshal(user, &um, "bson"); err != nil {
 			util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
 			return
 		}
 
 		//Redact some fields as a test
-		ms["id"] = ms["UUID"]
-		delete(ms, "UUID")
-		delete(ms, "flags")
-		delete(ms, "last_ip")
-		delete(ms, "options")
-		delete(ms, "tokens")
+		um["id"] = um["UUID"]
+		um = ms.RedactMap(um, true,
+			"id",
+			"username",
+			"display_name",
+			"pubkey",
+			"last_login",
+		)
 
 		//Marshal the map to JSON
-		jsons, err := json.Marshal(&ms)
+		jsons, err := json.Marshal(&um)
 		if err != nil {
 			util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
 		}

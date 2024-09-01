@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	"wraith.me/message_server/schema/user"
-	"wraith.me/message_server/util"
+	"wraith.me/message_server/util/ms"
 )
 
 // Generally better than MS.
 func BenchmarkRedactJsonDM(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		if err := redactJson(util.RedactJsonDM, true); err != nil {
+		if err := redactJson(ms.RedactJsonDM, true); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -21,20 +21,20 @@ func BenchmarkRedactJsonDM(b *testing.B) {
 
 func BenchmarkRedactJsonMS(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		if err := redactJson(util.RedactJsonMS, true); err != nil {
+		if err := redactJson(ms.RedactJsonMS, true); err != nil {
 			b.Fatal(err)
 		}
 	}
 }
 
 func TestRedactJsonDM(t *testing.T) {
-	if err := redactJson(util.RedactJsonDM, false); err != nil {
+	if err := redactJson(ms.RedactJsonDM, false); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestRedactJsonMS(t *testing.T) {
-	if err := redactJson(util.RedactJsonMS, false); err != nil {
+	if err := redactJson(ms.RedactJsonMS, false); err != nil {
 		t.Fatal(err)
 	}
 }

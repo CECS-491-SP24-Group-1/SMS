@@ -11,6 +11,7 @@ import (
 	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
+	"wraith.me/message_server/util/ms"
 )
 
 var usr = user.NewUserSimple(
@@ -102,19 +103,19 @@ func TestUser2MS(t *testing.T) {
 	fmt.Printf("struct: %v\n", user)
 
 	//Marshal to a map using mapstructure
-	ms := make(map[string]interface{})
-	if err := util.MSTextMarshal(*user, &ms, "bson"); err != nil {
+	mms := make(map[string]interface{})
+	if err := ms.MSTextMarshal(*user, &mms, "bson"); err != nil {
 		t.Fatal(err)
 	}
 
 	//Redact some fields as a test
-	ms["id"] = ms["UUID"]
-	delete(ms, "UUID")
-	delete(ms, "flags")
-	delete(ms, "last_ip")
-	delete(ms, "options")
-	delete(ms, "tokens")
+	mms["id"] = mms["UUID"]
+	delete(mms, "UUID")
+	delete(mms, "flags")
+	delete(mms, "last_ip")
+	delete(mms, "options")
+	delete(mms, "tokens")
 
 	//Emit the map to stdout
-	fmt.Printf("mapstr: %v\n", ms)
+	fmt.Printf("mapstr: %v\n", mms)
 }

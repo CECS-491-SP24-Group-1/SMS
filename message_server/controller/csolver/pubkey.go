@@ -17,6 +17,7 @@ import (
 	c "wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
+	"wraith.me/message_server/util/ms"
 )
 
 const (
@@ -118,7 +119,7 @@ func PreFlight[T LoginUser | LoginVerifyUser](user *T, hit *user.User, uc *user.
 	}
 
 	//Unmarshal the mapped request body into a user object
-	if err := util.MSTextUnmarshal(reqBody, user, ""); err != nil {
+	if err := ms.MSTextUnmarshal(reqBody, user, ""); err != nil {
 		util.ErrResponse(_PF_PARSE_ERR, err).Respond(w)
 		return false
 	}
