@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"wraith.me/message_server/util"
 	"wraith.me/message_server/util/ms"
 )
 
@@ -14,9 +15,8 @@ type myStruct struct {
 }
 
 func TestMSTimeHook(t *testing.T) {
-	now := time.Now()
 	in := myStruct{
-		CreatedAt: now,
+		CreatedAt: util.NowMillis(),
 		//UpdatedAt: now.Add(1 * time.Hour),
 		//Name:      "Example",
 	}

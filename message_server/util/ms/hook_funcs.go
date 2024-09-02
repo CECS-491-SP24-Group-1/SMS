@@ -13,7 +13,7 @@ const (
 
 var (
 	//Controls the formatting of marshalled times.
-	TimeFmt = time.RFC3339
+	TimeFmt = time.RFC3339Nano
 )
 
 // Custom hook function to handle time.Time marshaling.
