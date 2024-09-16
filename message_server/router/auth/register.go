@@ -215,9 +215,14 @@ Performs post-signup operations on the newly created user object, such
 as persistence to the database and generation of challenges.
 */
 func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User) error {
-	//Issue an email challenge for the user
-	if err := csolver.IssueEmailChallenge(usr, cfg, env, r); err != nil {
-		return err
+	//Issue an email challenge for the user if email is enabled
+	if cfg.Email.Enabled {
+		if err := csolver.IssueEmailChallenge(usr, cfg, env, r); err != nil {
+			return err
+		}
+	} else {
+		//Email is not enabled, so their email is marked verified by default
+		usr.Flags.EmailVerified = true
 	}
 
 	//Persist the user in the database

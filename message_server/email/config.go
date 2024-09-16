@@ -4,6 +4,9 @@ import "github.com/creasty/defaults"
 
 // Configuration object for the email daemon.
 type EConfig struct {
+	//Whether the emailer functionality is enabled.
+	Enabled bool `toml:"enabled" default:"true"`
+
 	//The address that the email server is located at.
 	Host string `toml:"host" default:"127.0.0.1"`
 

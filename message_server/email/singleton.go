@@ -63,6 +63,14 @@ func (m *EClient) Connect(cfg *EConfig) (*mail.SMTPClient, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
+	//Assign the config object
+	m.config = cfg
+
+	//Turn the operation into a NOP if email is off
+	if !m.config.Enabled {
+		return nil, nil
+	}
+
 	//Ensure there isn't already a connection open
 	if m.client != nil {
 		return m.client, fmt.Errorf("email: cannot establish a connection that is already open")
@@ -85,7 +93,7 @@ func (m *EClient) Connect(cfg *EConfig) (*mail.SMTPClient, error) {
 
 	//Connect to the SMTP server
 	smtpc, err := m.server.Connect()
-	m.client, m.config = smtpc, cfg
+	m.client = smtpc
 
 	//Return the client and any error that occurred
 	return m.client, err
@@ -111,9 +119,14 @@ Pings the SMTP server to ensure the connection is ok. Returns the
 ping time in microseconds.
 */
 func (m EClient) Heartbeat() (int64, error) {
+	//Turn the operation into a NOP if email is off
+	if !m.config.Enabled {
+		return 0, nil
+	}
+
 	//Ensure a connection actually exists
 	if m.client == nil {
-		return -1, fmt.Errorf("email: cannot perform a heartbeat; client is not currently connected to a server")
+		return 0, fmt.Errorf("email: cannot perform a heartbeat; client is not currently connected to a server")
 	}
 
 	//Ping the server
@@ -136,6 +149,11 @@ func (m *EClient) SendEmail(em *mail.Email) error {
 	//Lock the mutex and defer its unlock
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
+
+	//Turn the operation into a NOP if email is off
+	if !m.config.Enabled {
+		return nil
+	}
 
 	//Send a NOOP command to the server
 	if err := m.client.Noop(); err != nil {
