@@ -95,7 +95,7 @@ endif
 ####################################
 # Phony Build Rules
 ####################################
-#Builds the prohect
+#Builds the project
 .PHONY: build
 build:
 	@echo BUILD $(ENTRYPOINT_NAME) "->" $(BIN_FOLDER)/$(BIN_NAME)

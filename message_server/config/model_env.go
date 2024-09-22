@@ -77,6 +77,7 @@ func EnvInit(path string) (Env, error) {
 	}
 	unmarshaller := func(b []byte, c *Env) error {
 		//Unmarshal the bytes to a map
+		//TODO: use `github.com/golobby/dotenv` isntead of `github.com/joho/godotenv`
 		em, err := godotenv.UnmarshalBytes(b)
 		if err != nil {
 			return err

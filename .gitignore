@@ -1,4 +1,5 @@
 tmp/
-*.env
-message_server/config.toml
+**/*.env
+**/config.toml
 message_client/go/*.wasm
+TODO

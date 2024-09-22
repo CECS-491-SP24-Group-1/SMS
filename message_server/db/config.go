@@ -9,10 +9,10 @@ https://www.mongodb.com/docs/drivers/node/current/fundamentals/connection/connec
 */
 type MConfig struct {
 	//The connection string to use when establishing a connection to the MongoDB server.
-	ConnStr string `toml:"conn_str" default:"mongodb://127.0.0.1:27017"`
+	ConnStr string `toml:"conn_str" env:"MGO_CONN_STR" default:"mongodb://127.0.0.1:27017"`
 
 	//The timeout (in seconds) to use for connections.
-	Timeout int64 `toml:"timeout" default:"10"`
+	Timeout int64 `toml:"timeout" env:"MGO_TIMEOUT" default:"10"`
 }
 
 func DefaultMConfig() *MConfig {
