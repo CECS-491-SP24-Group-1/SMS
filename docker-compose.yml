@@ -1,0 +1,53 @@
+version: "3"
+
+#Define stack network
+networks:
+  wraithnet:
+    driver: bridge
+
+#Define stack services
+services: 
+  #Main application container
+  sms:
+    image: sms:v1
+    container_name: wraith_sms
+    hostname: wraith_sms
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./dockerfiles/wraithapp.Dockerfile
+    depends_on:
+      - mongodb
+      - redis
+    environment:
+      - MGO_CONN_STR=mongodb://mongodb:27017
+      - RED_HOST=redis
+      - EMAIL_ENABLED=false
+    networks:
+      - wraithnet
+    ports:
+      - "8888:8888"
+
+  #MongoDB database container
+  mongodb:
+    image: mongo:latest
+    container_name: wraith_mdb
+    hostname: wraith_mdb
+    restart: unless-stopped
+    attach: false
+    networks:
+      - wraithnet
+    ports:
+      - "27018:27017"
+
+  #Redis database container
+  redis:
+    image: redis:latest
+    container_name: wraith_rdb
+    hostname: wraith_rdb
+    restart: unless-stopped
+    attach: false
+    networks:
+      - wraithnet
+    ports:
+      - "6380:6379"
