@@ -20,6 +20,7 @@ services:
       - mongodb
       - redis
     environment:
+      - SRV_BIND_ADDR=0.0.0.0
       - MGO_CONN_STR=mongodb://mongodb:27017
       - RED_HOST=redis
       - EMAIL_ENABLED=false
