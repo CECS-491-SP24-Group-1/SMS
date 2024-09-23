@@ -9,21 +9,34 @@ ARG workdir=/wraith_sms
 # Install necessary packages
 RUN apk add --no-cache go make
 
+# Set GOPATH and add it to PATH
+ENV GOPATH /go
+ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
+
 # Create work directories
 RUN mkdir -p $workdir
 
-# Copy the repo and configs into the container
-COPY ./message_server $workdir
-RUN cd $workdir && \
-rm -f secrets.env config.toml
+# Set the working directory
+WORKDIR $workdir
 
-# Compile the project
-RUN cd $workdir && \
-make build
+# Copy only the go.mod and go.sum files (if they exist)
+COPY ./message_server/go.mod ./message_server/go.sum* ./
+
+# Download dependencies
+RUN go mod download
 
 # Expose necessary ports
 EXPOSE 8080
 
-# Run the binary
-WORKDIR $workdir
-CMD ["./sms_server"]
+# Install air for hot reloading; using an older version that's compatible with Alpine's packaged version
+RUN go install github.com/cosmtrek/air@v1.49.0
+
+# Verify air installation
+RUN which air
+
+# Copy the .air.toml file into the container
+COPY ./message_server/.air.toml .
+
+# Set the entrypoint to use air for hot reloading
+ENTRYPOINT ["air", "-c", ".air.toml"]
+

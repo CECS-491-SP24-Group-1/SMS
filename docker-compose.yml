@@ -27,6 +27,8 @@ services:
       - wraithnet
     ports:
       - "8888:8888"
+    volumes:
+      - ./message_server:/wraith_sms
 
   #MongoDB database container
   mongodb:
