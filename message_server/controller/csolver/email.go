@@ -66,7 +66,7 @@ func VerifyEmailChallenge(env *config.Env, ctext string, w http.ResponseWriter, 
 	 ctx := r.Context() 
  
 	 // Check if token ID exists in Redis
-	 exists, err := rcl.Exists(ctx, tokenID).Result() // rcl is the Redis client, already defined in the package
+	 exists, err := rcl.Exists(ctx, tokenID).Result()
 	 if err != nil {
 		 util.ErrResponse(http.StatusInternalServerError, fmt.Errorf("error checking token in Redis: %v", err)).Respond(w)
 		 return nil

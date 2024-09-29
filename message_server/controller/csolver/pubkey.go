@@ -40,7 +40,7 @@ func IssuePKChallenge(user user.User, env *config.Env) string {
 }
 
 // Verifies that a public key challenge is valid. This is stage 2 of a login/pk challenge.
-func VerifyPKChallenge(vreq LoginVerifyUser, env *config.Env) (*c.CToken, error) {
+func VerifyPKChallenge(vreq LoginVerifyUser, env *config.Env, r *http.Request) (*c.CToken, error) {
 	//Verify the signature against the token; this proves ownership of the private key
 	ok := ccrypto.Verify(vreq.PK, []byte(vreq.Token), vreq.Signature)
 	if !ok {
@@ -67,7 +67,7 @@ func VerifyPKChallenge(vreq LoginVerifyUser, env *config.Env) (*c.CToken, error)
 	ctx := r.Context()     
 
 	// Check if token ID exists in Redis
-	exists, err := redisClient.Exists(ctx, tokenID).Result()
+	exists, err := rcl.Exists(ctx, tokenID).Result()
 	if err != nil {
 		return nil, fmt.Errorf("error checking token in Redis: %v", err)
 	}
@@ -79,7 +79,7 @@ func VerifyPKChallenge(vreq LoginVerifyUser, env *config.Env) (*c.CToken, error)
 
 	// Store the token ID in Redis with an expiration time 
 	expiration := time.Minute * 10 
-	err = redisClient.Set(ctx, tokenID, "used", expiration).Err()
+	err = rcl.Set(ctx, tokenID, "used", expiration).Err()
 	if err != nil {
 		return nil, fmt.Errorf("failed to store token ID in Redis: %v", err)
 	}
