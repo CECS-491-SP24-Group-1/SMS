@@ -61,7 +61,29 @@ func VerifyPKChallenge(vreq LoginVerifyUser, env *config.Env) (*c.CToken, error)
 		return nil, err
 	}
 
-	//TODO: Reject signed tokens that were already submitted to prevent replay attacks
+	//Reject signed tokens that were already submitted to prevent replay attacks
+	// Check Redis to ensure the token hasn't been used before
+	tokenID := vreq.Token 
+	ctx := r.Context()     
+
+	// Check if token ID exists in Redis
+	exists, err := redisClient.Exists(ctx, tokenID).Result()
+	if err != nil {
+		return nil, fmt.Errorf("error checking token in Redis: %v", err)
+	}
+
+	// If the token ID exists in Redis, reject it (replay attack)
+	if exists > 0 {
+		return nil, fmt.Errorf("token already used, possible replay attack detected")
+	}
+
+	// Store the token ID in Redis with an expiration time (e.g., 15 minutes, or based on token expiration)
+	expiration := time.Minute * 15 // Adjust according to your use case
+	err = redisClient.Set(ctx, tokenID, "used", expiration).Err()
+	if err != nil {
+		return nil, fmt.Errorf("failed to store token ID in Redis: %v", err)
+	}
+
 
 	//Double check to ensure the challenge PK and the user PK match up
 	if subtle.ConstantTimeCompare(
