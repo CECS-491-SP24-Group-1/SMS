@@ -61,6 +61,31 @@ func VerifyEmailChallenge(env *config.Env, ctext string, w http.ResponseWriter, 
 		return nil
 	}
 
+	 // Use Redis to ensure the token hasn't been used before
+	 tokenID := ctext   
+	 ctx := r.Context() 
+ 
+	 // Check if token ID exists in Redis
+	 exists, err := rcl.Exists(ctx, tokenID).Result() // rcl is the Redis client, already defined in the package
+	 if err != nil {
+		 util.ErrResponse(http.StatusInternalServerError, fmt.Errorf("error checking token in Redis: %v", err)).Respond(w)
+		 return nil
+	 }
+ 
+	 // If the token ID exists in Redis, reject
+	 if exists > 0 {
+		 util.ErrResponse(http.StatusForbidden, fmt.Errorf("token already used, possible replay attack detected")).Respond(w)
+		 return nil
+	 }
+ 
+	 // Store the token ID in Redis with an expiration time 
+	 expiration := time.Hour * 24 // Use the same expiration time as the token
+	 err = rcl.Set(ctx, tokenID, "used", expiration).Err()
+	 if err != nil {
+		 util.ErrResponse(http.StatusInternalServerError, fmt.Errorf("failed to store token ID in Redis: %v", err)).Respond(w)
+		 return nil
+	 }
+
 	//Return the token
 	return ctoken
 }
