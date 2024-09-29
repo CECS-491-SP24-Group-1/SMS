@@ -77,8 +77,8 @@ func VerifyPKChallenge(vreq LoginVerifyUser, env *config.Env) (*c.CToken, error)
 		return nil, fmt.Errorf("token already used, possible replay attack detected")
 	}
 
-	// Store the token ID in Redis with an expiration time (e.g., 15 minutes, or based on token expiration)
-	expiration := time.Minute * 15 // Adjust according to your use case
+	// Store the token ID in Redis with an expiration time 
+	expiration := time.Minute * 10 
 	err = redisClient.Set(ctx, tokenID, "used", expiration).Err()
 	if err != nil {
 		return nil, fmt.Errorf("failed to store token ID in Redis: %v", err)
