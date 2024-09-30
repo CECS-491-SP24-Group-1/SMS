@@ -133,23 +133,29 @@ func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 		r.Use(limiter.Impose)
 	*/
 
-	//TODO: maybe group under an API route
+	//Index route
+	r.Get("/", router.Index)
+
+	//Group subsequent routes under `/api`
+	apir := chi.NewRouter()
 
 	//Health route
-	r.Get("/", router.Index)
-	r.Get("/heartbeat", router.Heartbeat)
+	apir.Get("/heartbeat", router.Heartbeat)
 
-	r.Post("/send_message", router.SendMessage)
+	apir.Post("/send_message", router.SendMessage)
 
 	//User auth routes
-	r.Mount("/auth", auth.AuthRoutes(cfg, env))
+	apir.Mount("/auth", auth.AuthRoutes(cfg, env))
 
 	//Challenge routes
-	r.Group(func(r chi.Router) {
+	apir.Group(func(r chi.Router) {
 		//authScopes := []token.TokenScope{token.TokenScopePOSTSIGNUP, token.TokenScopeUSER}
 		//r.Use(mw.NewAuthMiddleware(authScopes))
 		r.Mount("/challenges", challenges.ChallengeRoutes(env))
 	})
+
+	//Bind the API routes to the outgoing router
+	r.Mount("/api", apir)
 
 	//Return the built router for requests
 	return r
