@@ -75,7 +75,7 @@ func VerifyPKChallenge(vreq LoginVerifyUser, env *config.Env, r *http.Request) (
 
 	// If the token ID exists in Redis, reject it (replay attack)
 	if exists > 0 {
-		return nil, fmt.Errorf("token already used, possible replay attack detected")
+		return nil, fmt.Errorf("token already used")
 	}
 
 	// Store the token ID in Redis with an expiration time

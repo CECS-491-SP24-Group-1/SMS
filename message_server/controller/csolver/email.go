@@ -10,7 +10,6 @@ import (
 	"wraith.me/message_server/config"
 	"wraith.me/message_server/globals"
 	"wraith.me/message_server/obj/challenge"
-	c "wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/template/reg_email"
 	"wraith.me/message_server/util"
@@ -43,7 +42,7 @@ func IssueEmailChallenge(usr *user.User, cfg *config.Config, env *config.Env, r 
 }
 
 // Verifies that an email challenge is valid. This is stage 2 of an email challenge.
-func VerifyEmailChallenge(env *config.Env, ctext string, w http.ResponseWriter, r *http.Request) *c.CToken {
+func VerifyEmailChallenge(env *config.Env, ctext string, w http.ResponseWriter, r *http.Request) *challenge.CToken {
 	//Get the challenge text
 	if strings.TrimSpace(ctext) == "" {
 		//Bail out if nothing was supplied
