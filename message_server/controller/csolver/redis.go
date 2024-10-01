@@ -11,10 +11,8 @@ import (
 
 // Rejects signed tokens that were already submitted to prevent replay attacks.
 func CheckRedis(token *challenge.CToken, ctx context.Context) error {
-	//Check Redis to ensure the token hasn't been used before
-	tokenID := token.ID.String()
-
 	//Check if token ID exists in Redis
+	tokenID := token.ID.String()
 	exists, err := globals.Rcl.Exists(ctx, tokenID).Result()
 	if err != nil {
 		return fmt.Errorf("error checking token in Redis: %w", err)
