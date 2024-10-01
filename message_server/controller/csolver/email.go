@@ -8,8 +8,8 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"wraith.me/message_server/config"
+	"wraith.me/message_server/globals"
 	"wraith.me/message_server/obj/challenge"
-	c "wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/template/reg_email"
 	"wraith.me/message_server/util"
@@ -42,7 +42,7 @@ func IssueEmailChallenge(usr *user.User, cfg *config.Config, env *config.Env, r 
 }
 
 // Verifies that an email challenge is valid. This is stage 2 of an email challenge.
-func VerifyEmailChallenge(env *config.Env, ctext string, w http.ResponseWriter, r *http.Request) *c.CToken {
+func VerifyEmailChallenge(env *config.Env, ctext string, w http.ResponseWriter, r *http.Request) *challenge.CToken {
 	//Get the challenge text
 	if strings.TrimSpace(ctext) == "" {
 		//Bail out if nothing was supplied
@@ -58,6 +58,31 @@ func VerifyEmailChallenge(env *config.Env, ctext string, w http.ResponseWriter, 
 	ctoken, err := challenge.Decrypt(ctext, env.SK, env.ID, challenge.CPurposeCONFIRM)
 	if err != nil {
 		util.ErrResponse(http.StatusForbidden, err).Respond(w)
+		return nil
+	}
+
+	// Use Redis to ensure the token hasn't been used before
+	tokenID := ctext
+	ctx := r.Context()
+
+	// Check if token ID exists in Redis
+	exists, err := globals.Rcl.Exists(ctx, tokenID).Result()
+	if err != nil {
+		util.ErrResponse(http.StatusInternalServerError, fmt.Errorf("error checking token in Redis: %v", err)).Respond(w)
+		return nil
+	}
+
+	// If the token ID exists in Redis, reject
+	if exists > 0 {
+		util.ErrResponse(http.StatusForbidden, fmt.Errorf("token already used, possible replay attack detected")).Respond(w)
+		return nil
+	}
+
+	// Store the token ID in Redis with an expiration time
+	expiration := time.Hour * 24 // Use the same expiration time as the token
+	err = globals.Rcl.Set(ctx, tokenID, "used", expiration).Err()
+	if err != nil {
+		util.ErrResponse(http.StatusInternalServerError, fmt.Errorf("failed to store token ID in Redis: %v", err)).Respond(w)
 		return nil
 	}
 
