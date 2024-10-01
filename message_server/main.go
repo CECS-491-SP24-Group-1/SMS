@@ -11,6 +11,7 @@ import (
 	"wraith.me/message_server/consts"
 	"wraith.me/message_server/db"
 	"wraith.me/message_server/email"
+	"wraith.me/message_server/globals"
 	"wraith.me/message_server/mw"
 	cr "wraith.me/message_server/redis"
 	"wraith.me/message_server/router"
@@ -64,6 +65,9 @@ func main() {
 		panic(eerr)
 	}
 
+	//Setup globals
+	globals.Initialize(&cfg, &env)
+
 	//Setup scheduled tasks
 	if err := setupScheduledTasks(rclient); err != nil {
 		panic(err)
@@ -78,7 +82,7 @@ func main() {
 	*/
 
 	//Setup Chi and start listening for connections
-	r := setupServer(&cfg, &env)
+	r := setupServer()
 	connStr := fmt.Sprintf("%s:%d", cfg.Server.BindAddr, cfg.Server.ListenPort)
 	log.Printf("Listening on %s\n", connStr)
 	http := http.Server{
@@ -91,7 +95,7 @@ func main() {
 }
 
 // TODO: Maybe add https://github.com/goware/firewall
-func setupServer(cfg *config.Config, env *config.Env) chi.Router {
+func setupServer() chi.Router {
 	//Setup Chi router
 	r := chi.NewRouter()
 
@@ -145,13 +149,13 @@ func setupServer(cfg *config.Config, env *config.Env) chi.Router {
 	apir.Post("/send_message", router.SendMessage)
 
 	//User auth routes
-	apir.Mount("/auth", auth.AuthRoutes(cfg, env))
+	apir.Mount("/auth", auth.AuthRoutes())
 
 	//Challenge routes
 	apir.Group(func(r chi.Router) {
 		//authScopes := []token.TokenScope{token.TokenScopePOSTSIGNUP, token.TokenScopeUSER}
 		//r.Use(mw.NewAuthMiddleware(authScopes))
-		r.Mount("/challenges", challenges.ChallengeRoutes(env))
+		r.Mount("/challenges", challenges.ChallengeRoutes())
 	})
 
 	//Bind the API routes to the outgoing router

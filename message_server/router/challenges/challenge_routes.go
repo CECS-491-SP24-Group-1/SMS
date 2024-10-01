@@ -3,23 +3,26 @@ package challenges
 import (
 	"github.com/go-chi/chi/v5"
 	"wraith.me/message_server/config"
+	"wraith.me/message_server/globals"
 	"wraith.me/message_server/schema/user"
 )
 
-// Shared user collection across the entire package.
-var uc *user.UserCollection
+var (
+	// Shared user collection across the entire package.
+	uc *user.UserCollection
 
-// Shared env object across the entire package
-var env *config.Env
+	// Shared env object across the entire package
+	env *config.Env
+)
 
 // Sets up routes for the `/challenges` endpoint.
-func ChallengeRoutes(envv *config.Env) chi.Router {
+func ChallengeRoutes() chi.Router {
 	//Create the router
 	r := chi.NewRouter()
 
 	//Set the singletons for the entire package
-	uc = user.GetCollection()
-	env = envv
+	uc = globals.UC
+	env = globals.Env
 
 	//Add routes
 	r.Get("/email/{ctext}", SolveEChallengeRoute)

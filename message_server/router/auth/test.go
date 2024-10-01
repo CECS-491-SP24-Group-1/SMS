@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"wraith.me/message_server/config"
+	"wraith.me/message_server/globals"
 	"wraith.me/message_server/mw"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
@@ -30,11 +31,12 @@ type AuthTestRouter struct {
 }
 
 // Creates a new `AuthTestRouter` object.
-func NewAuthTestRouter(path string, secrets *config.Env) AuthTestRouter {
+func NewAuthTestRouter(path string) AuthTestRouter {
 	if path == "" {
 		path = "/test"
 	}
-	return AuthTestRouter{Path: path, secrets: secrets}
+	env := globals.Env
+	return AuthTestRouter{Path: path, secrets: env}
 }
 
 // Creates an authentication test route; accessible via a GET request.

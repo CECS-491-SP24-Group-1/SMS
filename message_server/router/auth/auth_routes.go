@@ -2,19 +2,15 @@ package auth
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/redis/go-redis/v9"
 	"wraith.me/message_server/config"
+	"wraith.me/message_server/globals"
 	"wraith.me/message_server/mw"
-	cr "wraith.me/message_server/redis"
 	"wraith.me/message_server/schema/user"
 )
 
 var (
 	// Shared user collection across the entire package.
 	uc *user.UserCollection
-
-	// Shared Redis client across the entire package.
-	rcl *redis.Client
 
 	// Shared config object across the entire package
 	cfg *config.Config
@@ -24,15 +20,14 @@ var (
 )
 
 // Sets up routes for the `/api/auth` endpoint.
-func AuthRoutes(cfgg *config.Config, envv *config.Env) chi.Router {
+func AuthRoutes() chi.Router {
 	//Create the router
 	r := chi.NewRouter()
 
 	//Set the singletons for the entire package
-	uc = user.GetCollection() //Init on this is called only once; this is safe to use
-	rcl = cr.GetInstance().GetClient()
-	cfg = cfgg
-	env = envv
+	uc = globals.UC
+	cfg = globals.Cfg
+	env = globals.Env
 
 	//Add routes (unauthenticated)
 	r.Post("/register", RegisterUserRoute)
@@ -42,12 +37,12 @@ func AuthRoutes(cfgg *config.Config, envv *config.Env) chi.Router {
 	r.Post("/logout", LogoutRoute)
 
 	//Add the test route
-	authTest := NewAuthTestRouter("", envv)
+	authTest := NewAuthTestRouter("")
 	r.Group(authTest.Router())
 
 	//Add routes (authenticated)
 	r.Group(func(r chi.Router) {
-		r.Use(mw.NewAuthMiddleware(envv))
+		r.Use(mw.NewAuthMiddleware(env))
 		r.Get("/sessions", SessionsRoute)
 	})
 
