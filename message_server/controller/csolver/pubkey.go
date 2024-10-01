@@ -14,7 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"wraith.me/message_server/config"
 	ccrypto "wraith.me/message_server/crypto"
-	"wraith.me/message_server/globals"
 	c "wraith.me/message_server/obj/challenge"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
@@ -62,27 +61,9 @@ func VerifyPKChallenge(vreq LoginVerifyUser, env *config.Env, r *http.Request) (
 		return nil, err
 	}
 
-	//Reject signed tokens that were already submitted to prevent replay attacks
-	// Check Redis to ensure the token hasn't been used before
-	tokenID := vreq.Token
-	ctx := r.Context()
-
-	// Check if token ID exists in Redis
-	exists, err := globals.Rcl.Exists(ctx, tokenID).Result()
-	if err != nil {
-		return nil, fmt.Errorf("error checking token in Redis: %v", err)
-	}
-
-	// If the token ID exists in Redis, reject it (replay attack)
-	if exists > 0 {
-		return nil, fmt.Errorf("token already used")
-	}
-
-	// Store the token ID in Redis with an expiration time
-	expiration := time.Minute * 10
-	err = globals.Rcl.Set(ctx, tokenID, "used", expiration).Err()
-	if err != nil {
-		return nil, fmt.Errorf("failed to store token ID in Redis: %v", err)
+	//Check the token in Redis
+	if err := CheckRedis(loginTok, r.Context()); err != nil {
+		return nil, err
 	}
 
 	//Double check to ensure the challenge PK and the user PK match up
