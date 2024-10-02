@@ -15,6 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/controller/csolver"
 	"wraith.me/message_server/crypto"
+	"wraith.me/message_server/db/mongoutil"
 	"wraith.me/message_server/obj/ip_addr"
 	schema "wraith.me/message_server/schema/json"
 	"wraith.me/message_server/schema/user"
@@ -101,8 +102,19 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Ensure the user doesn't already exist in the database
-	if err := ensureNonexistantUser(uc, iuser, r.Context()); err != nil {
-		util.ErrResponse(http.StatusBadRequest, err).Respond(w)
+	exists, err := ensureNonexistantUser(uc, iuser, r.Context())
+	if err != nil {
+		fmt.Printf("error during request from %s: %s\n", r.Host, err)
+		util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
+		return
+	}
+
+	//Check if there were any hits
+	if exists {
+		util.ErrResponse(
+			http.StatusBadRequest,
+			fmt.Errorf("one or more provided fields already map to an existing user in the database"),
+		).Respond(w)
 		return
 	}
 
@@ -134,7 +146,7 @@ was given by the user. A `nil` error indicates that no matching records
 were found. Checking collections for existent objects is expensive, so
 not all records are checked if one fails.
 */
-func ensureNonexistantUser(coll *user.UserCollection, usr intermediateUser, ctx context.Context) error {
+func ensureNonexistantUser(coll *user.UserCollection, usr intermediateUser, ctx context.Context) (bool, error) {
 	//Parse out the public key of the incoming user
 	pubkey, _ := crypto.ParsePubkey(usr.Pubkey) //Errors should not occur here; data is already pre-validated
 
@@ -166,17 +178,12 @@ func ensureNonexistantUser(coll *user.UserCollection, usr intermediateUser, ctx 
 	}
 
 	//Run the request and collect all hits; critical errors may be reported from this function so handle appropriately
-	hits := make([]util.UUID, 0)
-	err := coll.Aggregate(ctx, agg).All(&hits)
+	hits, err := mongoutil.Aggregate2IDArr(coll.Aggregate(ctx, agg))
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	//Check if there were any hits
-	if len(hits) > 0 {
-		return fmt.Errorf("one or more provided fields already map to an existing user in the database")
-	}
-	return nil
+	return len(hits) > 0, nil
 }
 
 // Validates an `intermediateUser` object using `tanqiangyes/govalidator`.
