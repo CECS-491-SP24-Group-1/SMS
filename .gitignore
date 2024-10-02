@@ -3,3 +3,4 @@ tmp/
 **/config.toml
 message_client/go/*.wasm
 TODO
+dist/

@@ -1,0 +1,12 @@
+packages:
+  # keystore.go
+  - path: "wraith.me/message_server/util"
+    output_path: "dist/http_response.d.ts"
+    indent: "\t"
+    preserve_comments: "none"
+    exclude_files:
+      - "cookie.go"
+      - "http.go"
+      - "util.go"
+      - "uuid.go"
+      - "uuid_ext.go"

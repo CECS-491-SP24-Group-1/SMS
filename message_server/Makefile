@@ -19,6 +19,7 @@ FRESH := fresh
 GO := go
 GOFMT := gofmt
 GO_ENUM := go-enum
+TYGO := tygo generate
 #MAKE := $(MAKE) -s
 
 #Flags
@@ -129,3 +130,8 @@ fmt:
 run:
 	@echo RUN $(BIN_FOLDER)/$(BIN_NAME)
 	$(BIN_FOLDER)/$(BIN_NAME)
+
+#Generates TypeScript headers for the vault structs
+.PHONY: ts
+ts:
+	$(TYGO)
