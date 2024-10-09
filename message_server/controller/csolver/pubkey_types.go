@@ -5,6 +5,8 @@ import (
 	"wraith.me/message_server/util"
 )
 
+//TODO: move to the http_types/request
+
 /*
 Defines the structure of JSON form data sent in the 1st stage of a login
 request. This contains the user's ID and public key, both of which must

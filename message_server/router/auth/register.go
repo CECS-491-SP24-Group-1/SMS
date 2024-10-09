@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/xeipuuv/gojsonschema"
@@ -16,46 +15,18 @@ import (
 	"wraith.me/message_server/controller/csolver"
 	"wraith.me/message_server/crypto"
 	"wraith.me/message_server/db/mongoutil"
+	"wraith.me/message_server/http_types/request"
+	"wraith.me/message_server/http_types/response"
 	"wraith.me/message_server/obj/ip_addr"
 	schema "wraith.me/message_server/schema/json"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
 )
 
-/*
-Represents a user object that was passed in as JSON. This object omits
-stuff like `last_login`, `uuid`, `flags`, etc. Attributes correspond to
-those on the standard user object. The `pubkey` attribute is serialized
-as a base64 string to save on transport size.
-*/
-type intermediateUser struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Pubkey   string `json:"pubkey"`
-}
-
-/*
-Represents a user object that is passed to the client once registration
-is completed.
-*/
-type postsignupUser struct {
-	//The ID of the user.
-	ID util.UUID `json:"id"`
-
-	//The username of the user.
-	Username string `json:"username"`
-
-	//The email of the user, but redacted.
-	RedactedEmail string `json:"redacted_email"`
-
-	//The fingerprint of the submitted public key.
-	PKFingerprint string `json:"pk_fingerprint"`
-}
-
 // Handles incoming requests made to `POST /api/auth/register`.
 func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Create a new intermediate user object
-	iuser := intermediateUser{}
+	iuser := request.RegisteringUser{}
 
 	//Read in the request body to a string
 	bodyBytes, err := io.ReadAll(r.Body)
@@ -88,7 +59,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Validate the unmarshalled struct
 	//At this point, the incoming JSON was accepted, but fields may be missing or invalid
-	valid, verrs := iuser.validate(false)
+	valid, verrs := iuser.Validate(false)
 	if !valid {
 		util.ErrResponse(http.StatusBadRequest, verrs...).Respond(w)
 		return
@@ -146,7 +117,7 @@ was given by the user. A `nil` error indicates that no matching records
 were found. Checking collections for existent objects is expensive, so
 not all records are checked if one fails.
 */
-func ensureNonexistantUser(coll *user.UserCollection, usr intermediateUser, ctx context.Context) (bool, error) {
+func ensureNonexistantUser(coll *user.UserCollection, usr request.RegisteringUser, ctx context.Context) (bool, error) {
 	//Parse out the public key of the incoming user
 	pubkey, _ := crypto.ParsePubkey(usr.Pubkey) //Errors should not occur here; data is already pre-validated
 
@@ -186,37 +157,6 @@ func ensureNonexistantUser(coll *user.UserCollection, usr intermediateUser, ctx 
 	return len(hits) > 0, nil
 }
 
-// Validates an `intermediateUser` object using `tanqiangyes/govalidator`.
-func (iu intermediateUser) validate(strictEmail bool) (bool, []error) {
-	//Create a slice to hold the collected errors
-	errors := []error{}
-
-	//Step 1: Check the validity of the username
-	//Username should be 4-16 characters in length and only consist of alphanumeric characters and underscores
-	//This function should never throw an error since the regexp is hard-coded
-	validUname, _ := regexp.MatchString(`^([a-z0-9_]){4,16}$`, strings.ToLower(iu.Username))
-	if !validUname {
-		errors = append(errors, fmt.Errorf("username '%s' is invalid. It must be 4-16 characters in length and only consist of alphanumeric characters and underscores", strings.ToLower(iu.Username)))
-	}
-
-	//Step 2: Check the validity of the email
-	evErr := csolver.IsValidEmail(iu.Email, strictEmail)
-	if evErr != nil {
-		errors = append(errors, evErr)
-	}
-
-	//Step 3: Check the validity of the base64'ed public key by attempting to convert to a byte array
-	validPubkey := true
-	_, err := crypto.ParsePubkey(iu.Pubkey)
-	if err != nil {
-		validPubkey = false
-		errors = append(errors, err)
-	}
-
-	//Return the validity status and any errors that occurred
-	return validUname && (evErr == nil) && validPubkey, errors
-}
-
 /*
 Performs post-signup operations on the newly created user object, such
 as persistence to the database and generation of challenges.
@@ -239,7 +179,7 @@ func postSignup(w http.ResponseWriter, r *http.Request, usr *user.User) error {
 	}
 
 	//Write the response back to the user
-	psu := postsignupUser{
+	psu := response.RegisteredUser{
 		ID:            usr.ID,
 		Username:      usr.Username,
 		RedactedEmail: util.RedactEmail(usr.Email),
