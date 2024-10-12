@@ -1,0 +1,24 @@
+packages:
+  # keystore.go
+  - path: "wraith.me/message_server/util"
+    output_path: "dist/http_response.d.ts"
+    indent: "\t"
+    preserve_comments: "none"
+    exclude_files:
+      - "cookie.go"
+      - "http.go"
+      - "util.go"
+      - "uuid.go"
+      - "uuid_ext.go"
+  # request/*.go
+  - path: "wraith.me/message_server/http_types/request"
+    output_path: "dist/request_types.d.ts"
+    indent: "\t"
+    preserve_comments: "none"
+  # response/*.go
+  - path: "wraith.me/message_server/http_types/response"
+    output_path: "dist/response_types.d.ts"
+    indent: "\t"
+    preserve_comments: "none"
+    type_mappings:
+      util.UUID: "string"

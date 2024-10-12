@@ -22,7 +22,7 @@ type HttpResponse[T any] struct {
 	Code int `json:"code"`
 
 	//The status message to emit; default: `<http response description>`.
-	Status string `json:"status,omitempty"`
+	Status string `json:"status"`
 
 	//The description of the response; default: `""`.
 	Desc string `json:"desc,omitempty"`
@@ -202,15 +202,15 @@ func (r HttpResponse[T]) Respond(w http.ResponseWriter) {
 // Handles the backend of the JSON marshalling operation.
 func backendMarshal[T any](obj *HttpResponse[T]) ([]byte, error) {
 	//Create an alias of the object
-	type Alias HttpResponse[T]
+	type alias HttpResponse[T]
 	aux := struct {
-		*Alias
+		*alias
 		Error    interface{} `json:"error,omitempty"`
 		Errors   interface{} `json:"errors,omitempty"`
 		Payload  interface{} `json:"payload,omitempty"`
 		Payloads interface{} `json:"payloads,omitempty"`
 	}{
-		Alias: (*Alias)(obj),
+		alias: (*alias)(obj),
 	}
 
 	//Marshal singular items into an array or separately in singular fields
