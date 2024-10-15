@@ -6,6 +6,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/config"
+	"wraith.me/message_server/http_types/response"
 	"wraith.me/message_server/obj/ip_addr"
 	"wraith.me/message_server/obj/token"
 	"wraith.me/message_server/schema/user"
@@ -113,9 +114,10 @@ func PostAuth(
 	IssueAccessToken(w, r, usr, env, cfg, &rtid, persistent) //This should happen second; might want to tie access and refresh tokens together
 
 	//Serialize the user's username and ID to a map
-	payload := make(map[string]string)
-	payload["id"] = usr.ID.String()
-	payload["username"] = usr.Username
+	payload := response.Auth{
+		ID:       usr.ID.String(),
+		Username: usr.Username,
+	}
 
 	//Respond back with the user's ID and username
 	msg := "successfully logged in as"

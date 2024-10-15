@@ -6,6 +6,7 @@ import (
 
 	"wraith.me/message_server/controller/cauth"
 	"wraith.me/message_server/controller/csolver"
+	"wraith.me/message_server/http_types/response"
 	"wraith.me/message_server/schema/user"
 	"wraith.me/message_server/util"
 )
@@ -48,7 +49,7 @@ func RequestLoginUserRoute(w http.ResponseWriter, r *http.Request) {
 	//Send the token to the user
 	util.PayloadOkResponse(
 		"",
-		loginTok,
+		response.LoginReq{Token: loginTok},
 	).Respond(w)
 }
 
