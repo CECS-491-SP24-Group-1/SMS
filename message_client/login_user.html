@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<title>Login Existing User</title>
 	<script type="application/javascript" src="./static/js/consts.js"></script>
@@ -12,89 +13,118 @@
 	<script type="application/javascript" src="./static/js/axios.min.js"></script>
 	<script type="application/javascript" src="./static/js/axios_mw.js"></script>
 	<style>
-		table, th, td {
+		table,
+		th,
+		td {
 			border: 1px solid black;
 		}
 
-		label + input {
+		label+input {
 			margin-left: 10px;
 		}
+
 		#output {
 			overflow: scroll;
 		}
+
 		#loadVaultWarn {
 			margin-left: 5px;
 			color: red;
 			display: inline-block;
 			visibility: hidden;
 		}
+
 		pre {
 			display: inline-block;
 			margin: 0;
 		}
-		.formBtn + .formBtn {
+
+		.formBtn+.formBtn {
 			margin-top: 3px;
 		}
+
 		#fileSelector {
 			display: block;
 		}
+
 		.header {
 			margin: 0;
 		}
-		.infoTable, h4, h5, h6 {
+
+		.infoTable,
+		h4,
+		h5,
+		h6 {
 			margin-left: 1em !important;
 		}
-		.infoTable td + td {
+
+		.infoTable td+td {
 			padding: 0 0.5em;
 		}
+
 		.monoFont {
 			font-family: "Courier New", Courier, monospace;
 		}
-		#skField, .bad {
+
+		#skField,
+		.bad {
 			color: red;
 		}
-		#pkField, .good {
+
+		#pkField,
+		.good {
 			color: green;
 		}
+
 		#tokenForm {
 			width: 100%;
 		}
+
 		.headerCell {
 			width: 10em;
 			overflow: none;
 		}
+
 		.headerCell50 {
 			width: 5em;
 			overflow: none;
 		}
+
 		.headerCell75 {
 			width: 7.5em;
 			overflow: none;
 		}
+
 		.medCell {
 			width: 45em;
 			overflow: scroll;
 		}
+
 		.bigCell {
 			width: 50em;
 			overflow: scroll;
 		}
+
 		.breakWrap {
 			white-space: pre-wrap;
 			overflow-wrap: break-word;
 			word-break: break-all;
 		}
+
 		.interData {
 			color: rgb(124, 89, 0);
 		}
 	</style>
 </head>
+
 <body>
 	<!-- Load vault form -->
 	<form id="loadVaultForm">
 		<input type="file" id="fileSelector" class="formBtn" name="vault" accept="application/json, text/plain">
 		<button type="button" id="loadVaultBtn" class="formBtn" onclick="readVault()">Load Vault</button>
-		<span id="loadVaultWarn">The following issue occurred while loading the vault: <pre>&nbsp;</pre></span>
+		<span id="loadVaultWarn">The following issue occurred while loading the vault:
+			<pre>&nbsp;</pre>
+		</span>
 	</form>
 
 	<!-- Vault info -->
@@ -143,12 +173,16 @@
 			<tbody>
 				<tr>
 					<td class="tokenEntry headerCell">Access Token:</td>
-					<td colspan="2" class="bigCell"><input type="text" placeholder="Token (optional)" class="monoFont" id="tokenForm"></td>
+					<td colspan="2" class="bigCell"><input type="text" placeholder="Token (optional)" class="monoFont"
+							id="tokenForm"></td>
 				</tr>
 				<tr>
-					<td class="headerCell"><button type="button" id="checkTokenBtn" class="formBtn" onclick="checkToken()">Check Token</button></td>
+					<td class="headerCell"><button type="button" id="checkTokenBtn" class="formBtn"
+							onclick="checkToken()">Check Token</button></td>
 					<td class="headerCell75">Token Status:</td>
-					<td class="bigCell"><pre id="tokenStatus">&nbsp;</pre></td>
+					<td class="bigCell">
+						<pre id="tokenStatus">&nbsp;</pre>
+					</td>
 				</tr>
 			</tbody>
 		</table>
@@ -175,35 +209,53 @@
 			<tbody>
 				<tr>
 					<td class="headerCell">Request Login:</td>
-					<td class="headerCell50"><button type="button" id="loginS1Btn" class="formBtn" onclick="loginS1()">Submit</button></td>
-					<td class="bigCell"><pre class="breakWrap" id="loginS1Status">&nbsp;</pre></td>
+					<td class="headerCell50"><button type="button" id="loginS1Btn" class="formBtn"
+							onclick="loginS1()">Submit</button></td>
+					<td class="bigCell">
+						<pre class="breakWrap" id="loginS1Status">&nbsp;</pre>
+					</td>
 				</tr>
 				<tr>
 					<td class="headerCell">Login Token:</td>
-					<td colspan="2"><pre class="breakWrap interData" id="loginTokContainer">&nbsp;</pre></td>
+					<td colspan="2">
+						<pre class="breakWrap interData" id="loginTokContainer">&nbsp;</pre>
+					</td>
 				</tr>
 				<tr>
 					<td class="headerCell">Token Signature:</td>
-					<td colspan="2"><pre class="breakWrap interData" id="loginTokSigContainer">&nbsp;</pre></td>
+					<td colspan="2">
+						<pre class="breakWrap interData" id="loginTokSigContainer">&nbsp;</pre>
+					</td>
 				</tr>
 				<tr>
 					<td class="headerCell">Verify Login Req:</td>
-					<td class="headerCell50"><button type="button" id="loginS2Btn" class="formBtn" onclick="loginS2()">Submit</button></td>
-					<td class="bigCell monoFont"><pre class="breakWrap" id="loginS2Status">&nbsp;</pre></td>
+					<td class="headerCell50"><button type="button" id="loginS2Btn" class="formBtn"
+							onclick="loginS2()">Submit</button></td>
+					<td class="bigCell monoFont">
+						<pre class="breakWrap" id="loginS2Status">&nbsp;</pre>
+					</td>
 				</tr>
 				<tr>
 					<td class="headerCell">Verify Result:</td>
-					<td colspan="2"><pre class="breakWrap interData" id="seshTokContainer">&nbsp;</pre></td>
+					<td colspan="2">
+						<pre class="breakWrap interData" id="seshTokContainer">&nbsp;</pre>
+					</td>
 				</tr>
 				<tr>
 					<td class="headerCell">Refresh Token:</td>
-					<td class="headerCell50"><button type="button" id="checkRTBtn" class="formBtn" onclick="checkRT()">Submit</button></td>
-					<td class="bigCell"><pre class="breakWrap" id="checkRTStatus">&nbsp;</pre></td>
+					<td class="headerCell50"><button type="button" id="checkRTBtn" class="formBtn"
+							onclick="checkRT()">Submit</button></td>
+					<td class="bigCell">
+						<pre class="breakWrap" id="checkRTStatus">&nbsp;</pre>
+					</td>
 				</tr>
 				<tr>
 					<td class="headerCell">Logout:</td>
-					<td class="headerCell50"><button type="button" id="logoutBtn" class="formBtn" onclick="logout()">Submit</button></td>
-					<td class="bigCell"><pre class="breakWrap" id="logoutStatus">&nbsp;</pre></td>
+					<td class="headerCell50"><button type="button" id="logoutBtn" class="formBtn"
+							onclick="logout()">Submit</button></td>
+					<td class="bigCell">
+						<pre class="breakWrap" id="logoutStatus">&nbsp;</pre>
+					</td>
 				</tr>
 			</tbody>
 		</table>
@@ -226,8 +278,11 @@
 			<tbody>
 				<tr>
 					<td class="headerCell">Get Sessions:</td>
-					<td class="headerCell50"><button type="button" id="sessionsBtn" class="formBtn" onclick="sessions()">Submit</button></td>
-					<td class="bigCell"><pre class="breakWrap" id="sessionsStatus">&nbsp;</pre></td>
+					<td class="headerCell50"><button type="button" id="sessionsBtn" class="formBtn"
+							onclick="sessions()">Submit</button></td>
+					<td class="bigCell">
+						<pre class="breakWrap" id="sessionsStatus">&nbsp;</pre>
+					</td>
 				</tr>
 			</tbody>
 		</table>
@@ -276,12 +331,12 @@
 		});
 
 		//populateById(id: string, text: string) -> void
-		function populateById(id, text){
+		function populateById(id, text) {
 			document.getElementById(id).innerHTML = text;
 		}
 
 		//populateVaultInfo(vault: vault?) -> void
-		function populateVaultInfo(vault){
+		function populateVaultInfo(vault) {
 			const CLR_CONTENTS = "&nbsp;"
 			populateById("idField", vault !== null ? vault.id : CLR_CONTENTS);
 			populateById("subjectField", vault !== null ? vault.subject : CLR_CONTENTS);
@@ -293,7 +348,7 @@
 		}
 
 		//showVaultLoadWarn(err: Error) -> void
-		function showVaultLoadWarn(err){
+		function showVaultLoadWarn(err) {
 			//Get the warning head and body elements
 			const warnHead = document.getElementById("loadVaultWarn");
 			const warnBody = warnHead.getElementsByTagName("pre")[0];
@@ -304,7 +359,7 @@
 		}
 
 		//hideVaultLoadWarn() -> void
-		function hideVaultLoadWarn(){
+		function hideVaultLoadWarn() {
 			//Get the warning head and body elements
 			const warnHead = document.getElementById("loadVaultWarn");
 			const warnBody = warnHead.getElementsByTagName("pre")[0];
@@ -315,12 +370,12 @@
 		}
 
 		//readVault() -> void
-		async function readVault(){
+		async function readVault() {
 			//Get the vault file from the selector
 			const vaultFile = document.getElementById("fileSelector").files[0];
 
 			//Check if a vault file is selected
-			if(!vaultFile){
+			if (!vaultFile) {
 				showVaultLoadWarn(new Error("No vault file selected"));
 				return;
 			}
@@ -332,19 +387,19 @@
 				const vaultContent = await readText(vaultFile);
 				vault = Vault.fromString(vaultContent);
 			}
-			catch(err){
+			catch (err) {
 				showVaultLoadWarn(err);
 				return;
 			}
 
 			//Populate the vault info pane
-			populateVaultInfo(vault);	
+			populateVaultInfo(vault);
 		}
 
 		//readText(file: File) -> string
-		async function readText(file){
+		async function readText(file) {
 			//Check if the file is JSON or plaintext
-			if(file.type && !(file.type === "application/json" || file.type === "text/plain")){
+			if (file.type && !(file.type === "application/json" || file.type === "text/plain")) {
 				throw new Error(`Invalid filetype '${file.type}'; expected 'application/json' or 'text/plain'`)
 			}
 
@@ -375,29 +430,29 @@
 		});
 
 		//checkToken() -> void
-		function checkToken(){
+		function checkToken() {
 			//Get the token from the user
 			token = document.getElementById("tokenForm").value;
 
 			//Check the token against the server
 			taxios.get(AUTH_TEST_EP)
 
-			//Display the data back to the webpage
-			.then(async response => {
-				//Get the response data
-				const resp = response.data;
-				const ok = !resp.errors;
+				//Display the data back to the webpage
+				.then(async response => {
+					//Get the response data
+					const resp = response.data;
+					const ok = !resp.errors;
 
-				//Check for errors
-				goodToken = ok;
+					//Check for errors
+					goodToken = ok;
 
-				//Echo the status back to the user in the token status
-				const statusForm = document.getElementById("tokenStatus");
-				setColor(statusForm, ok);
-				const errors = !ok ? resp.errors : `logged in as ${resp.payloads[0].id}`;
-				statusForm.innerHTML = `${resp.status} - ${errors}`;
-				console.log("token status:", resp);
-			});
+					//Echo the status back to the user in the token status
+					const statusForm = document.getElementById("tokenStatus");
+					setColor(statusForm, ok);
+					const errors = !ok ? resp.errors : `logged in as ${resp.payloads[0].id}`;
+					statusForm.innerHTML = `${resp.status} - ${errors}`;
+					console.log("token status:", resp);
+				});
 		}
 	</script>
 
@@ -408,14 +463,14 @@
 		const s2LoginStatusClasslist = [...document.getElementById("loginS2Status").classList];
 
 		//preFlight(statusElem: HTMLElement, resContainer: HTMLElement, statusElemClassList: HTMLElement[]) -> boolean
-		function preFlight(statusElem, resContainer, statusElemClassList){
+		function preFlight(statusElem, resContainer, statusElemClassList) {
 			//Clear any errors from the status elements
 			statusElem.innerHTML = "&nbsp";
 			resContainer.innerHTML = "&nbsp";
 			statusElem.classList = statusElemClassList;
 
 			//Only proceed if the vault is present in memory
-			if(vault === null){
+			if (vault === null) {
 				statusElem.innerHTML = `error - vault is not present in memory; try again after loading it`;
 				statusElem.classList.add("bad");
 				return false;
@@ -426,14 +481,14 @@
 		}
 
 		//loginS1() -> void
-		function loginS1(){
+		function loginS1() {
 			//Get the login status elements
 			const s1StatusElem = document.getElementById("loginS1Status");
 			const s1TokContainer = document.getElementById("loginTokContainer");
 
 			//Run the pre-flight checks
 			loginTok = "";
-			if(!preFlight(s1StatusElem, s1TokContainer, s1LoginStatusClasslist)){
+			if (!preFlight(s1StatusElem, s1TokContainer, s1LoginStatusClasslist)) {
 				loginS1Success = false;
 				return;
 			}
@@ -448,30 +503,30 @@
 			//Check the token against the server
 			taxios.post(LOGIN_S1_EP, loginReq)
 
-			//Display the data back to the webpage
-			.then(response => {
-				//Get the response data
-				const resp = response.data;
-				const ok = !resp.errors;
+				//Display the data back to the webpage
+				.then(response => {
+					//Get the response data
+					const resp = response.data;
+					const ok = !resp.errors;
 
-				//Check for errors
-				loginS1Success = ok;
+					//Check for errors
+					loginS1Success = ok;
 
-				//Echo the status back to the user in the token status
-				s1StatusElem.classList.add(ok ? "good" : "bad");
-				if(ok){
-					s1StatusElem.innerHTML = `${resp.status}; token can be found below`;
-					loginTok = resp.payloads[0];
-					s1TokContainer.innerHTML = JSON.stringify(loginTok);
-				}
-				else {
-					s1StatusElem.innerHTML = splitErrors(resp.status, resp.errors);
-				}
-			});
+					//Echo the status back to the user in the token status
+					s1StatusElem.classList.add(ok ? "good" : "bad");
+					if (ok) {
+						s1StatusElem.innerHTML = `${resp.status}; token can be found below`;
+						loginTok = resp.payloads[0].token;
+						s1TokContainer.innerHTML = JSON.stringify(loginTok);
+					}
+					else {
+						s1StatusElem.innerHTML = splitErrors(resp.status, resp.errors);
+					}
+				});
 		}
 
 		//loginS2() -> void
-		function loginS2(){
+		function loginS2() {
 			//Get the login status elements
 			const s2StatusElem = document.getElementById("loginS2Status");
 			const s2TokContainer = document.getElementById("loginTokSigContainer");
@@ -479,13 +534,13 @@
 
 			//Run the pre-flight checks
 			loginTokSignature = "";
-			if(!preFlight(s2StatusElem, s2TokContainer, s2LoginStatusClasslist)){
+			if (!preFlight(s2StatusElem, s2TokContainer, s2LoginStatusClasslist)) {
 				loginS2Success = false;
 				return;
 			}
 
 			//Ensure a login token is available
-			if(loginTok === ""){
+			if (loginTok === "") {
 				s2StatusElem.innerHTML = `error - login token is not available; try again after requesting one`;
 				s2StatusElem.classList.add("bad");
 				loginS2Success = false;
@@ -508,102 +563,102 @@
 			//Check the token against the server
 			taxios.post(LOGIN_S2_EP, loginReq)
 
-			//Display the data back to the webpage
-			.then(response => {
-				//Get the response data
-				const resp = response.data;
-				const ok = !resp.errors;
+				//Display the data back to the webpage
+				.then(response => {
+					//Get the response data
+					const resp = response.data;
+					const ok = !resp.errors;
 
-				//Check for errors
-				loginS2Success = ok;
+					//Check for errors
+					loginS2Success = ok;
 
-				//Echo the status back to the user in the token status
-				s2StatusElem.classList.add(ok ? "good" : "bad");
-				if(ok){
-					s2StatusElem.innerHTML = `${resp.status}; ${resp.desc}`;
-					let seshTok = resp.payloads[0];
-					s2SeshTokenContainer.innerHTML = JSON.stringify(seshTok);
-				}
-				else {
-					s2StatusElem.innerHTML = splitErrors(resp.status, resp.errors);
-				}
-			});
+					//Echo the status back to the user in the token status
+					s2StatusElem.classList.add(ok ? "good" : "bad");
+					if (ok) {
+						s2StatusElem.innerHTML = `${resp.status}; ${resp.desc}`;
+						let seshTok = resp.payloads[0];
+						s2SeshTokenContainer.innerHTML = JSON.stringify(seshTok);
+					}
+					else {
+						s2StatusElem.innerHTML = splitErrors(resp.status, resp.errors);
+					}
+				});
 		}
 
 		//checkRT() -> void
-		function checkRT(){
+		function checkRT() {
 			//Check the token against the server
 			taxios.post(REFRESH_EP)
 
-			//Display the data back to the webpage
-			.then(response => {
-				//Get the response data
-				const resp = response.data;
-				const ok = !resp.errors;
+				//Display the data back to the webpage
+				.then(response => {
+					//Get the response data
+					const resp = response.data;
+					const ok = !resp.errors;
 
-				//Echo the status back to the user in the token status
-				const statusForm = document.getElementById("checkRTStatus");
-				setColor(statusForm, ok);
-				const errors = !ok ? resp.errors : `${resp.desc} - ${JSON.stringify(resp.payloads[0])}`;
-				statusForm.innerHTML = `${resp.status} - ${errors}`;
-				console.log("token status:", resp);
-			});
+					//Echo the status back to the user in the token status
+					const statusForm = document.getElementById("checkRTStatus");
+					setColor(statusForm, ok);
+					const errors = !ok ? resp.errors : `${resp.desc} - ${JSON.stringify(resp.payloads[0])}`;
+					statusForm.innerHTML = `${resp.status} - ${errors}`;
+					console.log("token status:", resp);
+				});
 		}
 
 		//logout() -> void
-		function logout(){
+		function logout() {
 			//Logout
 			taxios.post(LOGOUT_EP)
 
-			//Display the data back to the webpage
-			.then(response => {
-				//Get the response data
-				const resp = response.data;
-				const ok = !resp.errors;
+				//Display the data back to the webpage
+				.then(response => {
+					//Get the response data
+					const resp = response.data;
+					const ok = !resp.errors;
 
-				//Echo the status back to the user in the token status
-				const statusForm = document.getElementById("logoutStatus");
-				setColor(statusForm, ok);
-				const errors = !ok ? resp.errors : `${resp.desc}`;
-				statusForm.innerHTML = `${resp.status} - ${errors}`;
-			});
+					//Echo the status back to the user in the token status
+					const statusForm = document.getElementById("logoutStatus");
+					setColor(statusForm, ok);
+					const errors = !ok ? resp.errors : `${resp.desc}`;
+					statusForm.innerHTML = `${resp.status} - ${errors}`;
+				});
 		}
 	</script>
 
 	<!-- Sessions stuff -->
 	<script type="application/javascript">
 		//sessions() -> void
-		function sessions(){
+		function sessions() {
 			//Get the serverside sessions for the user
 			taxios.get(SESSIONS_EP)
 
-			//Display the data back to the webpage
-			.then(response => {
-				//Get the response data
-				const resp = response.data;
-				const ok = !resp.errors;
-				const sessions = resp.payloads ? resp.payloads[0] : null;
+				//Display the data back to the webpage
+				.then(response => {
+					//Get the response data
+					const resp = response.data;
+					const ok = !resp.errors;
+					const sessions = resp.payloads ? resp.payloads[0] : null;
 
-				//Echo the status back to the user in the token status
-				const statusForm = document.getElementById("sessionsStatus");
-				setColor(statusForm, ok);
-				const errors = !ok ? resp.errors : `${resp.desc}\n${JSON.stringify(sessions, null, 4)}`;
-				statusForm.innerHTML = `${resp.status} - ${errors}`;
-			});
+					//Echo the status back to the user in the token status
+					const statusForm = document.getElementById("sessionsStatus");
+					setColor(statusForm, ok);
+					const errors = !ok ? resp.errors : `${resp.desc}\n${JSON.stringify(sessions, null, 4)}`;
+					statusForm.innerHTML = `${resp.status} - ${errors}`;
+				});
 		}
 	</script>
 
 	<!-- Misc -->
 	<script type="application/javascript">
 		//splitErrors(status: string, errs: [string | string[]]) -> string
-		function splitErrors(status, errs){
+		function splitErrors(status, errs) {
 			//Create the output string
 			let out = `${status}:`;
 
 			//Check if the errs object is an array
-			if(Array.isArray(errs)){
+			if (Array.isArray(errs)) {
 				//Add all of the errors to the output string
-				for(let i = 0; i < errs.length; i++){
+				for (let i = 0; i < errs.length; i++) {
 					out += `\n\t${errs[i]}`;
 				}
 			}
@@ -617,10 +672,11 @@
 		}
 
 		//setColor(elem: HTMLElement, good: boolean) -> void
-		function setColor(elem, good){
+		function setColor(elem, good) {
 			elem.classList.remove("good", "bad");
 			elem.classList.add(good ? "good" : "bad");
 		}
 	</script>
 </body>
+
 </html>

@@ -80,7 +80,7 @@ func VerifyPKChallenge(vreq LoginVerifyUser, env *config.Env, r *http.Request) (
 // Contains the common FoC that is to be ran before any login/pubkey solve request.
 func PreFlight[T LoginUser | LoginVerifyUser](user *T, hit *user.User, uc *user.UserCollection, w http.ResponseWriter, r *http.Request) bool {
 	//Get the request body and attempt to parse from JSON
-	var reqBody map[string]interface{}
+	var reqBody map[string]interface{} //TODO: find a better way to do this
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		util.ErrResponse(_PF_PARSE_ERR, err).Respond(w)
 		return false
