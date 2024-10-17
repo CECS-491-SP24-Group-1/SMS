@@ -5,6 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	
+	"go.mongodb.org/mongo-driver/bson"
+	"wraith.me/message_server/globals"
+	
+
 	"github.com/redis/go-redis/v9"
 	"wraith.me/message_server/db" // Accessing the db from message_server
 )
@@ -40,27 +45,17 @@ func (ftt PurgeOldUsersTask) runOnStop() {
 
 func (ftt PurgeOldUsersTask) runPeriodically() {
 	fmt.Printf("fit tea task; run periodically; time: %s\n", time.Now().Format("15:04:05.000"))
+	//Query for inactive users in the MongoDB collection
+	filter := bson.M{"should_purge": true}
 
-	/*
-		// Check the database connection
-		if !ftt.MongoClient.IsConnected() {
-			log.Println("MongoDB client is not connected, skipping purge task")
-			return
-		}
-	*/
+	// Deleting the users flagged as inactive
+	deleteResult, err := globals.UC.Collection.RemoveAll(ftt.CTX, filter)
+	if err != nil {
+		fmt.Printf("Error deleting inactive users: %v\n", err)
+		return
+	}
 
-	// Accessing user collection
-	//user_collection := // TODO
-
-	/*
-
-		// Perform the deletion
-		result, err := user_collection.RemoveAll(ftt.CTX, filter)
-		if err != nil {
-			log.Printf("Error purging users: %v", err)
-			return
-		}
-
-		log.Printf("Purged %d users from the database", result.DeletedCount)
-	*/
+	// Log how many users were deleted
+	fmt.Printf("Deleted %d inactive users.\n", deleteResult.DeletedCount)
+	
 }
