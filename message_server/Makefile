@@ -4,6 +4,7 @@
 ENTRYPOINT_NAME := main/main.go
 BIN_NAME := sms_server
 BIN_FOLDER := tmp
+TS_FOLDER := ts
 
 ####################################
 #Variables
@@ -106,8 +107,9 @@ build:
 #Cleans the directory of any binary files
 .PHONY: clean
 clean:
-	@echo CLEAN $(BIN_FOLDER)
+	@echo CLEAN $(BIN_FOLDER) $(TS_FOLDER)
 	@$(MAKE) -s __rmdir__ TARGET=$(BIN_FOLDER)
+	@$(MAKE) -s __rmdir__ TARGET=$(TS_FOLDER)
 
 #Runs the binary with Fresh (watches for changes and auto-recompiles)
 .PHONY: dev

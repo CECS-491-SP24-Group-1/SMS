@@ -1,7 +1,7 @@
 packages:
   # http_response.go
   - path: "wraith.me/message_server/pkg/util"
-    output_path: "dist/http_response.d.ts"
+    output_path: "ts/http_response.d.ts"
     indent: "\t"
     preserve_comments: "none"
     exclude_files:
@@ -13,13 +13,13 @@ packages:
 
   # request/*.go
   - path: "wraith.me/message_server/pkg/http_types/request"
-    output_path: "dist/request_types.d.ts"
+    output_path: "ts/request_types.d.ts"
     indent: "\t"
     preserve_comments: "none"
 
   # response/*.go
   - path: "wraith.me/message_server/pkg/http_types/response"
-    output_path: "dist/response_types.d.ts"
+    output_path: "ts/response_types.d.ts"
     indent: "\t"
     preserve_comments: "none"
     type_mappings:
@@ -27,7 +27,7 @@ packages:
 
   # ws/chat/*.go
   - path: "wraith.me/message_server/pkg/http_types/ws/chat"
-    output_path: "dist/chat.d.ts"
+    output_path: "ts/chat.d.ts"
     indent: "\t"
     preserve_comments: "none"
     type_mappings:
