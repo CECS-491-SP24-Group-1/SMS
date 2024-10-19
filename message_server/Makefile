@@ -4,7 +4,6 @@
 ENTRYPOINT_NAME := main/main.go
 BIN_NAME := sms_server
 BIN_FOLDER := tmp
-TS_FOLDER := ts
 
 ####################################
 #Variables
@@ -15,12 +14,18 @@ ifeq ($(OS), Windows_NT)
 BIN_NAME := $(BIN_NAME).exe
 endif
 
+#Denotes the output directory of tygo; this must match what is in tygo.yml
+TYGO_DIR := ./ts
+TYGO_OUT := $(TYGO_DIR)/*.ts
+PATCH_DIR := ./ts_patches
+
 # Tools
 AIR := air
 GO := go
 GOFMT := gofmt
 GO_ENUM := go-enum
 TYGO := tygo generate
+PATCH := patch
 #MAKE := $(MAKE) -s
 
 #Flags
@@ -107,9 +112,9 @@ build:
 #Cleans the directory of any binary files
 .PHONY: clean
 clean:
-	@echo CLEAN $(BIN_FOLDER) $(TS_FOLDER)
+	@echo CLEAN $(BIN_FOLDER) $(TYGO_DIR)
 	@$(MAKE) -s __rmdir__ TARGET=$(BIN_FOLDER)
-	@$(MAKE) -s __rmdir__ TARGET=$(TS_FOLDER)
+	@$(MAKE) -s __rmdir__ TARGET=$(TYGO_DIR)
 
 #Runs the binary with Fresh (watches for changes and auto-recompiles)
 .PHONY: dev
@@ -138,3 +143,6 @@ run:
 .PHONY: ts
 ts:
 	$(TYGO)
+	@cd $(TYGO_DIR) && for patch in ../$(PATCH_DIR)/*.patch; do \
+		$(PATCH) < $$patch || exit 1; \
+	done

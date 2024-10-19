@@ -32,7 +32,8 @@ packages:
     preserve_comments: "none"
     type_mappings:
       util.UUID: "string"
-      chat.ChatType: '"UNKNOWN" | "EVENT" | "MESSAGE" | "EK" | "KEX1" | "KEX2"'
+      #Tygo doesn't properly apply this line, so its applied as a patch
+      ChatType: '"UNKNOWN" | "EVENT" | "MESSAGE" | "EK" | "KEX1" | "KEX2"'
     exclude_files:
       - "chat_type.go"
       - "chat_type_enum.go"
