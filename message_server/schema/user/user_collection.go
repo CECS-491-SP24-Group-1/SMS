@@ -23,7 +23,7 @@ type UserCollection struct {
 }
 
 // This line enforces UserCollection to implement db.QMgoCollection.
-//var _ db.QMgoCollection = (*UserCollection)(nil)
+var _ db.QMgoCollection = (*UserCollection)(nil)
 
 func (uc UserCollection) ParentDB() string {
 	return db.ROOT_DB
