@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"wraith.me/message_server/util"
-	"wraith.me/message_server/util/ms"
+	"wraith.me/message_server/pkg/util"
+	"wraith.me/message_server/pkg/util/ms"
 )
 
 // Example struct with time.Time fields

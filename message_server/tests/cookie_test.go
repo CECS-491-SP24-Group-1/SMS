@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"wraith.me/message_server/util"
+	"wraith.me/message_server/pkg/util"
 )
 
 func TestCookie(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"slices"
 	"time"
 
-	"wraith.me/message_server/util"
+	"wraith.me/message_server/pkg/util"
 )
 
 // Define the object

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
-	"wraith.me/message_server/task"
+	"wraith.me/message_server/pkg/task"
 )
 
 func TestScheduler(t *testing.T) {

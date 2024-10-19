@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"testing"
 
-	"wraith.me/message_server/schema/user"
-	"wraith.me/message_server/util/ms"
+	"wraith.me/message_server/pkg/schema/user"
+	"wraith.me/message_server/pkg/util/ms"
 )
 
 // Generally better than MS.

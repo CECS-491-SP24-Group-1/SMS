@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"wraith.me/message_server/config"
-	"wraith.me/message_server/obj/token"
+	"wraith.me/message_server/pkg/config"
+	"wraith.me/message_server/pkg/obj/token"
 )
 
 func TestGenAccessTok(t *testing.T) {

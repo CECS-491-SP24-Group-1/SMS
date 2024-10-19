@@ -4,3 +4,4 @@ tmp/
 message_client/go/*.wasm
 TODO
 dist/
+ts/

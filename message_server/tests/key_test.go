@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	ccrypto "wraith.me/message_server/crypto"
+	ccrypto "wraith.me/message_server/pkg/crypto"
 )
 
 func TestKey(t *testing.T) {

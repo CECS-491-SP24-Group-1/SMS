@@ -39,4 +39,3 @@ COPY ./message_server/.air.toml .
 
 # Set the entrypoint to use air for hot reloading
 ENTRYPOINT ["air", "-c", ".air.toml"]
-

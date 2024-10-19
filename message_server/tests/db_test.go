@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"wraith.me/message_server/db"
-	"wraith.me/message_server/util"
+	"wraith.me/message_server/pkg/db"
+	"wraith.me/message_server/pkg/util"
 )
 
 const (

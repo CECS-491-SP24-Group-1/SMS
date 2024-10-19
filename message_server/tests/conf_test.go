@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"wraith.me/message_server/config"
+	"wraith.me/message_server/pkg/config"
 )
 
 func TestCfgFromEnv(t *testing.T) {

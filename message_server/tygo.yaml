@@ -1,7 +1,7 @@
 packages:
-  # keystore.go
-  - path: "wraith.me/message_server/util"
-    output_path: "dist/http_response.d.ts"
+  # http_response.go
+  - path: "wraith.me/message_server/pkg/util"
+    output_path: "ts/http_response.d.ts"
     indent: "\t"
     preserve_comments: "none"
     exclude_files:
@@ -10,15 +10,30 @@ packages:
       - "util.go"
       - "uuid.go"
       - "uuid_ext.go"
+
   # request/*.go
-  - path: "wraith.me/message_server/http_types/request"
-    output_path: "dist/request_types.d.ts"
+  - path: "wraith.me/message_server/pkg/http_types/request"
+    output_path: "ts/request_types.d.ts"
     indent: "\t"
     preserve_comments: "none"
+
   # response/*.go
-  - path: "wraith.me/message_server/http_types/response"
-    output_path: "dist/response_types.d.ts"
+  - path: "wraith.me/message_server/pkg/http_types/response"
+    output_path: "ts/response_types.d.ts"
     indent: "\t"
     preserve_comments: "none"
     type_mappings:
       util.UUID: "string"
+
+  # ws/chat/*.go
+  - path: "wraith.me/message_server/pkg/http_types/ws/chat"
+    output_path: "ts/chat.d.ts"
+    indent: "\t"
+    preserve_comments: "none"
+    type_mappings:
+      util.UUID: "string"
+      #Tygo doesn't properly apply this line, so its applied as a patch
+      ChatType: '"UNKNOWN" | "EVENT" | "MESSAGE" | "EK" | "KEX1" | "KEX2"'
+    exclude_files:
+      - "chat_type.go"
+      - "chat_type_enum.go"
