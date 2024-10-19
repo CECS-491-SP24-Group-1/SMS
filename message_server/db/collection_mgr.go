@@ -4,16 +4,16 @@ import (
 	"sync"
 )
 
+var (
+	manager     *CollectionManager
+	managerOnce sync.Once
+)
+
 // CollectionManager manages the creation and retrieval of collection instances.
 type CollectionManager struct {
 	collections map[string]*QMgoBase
 	mu          sync.Mutex
 }
-
-var (
-	manager     *CollectionManager
-	managerOnce sync.Once
-)
 
 // GetCollectionManager returns the singleton instance of CollectionManager.
 func GetCollectionManager() *CollectionManager {
