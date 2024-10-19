@@ -15,7 +15,7 @@ var (
 	env *config.Env
 )
 
-// Sets up routes for the `/challenges` endpoint.
+// Sets up routes for the `/api/challenges` endpoint.
 func ChallengeRoutes() chi.Router {
 	//Create the router
 	r := chi.NewRouter()

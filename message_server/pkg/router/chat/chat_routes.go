@@ -1,11 +1,11 @@
-package auth
+package chat
 
 import (
 	"github.com/go-chi/chi/v5"
 	"wraith.me/message_server/pkg/config"
 	"wraith.me/message_server/pkg/globals"
-	"wraith.me/message_server/pkg/mw"
 	"wraith.me/message_server/pkg/schema/user"
+	"wraith.me/message_server/pkg/ws"
 )
 
 var (
@@ -17,10 +17,13 @@ var (
 
 	// Shared env object across the entire package.
 	env *config.Env
+
+	// Shared Melody WS handler for the entire package.
+	mel *ws.WServer
 )
 
-// Sets up routes for the `/api/auth` endpoint.
-func AuthRoutes() chi.Router {
+// Sets up routes for the `/api/chat` endpoint.
+func ChatRoutes() chi.Router {
 	//Create the router
 	r := chi.NewRouter()
 
@@ -29,22 +32,19 @@ func AuthRoutes() chi.Router {
 	cfg = globals.Cfg
 	env = globals.Env
 
-	//Add routes (unauthenticated)
-	r.Post("/register", RegisterUserRoute)
-	r.Post("/login_req", RequestLoginUserRoute)
-	r.Post("/login_verify", VerifyLoginUserRoute)
-	r.Post("/refresh", RefreshTokenRoute)
-	r.Post("/logout", LogoutRoute)
+	//Start up Melody
+	mel = ws.GetInstance()
 
-	//Add the test route
-	authTest := NewAuthTestRouter("")
-	r.Group(authTest.Router())
+	//Add routes (unauthenticated)
+	r.Get("/room/{roomID}", ChatRoomRoute)
 
 	//Add routes (authenticated)
-	r.Group(func(r chi.Router) {
-		r.Use(mw.NewAuthMiddleware(env))
-		r.Get("/sessions", SessionsRoute)
-	})
+	/*
+		r.Group(func(r chi.Router) {
+			//r.Use(mw.NewAuthMiddleware(env))
+			//r.Get("/sessions", SessionsRoute)
+		})
+	*/
 
 	//Return the router
 	return r

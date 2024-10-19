@@ -17,10 +17,11 @@ import (
 	"wraith.me/message_server/pkg/router"
 	"wraith.me/message_server/pkg/router/auth"
 	"wraith.me/message_server/pkg/router/challenges"
+	"wraith.me/message_server/pkg/router/chat"
 	"wraith.me/message_server/pkg/task"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/redis/go-redis/v9"
 )
@@ -157,6 +158,9 @@ func setupServer() chi.Router {
 		//r.Use(mw.NewAuthMiddleware(authScopes))
 		r.Mount("/challenges", challenges.ChallengeRoutes())
 	})
+
+	//Chat routes
+	apir.Mount("/chat", chat.ChatRoutes())
 
 	//Bind the API routes to the outgoing router
 	r.Mount("/api", apir)

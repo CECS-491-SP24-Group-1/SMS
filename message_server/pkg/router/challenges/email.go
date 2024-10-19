@@ -12,10 +12,12 @@ import (
 )
 
 /*
-Handles incoming requests made to `GET /challenges/email/{ctext}`. This route
+Handles incoming requests made to `GET /api/challenges/email/{ctext}`. This route
 is only to be used for solving email-based challenges.
 */
 func SolveEChallengeRoute(w http.ResponseWriter, r *http.Request) {
+	//fmt.Printf("email chall: %s\n", chi.URLParam(r, "ctext"))
+
 	//Attempt to solve the email challenge
 	ctoken := csolver.VerifyEmailChallenge(
 		env, chi.URLParam(r, "ctext"),
