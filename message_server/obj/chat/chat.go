@@ -22,5 +22,5 @@ type ChatMessage struct {
 	Status string `json:"status" bson:"status"`
 
 	// Attachments within the message (if any).
-	Attachments []obj.Attachment `json:"attachments" bson:"attachments"`
+	//TODO
 }
