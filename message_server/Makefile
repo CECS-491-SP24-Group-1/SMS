@@ -1,9 +1,9 @@
 ### MASTER MAKEFILE ###
 
 ## EDIT THESE LINES TO CHANGE THE ENTRYPOINT & BINARY NAME ##
-ENTRYPOINT_NAME := main.go
+ENTRYPOINT_NAME := main/main.go
 BIN_NAME := sms_server
-BIN_FOLDER := .
+BIN_FOLDER := tmp
 
 ####################################
 #Variables
@@ -15,7 +15,7 @@ BIN_NAME := $(BIN_NAME).exe
 endif
 
 # Tools
-FRESH := fresh
+AIR := air
 GO := go
 GOFMT := gofmt
 GO_ENUM := go-enum
@@ -100,19 +100,20 @@ endif
 .PHONY: build
 build:
 	@echo BUILD $(ENTRYPOINT_NAME) "->" $(BIN_FOLDER)/$(BIN_NAME)
+	@$(MAKE) -s __mkdir__ TARGET=$(BIN_FOLDER)
 	$(GO) build $(GO_LD) -o $(BIN_FOLDER)/$(BIN_NAME) $(ENTRYPOINT_NAME)
 
 #Cleans the directory of any binary files
 .PHONY: clean
 clean:
-	@echo CLEAN $(BIN_FOLDER)/$(BIN_NAME)
-	@$(MAKE) -s __rmfile__ TARGET=$(BIN_FOLDER)/$(BIN_NAME)
+	@echo CLEAN $(BIN_FOLDER)
+	@$(MAKE) -s __rmdir__ TARGET=$(BIN_FOLDER)
 
 #Runs the binary with Fresh (watches for changes and auto-recompiles)
 .PHONY: dev
 dev:
-	@echo FRESH .
-	$(FRESH)
+	@echo AIR -c .air.toml
+	$(AIR)
 
 #Generates enum files based on `go-enum` syntax
 .PHONY: enum

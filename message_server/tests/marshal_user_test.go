@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	ccrypto "wraith.me/message_server/crypto"
-	"wraith.me/message_server/obj/token"
-	"wraith.me/message_server/schema/user"
-	"wraith.me/message_server/util"
-	"wraith.me/message_server/util/ms"
+	ccrypto "wraith.me/message_server/pkg/crypto"
+	"wraith.me/message_server/pkg/obj/token"
+	"wraith.me/message_server/pkg/schema/user"
+	"wraith.me/message_server/pkg/util"
+	"wraith.me/message_server/pkg/util/ms"
 )
 
 var usr = user.NewUserSimple(

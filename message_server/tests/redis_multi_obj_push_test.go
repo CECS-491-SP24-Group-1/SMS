@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	cr "wraith.me/message_server/redis"
+	cr "wraith.me/message_server/pkg/redis"
 )
 
 /*

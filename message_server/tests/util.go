@@ -7,9 +7,9 @@ import (
 	"github.com/qiniu/qmgo"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
-	"wraith.me/message_server/db"
-	cr "wraith.me/message_server/redis"
-	"wraith.me/message_server/schema/user"
+	"wraith.me/message_server/pkg/db"
+	cr "wraith.me/message_server/pkg/redis"
+	"wraith.me/message_server/pkg/schema/user"
 )
 
 const (

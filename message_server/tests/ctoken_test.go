@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	ccrypto "wraith.me/message_server/crypto"
-	c "wraith.me/message_server/obj/challenge"
-	"wraith.me/message_server/util"
+	ccrypto "wraith.me/message_server/pkg/crypto"
+	c "wraith.me/message_server/pkg/obj/challenge"
+	"wraith.me/message_server/pkg/util"
 )
 
 func TestCTokenClaims(t *testing.T) {

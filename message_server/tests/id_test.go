@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"wraith.me/message_server/db/mongoutil"
-	"wraith.me/message_server/util"
+	"wraith.me/message_server/pkg/db/mongoutil"
+	"wraith.me/message_server/pkg/util"
 )
 
 func TestUUIDvsOID(t *testing.T) {

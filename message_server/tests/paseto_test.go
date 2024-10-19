@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"aidanwoods.dev/go-paseto"
-	"wraith.me/message_server/util"
+	"wraith.me/message_server/pkg/util"
 )
 
 const SUBJECT_PK_KEY = "sub-pk"

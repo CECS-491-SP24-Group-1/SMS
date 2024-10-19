@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	cr "wraith.me/message_server/redis"
-	"wraith.me/message_server/util"
+	cr "wraith.me/message_server/pkg/redis"
+	"wraith.me/message_server/pkg/util"
 )
 
 func TestRedisKVSetS(t *testing.T) {
