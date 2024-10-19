@@ -12,8 +12,8 @@ type ChatMessage struct {
 	// Unique identifier for the message.
 	ID util.UUID `json:"id" bson:"_id"`
 
-	// The type of object (MESSAGE).
-	Type obj.IdType `json:"type" bson:"type"`
+	// The type of the chat message, e.g., MESSAGE, EVENT.
+	Type obj.ChatType `json:"type" bson:"type"`
 
 	// The ID of the user who sent the message.
 	Sender util.UUID `json:"sender_id" bson:"sender_id"`
