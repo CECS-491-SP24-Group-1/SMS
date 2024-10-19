@@ -26,7 +26,7 @@ func TestUUIDvsOID(t *testing.T) {
 func TestUUIDxOID(t *testing.T) {
 	//Generate UUID and get the timestamp
 	uuidIn, _ := util.NewUUID7()
-	uuidiTS := time.Unix(uuidIn.Time().UnixTime()).UTC()
+	uuidiTS := uuidIn.Time().UTC()
 
 	//Print stuff
 	fmt.Printf("UUID In:  %s\n", uuidIn.String())
@@ -42,7 +42,7 @@ func TestUUIDxOID(t *testing.T) {
 
 	//Convert the OID to a UUIDv7 and get the timestamp
 	uuidOut := mongoutil.OID2UUID(oid)
-	uuidoTS := time.Unix(uuidOut.Time().UnixTime()).UTC()
+	uuidoTS := uuidOut.Time().UTC()
 
 	//Print stuff
 	fmt.Printf("UUID Out: %s\n", uuidOut.String())

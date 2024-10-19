@@ -18,7 +18,7 @@ func UUID2OID(uuid util.UUID) primitive.ObjectID {
 
 	//Insert the Unix epoch into the OID; just the first 4 bytes in BE order
 	//The time will be a garbage value if the UUID version doesn't support times (eg: UUIDv4)
-	epochSec, _ := uuid.Time().UnixTime() //48-bit ts
+	epochSec := uuid.Time().Second() //48-bit ts
 	binary.BigEndian.PutUint32(oid[0:4], uint32(epochSec))
 
 	//Copy the rest of the UUID into the OID

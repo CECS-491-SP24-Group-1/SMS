@@ -3,16 +3,15 @@ package user
 import (
 	"sync"
 
-	"github.com/qiniu/qmgo"
 	"wraith.me/message_server/db"
 )
 
-const (
-	//The name of the database.
-	UserCollectionDBName = db.ROOT_DB
+var (
+	// Holds the shared instance of this collection.
+	userCollectionInst *UserCollection
 
-	//The name of the collection in the database.
-	UserCollectionCollName = db.USERS_COLLECTION
+	// Guard mutex to ensure that only one singleton object is created.
+	userCollectionOnce sync.Once
 )
 
 /*
@@ -20,14 +19,19 @@ Represents a single `User` object in a collection of objects in the database.
 This collection is managed by the `qmgo` Mongo ODM library.
 */
 type UserCollection struct {
-	*qmgo.Collection
+	*db.QMgoBase
 }
 
-// Holds the shared instance of this collection.
-var _UserCollectionInst *UserCollection
+// This line enforces UserCollection to implement db.QMgoCollection.
+//var _ db.QMgoCollection = (*UserCollection)(nil)
 
-// Guard mutex to ensure that only one singleton object is created.
-var _UserCollectionOnce sync.Once
+func (uc UserCollection) ParentDB() string {
+	return db.ROOT_DB
+}
+
+func (uc UserCollection) CollectionName() string {
+	return db.USERS_COLLECTION
+}
 
 /*
 Gets the currently active collection object instance or initializes it.
@@ -36,15 +40,9 @@ non-nil instance of the collection due to the usage of `sync.Once` to
 initialize the singleton.
 */
 func GetCollection() *UserCollection {
-	_UserCollectionOnce.Do(func() {
-		//Get the active database client instance
-		client := db.GetInstance().GetClient()
-
-		//Set the collection options
-		coll := client.Database(UserCollectionDBName).Collection(UserCollectionCollName)
-
-		//Assign the singleton
-		_UserCollectionInst = &UserCollection{coll}
+	userCollectionOnce.Do(func() {
+		c := db.GetCollectionManager().GetCollection(UserCollection{})
+		userCollectionInst = &UserCollection{c}
 	})
-	return _UserCollectionInst
+	return userCollectionInst
 }

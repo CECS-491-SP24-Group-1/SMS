@@ -113,7 +113,7 @@ func (id UUID) Bytes() [16]byte {
 	return id.UUID
 }
 
-// Determines if a UUID is a nil uuid.
+// Determines if a UUID is a nil UUID.
 func (id UUID) IsNil() bool {
 	return id.Bytes() == [16]byte{}
 }
@@ -142,6 +142,12 @@ func (id *UUID) UnmarshalText(text []byte) error {
 // Outputs a UUID with no separation hyphens.
 func (id UUID) ShortString() string {
 	return strings.ReplaceAll(id.String(), "-", "")
+}
+
+// Returns the time contained in the UUID.
+func (id UUID) Time() time.Time {
+	uuid := uuid.UUID(id.Bytes())
+	return time.Unix(uuid.Time().UnixTime())
 }
 
 // Tests if a UUID is valid. This is shorthand for `uuid.Validate() == nil`.
