@@ -4,7 +4,7 @@
 // Build Date:
 // Built By:
 
-package obj
+package chat
 
 import (
 	"fmt"

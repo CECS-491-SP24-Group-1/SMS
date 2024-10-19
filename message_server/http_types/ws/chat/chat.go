@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"wraith.me/message_server/util"
-	"wraith.me/message_server/obj"
+	
 )
 
 // Represents an individual message within a chat room.
@@ -13,7 +13,7 @@ type ChatMessage struct {
 	ID util.UUID `json:"id" bson:"_id"`
 
 	// The type of the chat message, e.g., MESSAGE, EVENT.
-	Type obj.ChatType `json:"type" bson:"type"`
+	Type chat.ChatType `json:"type" bson:"type"`
 
 	// The ID of the user who sent the message.
 	Sender util.UUID `json:"sender_id" bson:"sender_id"`
