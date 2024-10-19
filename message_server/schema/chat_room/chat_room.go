@@ -1,17 +1,18 @@
-package chat_room
+package chat
 
 import (
 	"time"
 
-	"wraith.me/message_server/obj"
+	"wraith.me/message_server/util"
 )
 
 // Represents a chat room containing multiple participants and messages.
 type ChatRoom struct {
-	obj.Identifiable `json:",inline" bson:",inline,squash"`
+	// Unique identifier for the chat room.
+	ID util.UUID `json:"id" bson:"_id"`
 
-	// The list of participants in the chat room.
-	Participants []obj.Participant `json:"participants" bson:"participants"`
+	// The list of participants in the chat room, represented by their UUIDs.
+	Participants []util.UUID `json:"participants" bson:"participants"`
 
 	// The list of messages in the chat room.
 	Messages []ChatMessage `json:"messages" bson:"messages"`
