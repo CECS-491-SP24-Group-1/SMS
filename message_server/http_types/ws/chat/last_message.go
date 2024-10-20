@@ -1,13 +1,13 @@
 package chat
 
 import (
-	
-
 	"wraith.me/message_server/util"
 )
 
+//May be unnecessary
+
 // Represents the last message in a chat room for quick preview.
 type LastMessage struct {
-	MessageID util.UUID `json:"message_id" bson:"message_id"`
-	Content   string    `json:"content" bson:"content"`
+	ID      util.UUID `json:"id" bson:"_id"`
+	Content string    `json:"content" bson:"content"`
 }
