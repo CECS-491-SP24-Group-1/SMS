@@ -1,7 +1,7 @@
-
+package chat
 
 import (
-	"time"
+	
 
 	"wraith.me/message_server/util"
 )
