@@ -109,12 +109,18 @@ build:
 	@$(MAKE) -s __mkdir__ TARGET=$(BIN_FOLDER)
 	$(GO) build $(GO_LD) -o $(BIN_FOLDER)/$(BIN_NAME) $(ENTRYPOINT_NAME)
 
-#Cleans the directory of any binary files
+#Cleans the directory of all build artifacts
 .PHONY: clean
 clean:
 	@echo CLEAN $(BIN_FOLDER) $(TYGO_DIR)
 	@$(MAKE) -s __rmdir__ TARGET=$(BIN_FOLDER)
 	@$(MAKE) -s __rmdir__ TARGET=$(TYGO_DIR)
+
+#Cleans the directory of any binary files
+.PHONY: cleanbin
+cleanbin:
+	@echo CLEANBIN $(BIN_FOLDER)
+	@$(MAKE) -s __rmdir__ TARGET=$(BIN_FOLDER)
 
 #Runs the binary with Fresh (watches for changes and auto-recompiles)
 .PHONY: dev
