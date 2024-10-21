@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"wraith.me/message_server/util"
-	"wraith.me/message_server/obj/chat"  
+	"wraith.me/message_server/http_types/ws/chat"  
 )
 
 // Represents a chat room containing multiple participants and messages.
@@ -32,9 +32,8 @@ type ChatRoom struct {
 func (c *ChatRoom) AddMessage(message chat.ChatMessage) {
 	c.Messages = append(c.Messages, message)
 	c.LastMessage = chat.LastMessage{
-		MessageID: message.ID,
-		Timestamp: message.Timestamp,
+		ID: message.ID,
 		Content:   message.Content,
 	}
-	c.UpdatedAt = message.Timestamp
+	//c.UpdatedAt = message.Timestamp
 }
