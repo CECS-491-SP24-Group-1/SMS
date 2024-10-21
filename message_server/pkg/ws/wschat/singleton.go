@@ -46,6 +46,7 @@ func (w *Server) GetMelody() *melody.Melody {
 	return w.melody
 }
 
+// Attempts to get a room by ID. If it doesn't exist, a new one is created.
 func (w *Server) getOrCreateRoom(id util.UUID) *Room {
 	w.roomMu.Lock()
 	defer w.roomMu.Unlock()
@@ -59,6 +60,7 @@ func (w *Server) getOrCreateRoom(id util.UUID) *Room {
 	return room
 }
 
+// Gets a room by ID.
 func (w *Server) getRoom(id util.UUID) *Room {
 	w.roomMu.RLock()
 	defer w.roomMu.RUnlock()
@@ -66,6 +68,7 @@ func (w *Server) getRoom(id util.UUID) *Room {
 	return w.rooms[id]
 }
 
+// Removes a room from the handler.
 func (w *Server) removeRoom(id util.UUID) {
 	w.roomMu.Lock()
 	defer w.roomMu.Unlock()
@@ -73,6 +76,9 @@ func (w *Server) removeRoom(id util.UUID) {
 	delete(w.rooms, id)
 }
 
-func isValidMessage(msg []byte) bool {
-	return len(msg) > 0
+// Sets up the handlers for the chat server.
+func (w *Server) setupHandlers() {
+	w.melody.HandleConnect(w.handleConnect)
+	w.melody.HandleDisconnect(w.handleDisconnect)
+	w.melody.HandleMessage(w.handleMessage)
 }
