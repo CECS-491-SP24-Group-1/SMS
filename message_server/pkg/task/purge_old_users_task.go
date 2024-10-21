@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	
 	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/pkg/globals"
-	
 
 	"github.com/redis/go-redis/v9"
 	"wraith.me/message_server/pkg/db" // Accessing the db from message_server
@@ -57,5 +55,5 @@ func (ftt PurgeOldUsersTask) runPeriodically() {
 
 	// Log how many users were deleted
 	fmt.Printf("Deleted %d inactive users.\n", deleteResult.DeletedCount)
-	
+
 }

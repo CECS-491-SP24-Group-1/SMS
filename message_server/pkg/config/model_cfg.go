@@ -31,12 +31,12 @@ type Config struct {
 	Server struct {
 		BindAddr   string `toml:"bind_addr" env:"SRV_BIND_ADDR" default:"127.0.0.1"`
 		ListenPort int    `toml:"listen_port" env:"SRV_LISTEN_PORT" default:"8888"`
-		BaseUrl    string `toml:"base_url" env:"SRV_BASE_URL" default:"http://127.0.0.1:8888/api"`
+		BaseUrl    string `toml:"base_url" env:"SRV_BASE_URL" default:"http://localhost:8888/api"`
 	} `toml:"server"`
 
 	//Client configuration
 	Client struct {
-		BaseUrl string `toml:"base_url" env:"CLI_BASE_URL" default:"http://127.0.0.1:8080"`
+		BaseUrl string `toml:"base_url" env:"CLI_BASE_URL" default:"http://localhost:8080"`
 	} `toml:"client"`
 
 	//Logging configuration
