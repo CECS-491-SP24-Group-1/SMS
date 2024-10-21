@@ -54,7 +54,7 @@ func (w *Server) handleDisconnect(s *melody.Session) {
 func announceMembershipChange(s *melody.Session, room *Room, joined bool) {
 	//Construct the initial message
 	initial := fmt.Sprintf(
-		"A user %s the room\nThere are %d members online.",
+		"A user %s the room. There are %d members online.",
 		util.If(joined, "joined", "left"),
 		room.Size(),
 	)
