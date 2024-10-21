@@ -35,5 +35,5 @@ func (c *ChatRoom) AddMessage(message chat.ChatMessage) {
 		ID:      message.ID,
 		Content: message.Content,
 	}
-	c.UpdatedAt = message.ID.Time()
+	//c.UpdatedAt = message.Timestamp
 }
