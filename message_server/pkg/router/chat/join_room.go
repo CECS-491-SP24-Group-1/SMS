@@ -11,10 +11,8 @@ import (
 	"wraith.me/message_server/pkg/ws/wschat"
 )
 
-/*
-Handles incoming requests made to `GET /api/chat/room/{roomID}`.
-*/
-func ChatRoomRoute(w http.ResponseWriter, r *http.Request) {
+// Handles incoming requests made to `GET /api/chat/room/{roomID}`.
+func JoinRoomRoute(w http.ResponseWriter, r *http.Request) {
 	log.Println("Request URL:", r.URL.String())
 
 	//Get the ID of the chat room

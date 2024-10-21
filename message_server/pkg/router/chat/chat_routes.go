@@ -37,7 +37,7 @@ func ChatRoutes() chi.Router {
 	mel = wschat.GetInstance()
 
 	//Add routes (unauthenticated)
-	r.Get("/room/{roomID}", ChatRoomRoute)
+	r.Get("/room/{roomID}", JoinRoomRoute)
 
 	//Add routes (authenticated)
 	/*
@@ -47,13 +47,13 @@ func ChatRoutes() chi.Router {
 		})
 	*/
 
-	// Add routes (authenticated)
+	//Add routes (authenticated)
 	r.Group(func(r chi.Router) {
-		// Apply authentication middleware
+		//Apply authentication middleware
 		r.Use(mw.NewAuthMiddleware(env))
 
-		// Route to create a new chat room
-		r.Post("/room", CreateChatRoom)
+		//Route to create a new chat room
+		r.Post("/room/create", CreateRoomRoute)
 	})
 
 	//Return the router

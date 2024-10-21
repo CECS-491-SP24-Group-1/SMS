@@ -13,6 +13,9 @@ const (
 	//Denotes the collection that stores user objects.
 	USERS_COLLECTION = "users"
 
+	//Denotes the collection that stores chat rooms.
+	CROOMS_COLLECTION = "rooms"
+
 	//Denotes the collection that stores tests.
 	TESTS_COLLECTION = "tests"
 )

@@ -1,12 +1,7 @@
 package mongoutil
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/qiniu/qmgo"
-	"wraith.me/message_server/pkg/db"
-	chatroom "wraith.me/message_server/pkg/schema/chat_room"
 	"wraith.me/message_server/pkg/util"
 )
 
@@ -25,18 +20,4 @@ func Aggregate2IDArr(agg qmgo.AggregateI) ([]util.UUID, error) {
 		out[i] = uuid["_id"]
 	}
 	return out, nil
-}
-
-// CreateChatRoom inserts a new chat room into the MongoDB collection.
-func CreateChatRoom(chatRoom *chatroom.ChatRoom) error {
-	client := db.GetInstance().GetClient() // Call GetInstance() from singleton.go
-	if client == nil {
-		return fmt.Errorf("MongoDB client is not initialized")
-	}
-
-	collection := client.Database("your_database_name").Collection("chat_rooms")
-
-	// Insert the chat room document into the collection
-	_, err := collection.InsertOne(context.TODO(), chatRoom)
-	return err
 }
