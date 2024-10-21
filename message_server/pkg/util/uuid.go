@@ -90,6 +90,22 @@ func NilUUID() UUID {
 	return UUID{[16]byte{}}
 }
 
+// Returns a UUID parsed from the input string.
+func ParseUUIDv7(input string) (UUID, error) {
+	//Parse the UUID
+	id, err := uuid.Parse(input)
+	if err != nil {
+		return NilUUID(), err
+	}
+
+	//Ensure its a version 7
+	if id.Version() != 7 {
+		return NilUUID(), fmt.Errorf("must be a UUIDv7; got version %d", id.Version())
+	}
+
+	return UUID{id}, nil
+}
+
 /*
 Returns a UUID parsed from the input string, or a nil UUID if the input
 string is not a valid UUID.

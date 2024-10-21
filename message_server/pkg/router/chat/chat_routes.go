@@ -5,7 +5,7 @@ import (
 	"wraith.me/message_server/pkg/config"
 	"wraith.me/message_server/pkg/globals"
 	"wraith.me/message_server/pkg/schema/user"
-	"wraith.me/message_server/pkg/ws"
+	"wraith.me/message_server/pkg/ws/wschat"
 )
 
 var (
@@ -19,7 +19,7 @@ var (
 	env *config.Env
 
 	// Shared Melody WS handler for the entire package.
-	mel *ws.WServer
+	mel *wschat.Server
 )
 
 // Sets up routes for the `/api/chat` endpoint.
@@ -33,7 +33,7 @@ func ChatRoutes() chi.Router {
 	env = globals.Env
 
 	//Start up Melody
-	mel = ws.GetInstance()
+	mel = wschat.GetInstance()
 
 	//Add routes (unauthenticated)
 	r.Get("/room/{roomID}", ChatRoomRoute)
