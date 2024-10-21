@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"wraith.me/message_server/pkg/config"
 	"wraith.me/message_server/pkg/globals"
+	"wraith.me/message_server/pkg/mw"
 	"wraith.me/message_server/pkg/schema/user"
 	"wraith.me/message_server/pkg/ws"
 )
@@ -45,6 +46,15 @@ func ChatRoutes() chi.Router {
 			//r.Get("/sessions", SessionsRoute)
 		})
 	*/
+
+	// Add routes (authenticated)
+	r.Group(func(r chi.Router) {
+		// Apply authentication middleware
+		r.Use(mw.NewAuthMiddleware(env))
+
+		// Route to create a new chat room
+		r.Post("/room", CreateChatRoom)
+	})
 
 	//Return the router
 	return r
