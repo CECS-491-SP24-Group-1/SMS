@@ -26,6 +26,8 @@ func JoinRoomRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//TODO: check if a user is a member of the room and if the room even exists
+
 	//Set the room ID in the request context and handle the connection
 	r = r.WithContext(context.WithValue(r.Context(), wschat.WSChatCtxRoomIDKey, rid))
 	mel.GetMelody().HandleRequest(w, r)
