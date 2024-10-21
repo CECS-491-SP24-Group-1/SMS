@@ -5,12 +5,12 @@ import (
 )
 
 // Represents an individual message within a chat room.
-type ChatMessage struct {
+type Message struct {
 	// Unique identifier for the message.
 	ID util.UUID `json:"id" bson:"_id"`
 
 	// The type of the chat message, e.g., MESSAGE, EVENT.
-	Type ChatType `json:"type" bson:"type"`
+	Type Type `json:"type" bson:"type"`
 
 	// The ID of the user who sent the message.
 	Sender util.UUID `json:"sender_id" bson:"sender_id"`

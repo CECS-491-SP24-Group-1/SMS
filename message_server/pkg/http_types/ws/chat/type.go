@@ -2,7 +2,7 @@
 package chat
 
 //
-//-- ENUM: ChatType
+//-- ENUM: Type
 //
 
 /*
@@ -18,4 +18,4 @@ ENUM(
 	KEX2,
 )
 */
-type ChatType int8
+type Type int8

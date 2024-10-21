@@ -33,9 +33,9 @@ packages:
     type_mappings:
       util.UUID: "string"
       #Tygo doesn't properly apply this line, so its applied as a patch
-      ChatType: '"UNKNOWN" | "EVENT" | "MESSAGE" | "EK" | "KEX1" | "KEX2"'
+      Type: '"UNKNOWN" | "EVENT" | "MESSAGE" | "EK" | "KEX1" | "KEX2"'
     exclude_files:
-      - "chat_type_enum.go"
+      - "type_enum.go"
 
   # schema/chatroom/room.go
   - path: "wraith.me/message_server/pkg/schema/chat_room"

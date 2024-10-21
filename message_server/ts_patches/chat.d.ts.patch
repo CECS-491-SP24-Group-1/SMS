@@ -1,11 +1,8 @@
 --- chat.d.ts
 +++ chat.d.ts
-@@ -14,7 +14,7 @@
+@@ -22,4 +22,4 @@
  //////////
- // source: chat_type.go
+ // source: type.go
  
--export type ChatType = number /* int8 */;
-+export type ChatType = "UNKNOWN" | "EVENT" | "MESSAGE" | "EK" | "KEX1" | "KEX2";
- 
- //////////
- // source: last_message.go
+-export type Type = number /* int8 */;
++export type Type = "UNKNOWN" | "EVENT" | "MESSAGE" | "EK" | "KEX1" | "KEX2";
