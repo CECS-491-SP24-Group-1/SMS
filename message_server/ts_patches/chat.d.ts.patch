@@ -1,11 +1,11 @@
---- /home/spotrealms/Documents/SMS/message_server/ts/chat.d.ts
-+++ <unnamed>
-@@ -5,7 +5,7 @@
+--- chat.d.ts
++++ chat.d.ts
+@@ -14,7 +14,7 @@
+ //////////
+ // source: chat_type.go
  
- export interface ChatMessage {
- 	id: string;
--	type: ChatType;
-+	type: "UNKNOWN" | "EVENT" | "MESSAGE" | "EK" | "KEX1" | "KEX2";
- 	sender_id: string;
- 	recipient_id: string;
- 	content: string;
+-export type ChatType = number /* int8 */;
++export type ChatType = "UNKNOWN" | "EVENT" | "MESSAGE" | "EK" | "KEX1" | "KEX2";
+ 
+ //////////
+ // source: last_message.go

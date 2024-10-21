@@ -1,0 +1,20 @@
+--- room.d.ts
++++ room.d.ts
+@@ -3,13 +3,14 @@
+ //////////
+ // source: role.go
+ 
+-export type Role = number /* int8 */;
++export type Role = "MEMBER" | "MODERATOR" | "OWNER";
+ 
+ //////////
+ // source: room.go
+ 
+ export interface Room {
+-	DBObj: any /* db.DBObj */;
++	created_at: string;
++	updated_at: string;
+ 	id: string;
+-	participants: { [key: string]: Role};
++	participants: { [rid: string]: Role};
+ }

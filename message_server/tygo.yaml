@@ -35,5 +35,18 @@ packages:
       #Tygo doesn't properly apply this line, so its applied as a patch
       ChatType: '"UNKNOWN" | "EVENT" | "MESSAGE" | "EK" | "KEX1" | "KEX2"'
     exclude_files:
-      - "chat_type.go"
       - "chat_type_enum.go"
+
+  # schema/chatroom/room.go
+  - path: "wraith.me/message_server/pkg/schema/chat_room"
+    output_path: "ts/room.d.ts"
+    indent: "\t"
+    preserve_comments: "none"
+    type_mappings:
+      util.UUID: "string"
+      #Tygo doesn't properly apply this line, so its applied as a patch
+      Role: '"MEMBER" | "MODERATOR" | "OWNER"'
+    exclude_files:
+      - "room_collection.go"
+      #- "role.go"
+      - "role_enum.go"
