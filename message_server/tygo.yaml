@@ -33,7 +33,7 @@ packages:
     type_mappings:
       util.UUID: "string"
       #Tygo doesn't properly apply this line, so its applied as a patch
-      Type: '"UNKNOWN" | "EVENT" | "MESSAGE" | "EK" | "KEX1" | "KEX2"'
+      Type: '"UNKNOWN" | "U_MSG" | "S_MSG" | "S_ERR" | "JOIN_EVENT" | "QUIT_EVENT" | "EK" | "KEX1" | "KEX2"'
     exclude_files:
       - "type_enum.go"
 

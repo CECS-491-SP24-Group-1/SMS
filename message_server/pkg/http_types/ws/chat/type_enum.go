@@ -12,25 +12,40 @@ import (
 )
 
 const (
-	TypeUKNOWN Type = iota
-	TypeEVENT
-	TypeMESSAGE
+	// Unknown chat type.
+	TypeUNKNOWN Type = iota
+	// User message.
+	TypeUMSG
+	// Server message.
+	TypeSMSG
+	// Server error message.
+	TypeSERR
+	// A user joined the room.
+	TypeJOINEVENT
+	// A user left the room.
+	TypeQUITEVENT
+	// An encryption key sent by a user for the purpose of decrypting a group message.
 	TypeEK
+	// Step 1 of an X3DH KEX operation.
 	TypeKEX1
+	// Step 2 of an X3DH KEX operation.
 	TypeKEX2
 )
 
 var ErrInvalidType = fmt.Errorf("not a valid Type, try [%s]", strings.Join(_TypeNames, ", "))
 
-const _TypeName = "UKNOWNEVENTMESSAGEEKKEX1KEX2"
+const _TypeName = "UNKNOWNU_MSGS_MSGS_ERRJOIN_EVENTQUIT_EVENTEKKEX1KEX2"
 
 var _TypeNames = []string{
-	_TypeName[0:6],
-	_TypeName[6:11],
-	_TypeName[11:18],
-	_TypeName[18:20],
-	_TypeName[20:24],
-	_TypeName[24:28],
+	_TypeName[0:7],
+	_TypeName[7:12],
+	_TypeName[12:17],
+	_TypeName[17:22],
+	_TypeName[22:32],
+	_TypeName[32:42],
+	_TypeName[42:44],
+	_TypeName[44:48],
+	_TypeName[48:52],
 }
 
 // TypeNames returns a list of possible string values of Type.
@@ -43,9 +58,12 @@ func TypeNames() []string {
 // TypeValues returns a list of the values for Type
 func TypeValues() []Type {
 	return []Type{
-		TypeUKNOWN,
-		TypeEVENT,
-		TypeMESSAGE,
+		TypeUNKNOWN,
+		TypeUMSG,
+		TypeSMSG,
+		TypeSERR,
+		TypeJOINEVENT,
+		TypeQUITEVENT,
 		TypeEK,
 		TypeKEX1,
 		TypeKEX2,
@@ -53,12 +71,15 @@ func TypeValues() []Type {
 }
 
 var _TypeMap = map[Type]string{
-	TypeUKNOWN:  _TypeName[0:6],
-	TypeEVENT:   _TypeName[6:11],
-	TypeMESSAGE: _TypeName[11:18],
-	TypeEK:      _TypeName[18:20],
-	TypeKEX1:    _TypeName[20:24],
-	TypeKEX2:    _TypeName[24:28],
+	TypeUNKNOWN:   _TypeName[0:7],
+	TypeUMSG:      _TypeName[7:12],
+	TypeSMSG:      _TypeName[12:17],
+	TypeSERR:      _TypeName[17:22],
+	TypeJOINEVENT: _TypeName[22:32],
+	TypeQUITEVENT: _TypeName[32:42],
+	TypeEK:        _TypeName[42:44],
+	TypeKEX1:      _TypeName[44:48],
+	TypeKEX2:      _TypeName[48:52],
 }
 
 // String implements the Stringer interface.
@@ -77,12 +98,15 @@ func (x Type) IsValid() bool {
 }
 
 var _TypeValue = map[string]Type{
-	_TypeName[0:6]:   TypeUKNOWN,
-	_TypeName[6:11]:  TypeEVENT,
-	_TypeName[11:18]: TypeMESSAGE,
-	_TypeName[18:20]: TypeEK,
-	_TypeName[20:24]: TypeKEX1,
-	_TypeName[24:28]: TypeKEX2,
+	_TypeName[0:7]:   TypeUNKNOWN,
+	_TypeName[7:12]:  TypeUMSG,
+	_TypeName[12:17]: TypeSMSG,
+	_TypeName[17:22]: TypeSERR,
+	_TypeName[22:32]: TypeJOINEVENT,
+	_TypeName[32:42]: TypeQUITEVENT,
+	_TypeName[42:44]: TypeEK,
+	_TypeName[44:48]: TypeKEX1,
+	_TypeName[48:52]: TypeKEX2,
 }
 
 // ParseType attempts to convert a string to a Type.
