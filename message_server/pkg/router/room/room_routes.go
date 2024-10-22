@@ -1,10 +1,11 @@
-package chat
+package room
 
 import (
 	"github.com/go-chi/chi/v5"
 	"wraith.me/message_server/pkg/config"
 	"wraith.me/message_server/pkg/globals"
 	"wraith.me/message_server/pkg/mw"
+	chatroom "wraith.me/message_server/pkg/schema/chat_room"
 	"wraith.me/message_server/pkg/schema/user"
 	"wraith.me/message_server/pkg/ws/wschat"
 )
@@ -12,6 +13,8 @@ import (
 var (
 	// Shared user collection across the entire package.
 	uc *user.UserCollection
+
+	rc *chatroom.RoomCollection
 
 	// Shared config object across the entire package.
 	cfg *config.Config
@@ -23,13 +26,14 @@ var (
 	mel *wschat.Server
 )
 
-// Sets up routes for the `/api/chat` endpoint.
-func ChatRoutes() chi.Router {
+// Sets up routes for the `/api/chat/room` endpoint.
+func RoomRoutes() chi.Router {
 	//Create the router
 	r := chi.NewRouter()
 
 	//Set the singletons for the entire package
 	uc = globals.UC
+	rc = globals.RC
 	cfg = globals.Cfg
 	env = globals.Env
 
@@ -37,7 +41,7 @@ func ChatRoutes() chi.Router {
 	mel = wschat.GetInstance()
 
 	//Add routes (unauthenticated)
-	r.Get("/room/{roomID}", JoinRoomRoute)
+	r.Get("/{roomID}", JoinRoomRoute)
 
 	//Add routes (authenticated)
 	/*
@@ -52,8 +56,9 @@ func ChatRoutes() chi.Router {
 		//Apply authentication middleware
 		r.Use(mw.NewAuthMiddleware(env))
 
-		//Route to create a new chat room
-		r.Post("/room/create", CreateRoomRoute)
+		//Bind routes
+		r.Post("/create", CreateRoomRoute)
+		r.Get("/list", GetRoomsRoute)
 	})
 
 	//Return the router

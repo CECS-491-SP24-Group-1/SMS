@@ -2,8 +2,8 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-	cmd = "make cleanbin && make build"
-	#cmd = "go build -ldflags \"-s -w\" -o tmp/sms_server main/main.go"
+	cmd = "make build"
+	#cmd = "make cleanbin && make build"
 	bin = "./tmp/sms_server"
 	main = "main/main.go"
 	delay = 1000

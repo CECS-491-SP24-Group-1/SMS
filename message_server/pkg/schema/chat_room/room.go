@@ -30,6 +30,9 @@ func NewRoom(owner util.UUID, participants ...util.UUID) Room {
 		members[participant] = RoleMEMBER
 	}
 
+	//Add the owner as a participant
+	members[owner] = RoleOWNER
+
 	//Create the room
 	return Room{
 		DBObj:        db.NewDBObj(),

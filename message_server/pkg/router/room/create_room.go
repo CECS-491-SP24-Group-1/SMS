@@ -1,4 +1,4 @@
-package chat
+package room
 
 import (
 	"encoding/json"
@@ -51,7 +51,7 @@ func CreateRoomRoute(w http.ResponseWriter, r *http.Request) {
 	room := chatroom.NewRoom(owner.ID, req.Participants...)
 
 	//Save the chat room in the database
-	_, err := chatroom.GetCollection().InsertOne(r.Context(), room)
+	_, err := rc.InsertOne(r.Context(), room)
 	if err != nil {
 		util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
 		return

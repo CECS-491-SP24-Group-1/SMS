@@ -17,7 +17,7 @@ import (
 	"wraith.me/message_server/pkg/router"
 	"wraith.me/message_server/pkg/router/auth"
 	"wraith.me/message_server/pkg/router/challenges"
-	"wraith.me/message_server/pkg/router/chat"
+	"wraith.me/message_server/pkg/router/room"
 	"wraith.me/message_server/pkg/task"
 
 	"github.com/go-chi/chi/v5"
@@ -160,7 +160,7 @@ func setupServer() chi.Router {
 	})
 
 	//Chat routes
-	apir.Mount("/chat", chat.ChatRoutes())
+	apir.Mount("/chat/room", room.RoomRoutes())
 
 	//Bind the API routes to the outgoing router
 	r.Mount("/api", apir)

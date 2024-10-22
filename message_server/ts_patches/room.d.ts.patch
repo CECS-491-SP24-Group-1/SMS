@@ -16,5 +16,5 @@
 +	updated_at: string;
  	id: string;
 -	participants: { [key: string]: Role};
-+	participants: { [rid: string]: Role};
++	participants: { [rid: string]: Role };
  }

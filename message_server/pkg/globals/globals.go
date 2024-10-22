@@ -5,6 +5,7 @@ import (
 	"wraith.me/message_server/pkg/config"
 	"wraith.me/message_server/pkg/email"
 	cred "wraith.me/message_server/pkg/redis"
+	chatroom "wraith.me/message_server/pkg/schema/chat_room"
 	"wraith.me/message_server/pkg/schema/user"
 )
 
@@ -13,6 +14,9 @@ var (
 
 	// Shared user collection across the entire application.
 	UC *user.UserCollection
+
+	// Shared room collection across the entire application.
+	RC *chatroom.RoomCollection
 
 	//-- Configs
 
@@ -35,6 +39,7 @@ var (
 func Initialize(cfg *config.Config, env *config.Env) {
 	//Initialize MDB collections
 	UC = user.GetCollection()
+	RC = chatroom.GetCollection()
 
 	//Initialize configs
 	Cfg = cfg

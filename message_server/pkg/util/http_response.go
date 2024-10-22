@@ -32,6 +32,9 @@ type HttpResponse[T any] struct {
 
 	//The payloads of the server response, if any; default: `[]`.
 	Payloads []T `json:"payloads,omitempty"`
+
+	//Whether the response has a payload.
+	hasPayload bool
 }
 
 //-- Constructors
@@ -107,10 +110,11 @@ func PayloadResponse[T any](code int, desc string, payloads ...T) HttpResponse[T
 
 	//Create the response
 	resp := HttpResponse[T]{
-		Code:     code,
-		Status:   status,
-		Desc:     desc,
-		Payloads: payloads,
+		Code:       code,
+		Status:     status,
+		Desc:       desc,
+		Payloads:   payloads,
+		hasPayload: true,
 	}
 
 	//Emit the full response
@@ -189,6 +193,8 @@ func (r HttpResponse[T]) Respond(w http.ResponseWriter) {
 		return
 	}
 
+	//fmt.Printf("output JSON: %s\n", json)
+
 	//Write the status code and resultant JSON to the output stream
 	w.WriteHeader(r.Code)
 	_, err = w.Write(json)
@@ -219,7 +225,9 @@ func backendMarshal[T any](obj *HttpResponse[T]) ([]byte, error) {
 		if len(obj.Errors) > 0 {
 			aux.Errors = obj.Errors
 		}
-		if len(obj.Payloads) > 0 {
+
+		//Always include payloads if hasPayload is true
+		if obj.hasPayload {
 			aux.Payloads = obj.Payloads
 		}
 	} else {
@@ -229,10 +237,14 @@ func backendMarshal[T any](obj *HttpResponse[T]) ([]byte, error) {
 		} else if len(obj.Errors) > 1 {
 			aux.Errors = obj.Errors
 		}
-		if len(obj.Payloads) == 1 {
-			aux.Payload = obj.Payloads[0]
-		} else if len(obj.Payloads) > 1 {
-			aux.Payloads = obj.Payloads
+
+		//Only add payloads if hasPayload is true
+		if obj.hasPayload {
+			if len(obj.Payloads) == 1 {
+				aux.Payload = obj.Payloads[0]
+			} else {
+				aux.Payloads = obj.Payloads
+			}
 		}
 	}
 

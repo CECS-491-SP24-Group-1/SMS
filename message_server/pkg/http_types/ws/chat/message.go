@@ -4,6 +4,11 @@ import (
 	"wraith.me/message_server/pkg/util"
 )
 
+var (
+	// The prefix of a server command.
+	CommandPrefix = '/'
+)
+
 // Represents an individual message within a chat room.
 type Message struct {
 	// Unique identifier for the message.
@@ -26,4 +31,18 @@ type Message struct {
 
 	// Attachments within the message (if any).
 	//Attachments []obj.Attachment `json:"attachments" bson:"attachments"`
+}
+
+// Checks whether this message is a command.
+func (m Message) IsCommand() bool {
+	return len(m.Content) > 0 && m.Content[0] == byte(CommandPrefix)
+}
+
+// Gets the command contained in the message, if it is one.
+func (m Message) GetCommand() string {
+	if !m.IsCommand() || len(m.Content) <= 1 {
+		return ""
+	} else {
+		return m.Content[2:]
+	}
 }

@@ -10,11 +10,11 @@ package challenge
 //etc.
 /*
 ENUM(
-	UNKNOWN, //The purpose of the challenge is unknown.
-	REGISTER, //The purpose of the challenge is to complete account registration.
-	LOGIN, //The purpose of the challenge is to perform account login.
-	DELETE, //The purpose of the challenge is to complete account deletion.
-	CONFIRM, //The purpose of the challenge is to confirm a claimed identity.
+	UNKNOWN 	//The purpose of the challenge is unknown.
+	REGISTER 	//The purpose of the challenge is to complete account registration.
+	LOGIN 		//The purpose of the challenge is to perform account login.
+	DELETE 		//The purpose of the challenge is to complete account deletion.
+	CONFIRM 	//The purpose of the challenge is to confirm a claimed identity.
 )
 */
 type CPurpose int8
