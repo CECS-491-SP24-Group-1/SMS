@@ -25,7 +25,7 @@ type HttpResponse[T any] struct {
 	Status string `json:"status"`
 
 	//The description of the response; default: `""`.
-	Desc string `json:"desc,omitempty"`
+	Desc string `json:"desc"`
 
 	//The errors of the server response, if any; default: `[]`.
 	Errors []string `json:"errors,omitempty"` //https://github.com/golang/go/issues/5161
@@ -47,16 +47,14 @@ func ErrResponse(code int, errs ...error) HttpResponse[bool] {
 	}
 
 	//Create the status message
-	estr := "error"
-	if len(errs) > 1 {
-		estr += "s"
-	}
-	status := fmt.Sprintf("%s; %d %s", http.StatusText(code), len(errs), estr)
+	desc := fmt.Sprintf("%d error", len(errs))
+	desc += If(len(errs) > 1, "s", "")
 
 	//Create the response
 	resp := HttpResponse[bool]{
 		Code:   code,
-		Status: status,
+		Status: http.StatusText(code) + "; " + desc,
+		Desc:   desc,
 		Errors: make([]string, len(errs)),
 	}
 
