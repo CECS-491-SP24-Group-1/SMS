@@ -1,0 +1,14 @@
+--- http_response.d.ts
++++ http_response.d.ts
+@@ -5,3 +5,3 @@
+ 
+-export interface HttpResponse<T extends any> {
++interface HttpResponseBase<T extends any> {
+ 	code: number /* int */;
+@@ -13 +13,6 @@
+ 
++
++export type HttpResponse<T> = T extends null
++	? HttpResponseBase<T> & { payloads?: never }
++	: HttpResponseBase<T> & { payloads: T[] };
++

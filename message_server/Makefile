@@ -150,5 +150,5 @@ run:
 ts:
 	$(TYGO)
 	@cd $(TYGO_DIR) && for patch in ../$(PATCH_DIR)/*.patch; do \
-		$(PATCH) < $$patch || exit 1; \
+		$(PATCH) --no-backup-if-mismatch -r - < $$patch || exit 1; \
 	done
