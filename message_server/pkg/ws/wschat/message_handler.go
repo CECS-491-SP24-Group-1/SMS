@@ -1,18 +1,16 @@
 package wschat
 
-import (
-	"github.com/olahol/melody"
-	"wraith.me/message_server/pkg/util"
-)
+import "github.com/olahol/melody"
 
 // Handles messages sent to the chat server by participants.
 func (w *Server) handleMessage(s *melody.Session, msg []byte) {
-	roomUUID, ok := s.Request.Context().Value(WSChatCtxRoomIDKey).(util.UUID)
-	if !ok {
+	//Get the ID of the room
+	roomUUID := getRoomID(s)
+	if roomUUID == nil {
 		return
 	}
 
-	room := w.getRoom(roomUUID)
+	room := w.getRoom(*roomUUID)
 	if room != nil && room.HasSession(s) {
 		if isValidMessage(msg) {
 			room.Broadcast(msg, nil)

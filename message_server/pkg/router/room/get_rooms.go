@@ -13,7 +13,7 @@ import (
 // Handles incoming requests made to `GET /api/chat/room/list`.
 func GetRoomsRoute(w http.ResponseWriter, r *http.Request) {
 	//Get the requestor's info
-	requestor := r.Context().Value(mw.AuthCtxUserKey).(user.User) //This assert is safe
+	requestor := r.Context().Value(mw.AuthCtxUserKey).(user.User)
 
 	//Construct the search query
 	innerKey := "participants." + requestor.ID.String()

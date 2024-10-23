@@ -41,15 +41,7 @@ func RoomRoutes() chi.Router {
 	mel = wschat.GetInstance()
 
 	//Add routes (unauthenticated)
-	r.Get("/{roomID}", JoinRoomRoute)
-
-	//Add routes (authenticated)
-	/*
-		r.Group(func(r chi.Router) {
-			//r.Use(mw.NewAuthMiddleware(env))
-			//r.Get("/sessions", SessionsRoute)
-		})
-	*/
+	// (nada)
 
 	//Add routes (authenticated)
 	r.Group(func(r chi.Router) {
@@ -59,6 +51,7 @@ func RoomRoutes() chi.Router {
 		//Bind routes
 		r.Post("/create", CreateRoomRoute)
 		r.Get("/list", GetRoomsRoute)
+		r.Get("/{roomID}", JoinRoomRoute)
 	})
 
 	//Return the router

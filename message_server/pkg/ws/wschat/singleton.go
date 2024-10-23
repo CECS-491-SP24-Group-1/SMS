@@ -24,7 +24,7 @@ wrapper on a Melody server that's responsible for chats.
 type Server struct {
 	melody *melody.Melody
 	mutex  *sync.Mutex
-	rooms  map[util.UUID]*Room
+	rooms  map[util.UUID]*WSRoom
 	roomMu sync.RWMutex
 }
 
@@ -34,7 +34,7 @@ func GetInstance() *Server {
 		instance = &Server{
 			melody: melody.New(),
 			mutex:  &sync.Mutex{},
-			rooms:  make(map[util.UUID]*Room),
+			rooms:  make(map[util.UUID]*WSRoom),
 		}
 		instance.setupHandlers()
 	})
@@ -47,7 +47,7 @@ func (w *Server) GetMelody() *melody.Melody {
 }
 
 // Attempts to get a room by ID. If it doesn't exist, a new one is created.
-func (w *Server) getOrCreateRoom(id util.UUID) *Room {
+func (w *Server) getOrCreateRoom(id util.UUID) *WSRoom {
 	w.roomMu.Lock()
 	defer w.roomMu.Unlock()
 
@@ -61,7 +61,7 @@ func (w *Server) getOrCreateRoom(id util.UUID) *Room {
 }
 
 // Gets a room by ID.
-func (w *Server) getRoom(id util.UUID) *Room {
+func (w *Server) getRoom(id util.UUID) *WSRoom {
 	w.roomMu.RLock()
 	defer w.roomMu.RUnlock()
 
