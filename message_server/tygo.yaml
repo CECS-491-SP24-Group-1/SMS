@@ -33,7 +33,7 @@ packages:
     type_mappings:
       util.UUID: "string"
       #Tygo doesn't properly apply this line, so its applied as a patch
-      Type: '"UNKNOWN" | "U_MSG" | "S_MSG" | "S_ERR" | "JOIN_EVENT" | "QUIT_EVENT" | "EK" | "KEX1" | "KEX2"'
+      Type: ""
     exclude_files:
       - "type_enum.go"
 
@@ -45,7 +45,7 @@ packages:
     type_mappings:
       util.UUID: "string"
       #Tygo doesn't properly apply this line, so its applied as a patch
-      Role: '"MEMBER" | "MODERATOR" | "OWNER"'
+      Role: ""
     exclude_files:
       - "room_collection.go"
       #- "role.go"

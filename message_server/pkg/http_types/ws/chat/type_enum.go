@@ -24,6 +24,8 @@ const (
 	TypeJOINEVENT
 	// A user left the room.
 	TypeQUITEVENT
+	// Membership announcement message.
+	TypeMEMBERSHIP
 	// An encryption key sent by a user for the purpose of decrypting a group message.
 	TypeEK
 	// Step 1 of an X3DH KEX operation.
@@ -34,7 +36,7 @@ const (
 
 var ErrInvalidType = fmt.Errorf("not a valid Type, try [%s]", strings.Join(_TypeNames, ", "))
 
-const _TypeName = "UNKNOWNU_MSGS_MSGS_ERRJOIN_EVENTQUIT_EVENTEKKEX1KEX2"
+const _TypeName = "UNKNOWNU_MSGS_MSGS_ERRJOIN_EVENTQUIT_EVENTMEMBERSHIPEKKEX1KEX2"
 
 var _TypeNames = []string{
 	_TypeName[0:7],
@@ -43,9 +45,10 @@ var _TypeNames = []string{
 	_TypeName[17:22],
 	_TypeName[22:32],
 	_TypeName[32:42],
-	_TypeName[42:44],
-	_TypeName[44:48],
-	_TypeName[48:52],
+	_TypeName[42:52],
+	_TypeName[52:54],
+	_TypeName[54:58],
+	_TypeName[58:62],
 }
 
 // TypeNames returns a list of possible string values of Type.
@@ -64,6 +67,7 @@ func TypeValues() []Type {
 		TypeSERR,
 		TypeJOINEVENT,
 		TypeQUITEVENT,
+		TypeMEMBERSHIP,
 		TypeEK,
 		TypeKEX1,
 		TypeKEX2,
@@ -71,15 +75,16 @@ func TypeValues() []Type {
 }
 
 var _TypeMap = map[Type]string{
-	TypeUNKNOWN:   _TypeName[0:7],
-	TypeUMSG:      _TypeName[7:12],
-	TypeSMSG:      _TypeName[12:17],
-	TypeSERR:      _TypeName[17:22],
-	TypeJOINEVENT: _TypeName[22:32],
-	TypeQUITEVENT: _TypeName[32:42],
-	TypeEK:        _TypeName[42:44],
-	TypeKEX1:      _TypeName[44:48],
-	TypeKEX2:      _TypeName[48:52],
+	TypeUNKNOWN:    _TypeName[0:7],
+	TypeUMSG:       _TypeName[7:12],
+	TypeSMSG:       _TypeName[12:17],
+	TypeSERR:       _TypeName[17:22],
+	TypeJOINEVENT:  _TypeName[22:32],
+	TypeQUITEVENT:  _TypeName[32:42],
+	TypeMEMBERSHIP: _TypeName[42:52],
+	TypeEK:         _TypeName[52:54],
+	TypeKEX1:       _TypeName[54:58],
+	TypeKEX2:       _TypeName[58:62],
 }
 
 // String implements the Stringer interface.
@@ -104,9 +109,10 @@ var _TypeValue = map[string]Type{
 	_TypeName[17:22]: TypeSERR,
 	_TypeName[22:32]: TypeJOINEVENT,
 	_TypeName[32:42]: TypeQUITEVENT,
-	_TypeName[42:44]: TypeEK,
-	_TypeName[44:48]: TypeKEX1,
-	_TypeName[48:52]: TypeKEX2,
+	_TypeName[42:52]: TypeMEMBERSHIP,
+	_TypeName[52:54]: TypeEK,
+	_TypeName[54:58]: TypeKEX1,
+	_TypeName[58:62]: TypeKEX2,
 }
 
 // ParseType attempts to convert a string to a Type.
