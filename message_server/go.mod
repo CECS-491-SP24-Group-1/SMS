@@ -41,6 +41,7 @@ require (
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/olahol/melody v1.2.1 // indirect
+	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208 // indirect
