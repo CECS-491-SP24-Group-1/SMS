@@ -19,11 +19,15 @@ services:
     depends_on:
       - mongodb
       - redis
+      - amqp
     environment:
       - SRV_BIND_ADDR=0.0.0.0
       - MGO_CONN_STR=mongodb://mongodb:27017
       - RED_HOST=redis
       - EMAIL_ENABLED=false
+      - AMQP_HOST=amqp
+      - AMQP_USERNAME=guest
+      - AMQP_PASSWORD=guest
       - CLI_BASE_URL=http://localhost:8080
       - SRV_BASE_URL=http://localhost:8888/api
     networks:
@@ -32,6 +36,7 @@ services:
       - "8888:8888"
     volumes:
       - ./message_server:/wraith_sms
+    #user: "${UID:-1000}:${GID:-1000}"  # Default to 1000 if not set
 
   #MongoDB database container
   mongodb:
@@ -56,3 +61,16 @@ services:
       - wraithnet
     ports:
       - "6380:6379"
+
+  #LavinMQ message broker
+  amqp:
+    image: cloudamqp/lavinmq:latest
+    container_name: wraith_amqp
+    hostname: wraith_amqp
+    restart: unless-stopped
+    attach: false
+    networks:
+      - wraithnet
+    ports:
+      - "5673:5672"
+      - "15673:15672"
