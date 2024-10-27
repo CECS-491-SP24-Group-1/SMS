@@ -18,14 +18,16 @@ func TestConsumer(t *testing.T) {
 	}
 	/* COMMON STOP */
 
-	//Peek at the queue to get the number of messages that can be consumed
-	messageCount, err := QueuePeek(ch, q.Name)
-	if err != nil {
-		t.Fatalf("Failed to peek at queue with error %s", err)
-	}
+	/*
+		//Peek at the queue to get the number of messages that can be consumed
+		messageCount, err := QueuePeek(ch, q.Name)
+		if err != nil {
+			t.Fatalf("Failed to peek at queue with error %s", err)
+		}
+	*/
 
 	//Show the number of messages
-	fmt.Printf("Found %d messages to consume from queue %s\n", messageCount, q.Name)
+	fmt.Printf("Found %d messages to consume from queue %s\n", q.Messages, q.Name)
 
 	//Setup a queue consumer
 	msgs, err := ch.Consume(
