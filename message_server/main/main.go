@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"wraith.me/message_server/pkg/amqp"
 	"wraith.me/message_server/pkg/config"
 	"wraith.me/message_server/pkg/consts"
 	"wraith.me/message_server/pkg/db"
@@ -50,21 +51,29 @@ func main() {
 	//Connect to MongoDB
 	_, merr := db.GetInstance().Connect(&cfg.MongoDB)
 	if merr != nil {
-		panic(merr)
+		panic(fmt.Sprintf("mongodb connection: %s", merr))
 	}
 	defer db.GetInstance().Disconnect()
 
 	//Connect to Redis
 	rclient, rerr := cr.GetInstance().Connect(&cfg.Redis)
 	if rerr != nil {
-		panic(rerr)
+		panic(fmt.Sprintf("redis connection: %s", rerr))
 	}
 
 	//Connect to the SMTP server
-	_, eerr := email.GetInstance().Connect(&cfg.Email)
+	eclient, eerr := email.GetInstance().Connect(&cfg.Email)
 	if eerr != nil {
-		panic(eerr)
+		panic(fmt.Sprintf("email connection: %s", eerr))
 	}
+	defer eclient.Close()
+
+	//Connect to AMQP
+	amqpclient, aerr := amqp.GetInstance().Connect(&cfg.AMQP)
+	if aerr != nil {
+		panic(fmt.Sprintf("amqp connection: %s", aerr))
+	}
+	defer amqpclient.Close()
 
 	//Setup globals
 	globals.Initialize(&cfg, &env)

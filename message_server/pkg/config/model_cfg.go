@@ -9,6 +9,7 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/golobby/config/v3"
 	"github.com/golobby/config/v3/pkg/feeder"
+	"wraith.me/message_server/pkg/amqp"
 	"wraith.me/message_server/pkg/db"
 	"wraith.me/message_server/pkg/email"
 	"wraith.me/message_server/pkg/obj/token"
@@ -52,6 +53,9 @@ type Config struct {
 
 	//SMTP configuration
 	Email email.EConfig `toml:"email"`
+
+	//AMQP configuration
+	AMQP amqp.AMQPConfig `toml:"amqp"`
 
 	//Token configuration
 	Token token.TConfig `toml:"token"`
