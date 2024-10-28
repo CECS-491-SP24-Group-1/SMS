@@ -1,8 +1,6 @@
 package wschat
 
 import (
-	"fmt"
-
 	"github.com/olahol/melody"
 	"wraith.me/message_server/pkg/http_types/ws/chat"
 	"wraith.me/message_server/pkg/util"
@@ -40,12 +38,15 @@ func (w *Server) handleConnect(s *melody.Session) {
 		return
 	}
 
+	//Get the number of users currently in the room
+	currentUsers := room.Size()
+
 	//Add the user to the room
 	room.AddSession(s, uinfo)
 
 	//Send the MOTD to the connecting user and announce the membership change
 	s.Write([]byte("Welcome to the room!"))
-	announceMembershipChange(s, room, true)
+	announceMembershipChange(s, room, currentUsers)
 }
 
 // Handles disconnections from the chat server.
@@ -59,11 +60,14 @@ func (w *Server) handleDisconnect(s *melody.Session) {
 	//Get the room instance and eject the session if it's non-null
 	room := w.getRoom(*roomUUID)
 	if room != nil {
+		//Get the number of users currently in the room
+		currentUsers := room.Size()
+
 		//Remove the current session handler for the user
 		room.RemoveSession(s)
 
 		//Broadcast the membership change event
-		announceMembershipChange(s, room, false)
+		announceMembershipChange(s, room, currentUsers)
 
 		//Eject the room from the handler if the last person left
 		if room.IsEmpty() {
@@ -73,14 +77,21 @@ func (w *Server) handleDisconnect(s *melody.Session) {
 }
 
 // Announces the membership info to the room.
-func announceMembershipChange(s *melody.Session, room *WSRoom, joined bool) {
-	//Construct the initial message
-	content := fmt.Sprintf(
-		"A user %s the room. There are %d members online.",
-		util.If(joined, "joined", "left"),
-		room.Size(),
-	)
-	msg := chat.NewMessage(content, room.ID, room.ID)
+func announceMembershipChange(s *melody.Session, room *WSRoom, oldSize int) {
+	//Get the numbers of members in the room after the change
+	newSize := room.Size()
+
+	//Get the type of membership change event
+	typ := util.If(newSize > oldSize, chat.TypeJOINEVENT, chat.TypeQUITEVENT)
+
+	//Construct the inner membership change event message
+	content := chat.MembershipChange{
+		Old: oldSize,
+		New: newSize,
+	}
+
+	//Create the message
+	msg := chat.NewMessageTyp(string(content.JSON()), room.ID, room.ID, typ)
 
 	//Broadcast to the room
 	room.Broadcast(msg.JSON(), s)

@@ -35,15 +35,20 @@ type Message struct {
 	//Attachments []obj.Attachment `json:"attachments" bson:"attachments"`
 }
 
-// Creates a new message.
-func NewMessage(content string, sid util.UUID, rid util.UUID) Message {
+// Creates a new message, with type field.
+func NewMessageTyp(content string, sid util.UUID, rid util.UUID, typ Type) Message {
 	return Message{
 		ID:        util.MustNewUUID7(),
-		Type:      TypeSMSG,
+		Type:      typ,
 		Sender:    sid,
 		Recipient: rid,
 		Content:   content,
 	}
+}
+
+// Creates a new message.
+func NewMessage(content string, sid util.UUID, rid util.UUID) Message {
+	return NewMessageTyp(content, sid, rid, TypeSMSG)
 }
 
 // Checks whether this message is a command.
