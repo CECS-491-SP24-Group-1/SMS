@@ -2,6 +2,7 @@ package wschat
 
 import (
 	"github.com/olahol/melody"
+	chatroom "wraith.me/message_server/pkg/schema/chat_room"
 	"wraith.me/message_server/pkg/util"
 )
 
@@ -23,4 +24,14 @@ func getUserID(s *melody.Session) *util.UUID {
 		return nil
 	}
 	return &ctx.MemberID
+}
+
+// Gets the membership info of the room.
+func getMembershipList(s *melody.Session) chatroom.MembershipList {
+	//Get the membership info
+	ctx, ok := s.Request.Context().Value(WSChatCtxObjKey).(Context)
+	if !ok {
+		return nil
+	}
+	return ctx.Participants
 }

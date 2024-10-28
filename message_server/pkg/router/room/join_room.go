@@ -56,13 +56,14 @@ func JoinRoomRoute(w http.ResponseWriter, r *http.Request) {
 
 	//Create the context object
 	ctx := wschat.Context{
-		RoomID:   rid,
-		MemberID: requestor.ID,
+		RoomID:       rid,
+		MemberID:     requestor.ID,
+		Participants: room.Participants,
 	}
 
 	fmt.Printf("user %s attempted to join room %s\n", requestor.ID, rid)
 
-	//Set the room ID and user ID in the request context and handle the connection
+	//Set the request context and handle the connection
 	r = r.WithContext(context.WithValue(r.Context(), wschat.WSChatCtxObjKey, ctx))
 	mel.GetMelody().HandleRequest(w, r)
 }

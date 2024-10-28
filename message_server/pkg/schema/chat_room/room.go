@@ -5,6 +5,9 @@ import (
 	"wraith.me/message_server/pkg/util"
 )
 
+// A map that pairs a user ID with a role.
+type MembershipList map[util.UUID]Role
+
 // Represents a chat room containing multiple participants and messages.
 type Room struct {
 	db.DBObj `bson:",inline"`
@@ -13,7 +16,7 @@ type Room struct {
 	ID util.UUID `json:"id" bson:"_id"`
 
 	// The list of participants in the chat room, represented by their UUIDs.
-	Participants map[util.UUID]Role `json:"participants" bson:"participants"`
+	Participants MembershipList `json:"participants" bson:"participants"`
 
 	// The list of messages in the chat room.
 	//Messages []chat.ChatMessage `json:"messages" bson:"-"`

@@ -50,13 +50,19 @@ func (r *WSRoom) AddSession(s *melody.Session, userData *UserData) bool {
 }
 
 // Broadcasts a message to the room.
-func (r *WSRoom) Broadcast(msg []byte, exclude *melody.Session) {
+func (r *WSRoom) Broadcast(msg []byte, excludes ...*melody.Session) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	//TODO: add ability to exclude multiple sessions or by user ID
+	//Create a map for quick lookup of excluded sessions
+	excludeMap := make(map[*melody.Session]bool)
+	for _, exclude := range excludes {
+		excludeMap[exclude] = true
+	}
+
+	//Iterate through the sessions map and send the message
 	for session := range r.sessions {
-		if session != exclude {
+		if !excludeMap[session] {
 			session.Write(msg)
 		}
 	}

@@ -29,6 +29,7 @@ func (w *Server) handleConnect(s *melody.Session) {
 	}
 
 	//Get an existing room or create a new one
+	//TODO: pass in membership info via `getMembershipList()`
 	room := w.getOrCreateRoom(*roomID)
 
 	//Reject the session if the user is already in the room
@@ -44,8 +45,7 @@ func (w *Server) handleConnect(s *melody.Session) {
 	//Add the user to the room
 	room.AddSession(s, uinfo)
 
-	//Send the MOTD to the connecting user and announce the membership change
-	s.Write([]byte("Welcome to the room!"))
+	//Announce the membership change
 	announceMembershipChange(s, room, currentUsers)
 }
 
@@ -77,7 +77,7 @@ func (w *Server) handleDisconnect(s *melody.Session) {
 }
 
 // Announces the membership info to the room.
-func announceMembershipChange(s *melody.Session, room *WSRoom, oldSize int) {
+func announceMembershipChange(_ *melody.Session, room *WSRoom, oldSize int) {
 	//Get the numbers of members in the room after the change
 	newSize := room.Size()
 
@@ -94,5 +94,5 @@ func announceMembershipChange(s *melody.Session, room *WSRoom, oldSize int) {
 	msg := chat.NewMessageTyp(string(content.JSON()), room.ID, room.ID, typ)
 
 	//Broadcast to the room
-	room.Broadcast(msg.JSON(), s)
+	room.Broadcast(msg.JSON())
 }
