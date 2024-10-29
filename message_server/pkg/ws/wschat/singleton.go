@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/olahol/melody"
+	chatroom "wraith.me/message_server/pkg/schema/chat_room"
 	"wraith.me/message_server/pkg/util"
 )
 
@@ -47,7 +48,7 @@ func (w *Server) GetMelody() *melody.Melody {
 }
 
 // Attempts to get a room by ID. If it doesn't exist, a new one is created.
-func (w *Server) getOrCreateRoom(id util.UUID) *WSRoom {
+func (w *Server) getOrCreateRoom(id util.UUID, participants chatroom.MembershipList) *WSRoom {
 	w.roomMu.Lock()
 	defer w.roomMu.Unlock()
 
@@ -56,6 +57,7 @@ func (w *Server) getOrCreateRoom(id util.UUID) *WSRoom {
 	}
 
 	room := NewRoom(id)
+	room.participants = participants
 	w.rooms[id] = room
 	return room
 }

@@ -27,7 +27,7 @@ func getUserID(s *melody.Session) *util.UUID {
 }
 
 // Gets the membership info of the room.
-func getMembershipList(s *melody.Session) chatroom.MembershipList {
+func getParticipants(s *melody.Session) chatroom.MembershipList {
 	//Get the membership info
 	ctx, ok := s.Request.Context().Value(WSChatCtxObjKey).(Context)
 	if !ok {

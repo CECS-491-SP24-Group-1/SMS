@@ -4,23 +4,26 @@ import (
 	"sync"
 
 	"github.com/olahol/melody"
+	chatroom "wraith.me/message_server/pkg/schema/chat_room"
 	"wraith.me/message_server/pkg/util"
 )
 
 // Represents an active chatroom instance.
 type WSRoom struct {
-	ID       util.UUID
-	sessions map[*melody.Session]*UserData
-	userIDs  map[util.UUID]*melody.Session
-	mu       sync.RWMutex
+	ID           util.UUID
+	sessions     map[*melody.Session]*UserData
+	userIDs      map[util.UUID]*melody.Session
+	participants chatroom.MembershipList
+	mu           sync.RWMutex
 }
 
 // Creates a new room.
 func NewRoom(id util.UUID) *WSRoom {
 	return &WSRoom{
-		ID:       id,
-		sessions: make(map[*melody.Session]*UserData),
-		userIDs:  make(map[util.UUID]*melody.Session),
+		ID:           id,
+		sessions:     make(map[*melody.Session]*UserData),
+		userIDs:      make(map[util.UUID]*melody.Session),
+		participants: make(chatroom.MembershipList),
 	}
 }
 

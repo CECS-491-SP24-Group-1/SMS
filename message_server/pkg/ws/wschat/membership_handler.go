@@ -29,8 +29,7 @@ func (w *Server) handleConnect(s *melody.Session) {
 	}
 
 	//Get an existing room or create a new one
-	//TODO: pass in membership info via `getMembershipList()`
-	room := w.getOrCreateRoom(*roomID)
+	room := w.getOrCreateRoom(*roomID, getParticipants(s))
 
 	//Reject the session if the user is already in the room
 	if room.HasUser(uinfo.ID) {
