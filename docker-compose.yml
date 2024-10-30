@@ -40,7 +40,7 @@ services:
 
   #MongoDB database container
   mongodb:
-    image: bitnami/mongodb:latest
+    image: mongo:latest
     container_name: wraith_mdb
     hostname: wraith_mdb
     restart: unless-stopped
