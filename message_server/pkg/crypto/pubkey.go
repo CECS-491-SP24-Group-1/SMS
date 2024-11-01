@@ -1,18 +1,12 @@
 package crypto
 
 import (
-	"crypto/ed25519"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-)
-
-const (
-	//The size of a public key in bytes.
-	PUBKEY_SIZE = ed25519.PublicKeySize
 )
 
 //
