@@ -36,6 +36,7 @@ func UserRoutes() chi.Router {
 	r.Group(func(r chi.Router) {
 		r.Use(mw.NewAuthMiddleware(env))
 		r.Patch(`/changeName`, changeUserName)
+		r.Get(`/me`, getMyInfo)
 	})
 
 	//Return the router
