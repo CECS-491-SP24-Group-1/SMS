@@ -44,6 +44,21 @@ func changeUserName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Update the username in the database
+	filter := bson.M{"_id": user.ID}
+	update := bson.M{"$set": bson.M{
+		"username": req.NewUsername,
+		"display_name": req.NewUsername,
+	}}
+	if err := uc.UpdateOne(r.Context(), filter, update); err != nil {
+		util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
+		return
+	}
+
+	// Update the current Go User object
+	user.Username = req.NewUsername
+	user.DisplayName = req.NewUsername
+
 	util.PayloadOkResponse(fmt.Sprintf("username changed successfully"), user).Respond(w)
 }
 
