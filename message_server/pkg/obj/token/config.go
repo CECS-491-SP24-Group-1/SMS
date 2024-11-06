@@ -21,8 +21,9 @@ type TConfig struct {
 	//The path at which access token cookies are valid.
 	AccessCookiePath string `toml:"access_cookie_path" env:"TOK_ACCESS_COOKIE_PATH" default:"/api"`
 
+	//TODO: Add /api/auth for production
 	//The path at which refresh token cookies are valid.
-	RefreshCookiePath string `toml:"refresh_cookie_path" env:"TOK_REFRESH_COOKIE_PATH" default:"/api/auth"`
+	RefreshCookiePath string `toml:"refresh_cookie_path" env:"TOK_REFRESH_COOKIE_PATH" default:"/api"`
 }
 
 func DefaultTConfig() *TConfig {
