@@ -52,6 +52,7 @@ func RoomRoutes() chi.Router {
 		r.Post("/create", CreateRoomRoute)
 		r.Get("/list", GetRoomsRoute)
 		r.Get("/{roomID}", JoinRoomRoute)
+		r.Post("/{roomID}/leave", LeaveRoomRoute)
 	})
 
 	//Return the router
