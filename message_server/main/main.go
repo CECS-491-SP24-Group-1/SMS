@@ -19,6 +19,7 @@ import (
 	"wraith.me/message_server/pkg/router/auth"
 	"wraith.me/message_server/pkg/router/challenges"
 	"wraith.me/message_server/pkg/router/room"
+	"wraith.me/message_server/pkg/router/user"
 	"wraith.me/message_server/pkg/task"
 
 	"github.com/go-chi/chi/v5"
@@ -167,6 +168,9 @@ func setupServer() chi.Router {
 		//r.Use(mw.NewAuthMiddleware(authScopes))
 		r.Mount("/challenges", challenges.ChallengeRoutes())
 	})
+
+	//User routes
+	apir.Mount("/user", user.UserRoutes())
 
 	//Chat routes
 	apir.Mount("/chat/room", room.RoomRoutes())
