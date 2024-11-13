@@ -15,7 +15,8 @@ import (
 	"wraith.me/message_server/pkg/util"
 )
 
-func changeUserName(w http.ResponseWriter, r *http.Request) {
+// Handles incoming requests made to `PATCH /api/user/username`.
+func ChangeUnameRoute(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		NewUsername string `json:"username"`
 	}
@@ -47,7 +48,7 @@ func changeUserName(w http.ResponseWriter, r *http.Request) {
 	// Update the username in the database
 	filter := bson.M{"_id": user.ID}
 	update := bson.M{"$set": bson.M{
-		"username": req.NewUsername,
+		"username":     req.NewUsername,
 		"display_name": req.NewUsername,
 	}}
 	if err := uc.UpdateOne(r.Context(), filter, update); err != nil {
@@ -59,7 +60,7 @@ func changeUserName(w http.ResponseWriter, r *http.Request) {
 	user.Username = req.NewUsername
 	user.DisplayName = req.NewUsername
 
-	util.PayloadOkResponse(fmt.Sprintf("username changed successfully"), user).Respond(w)
+	util.PayloadOkResponse("username changed successfully", user).Respond(w)
 }
 
 /*
