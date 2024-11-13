@@ -1,6 +1,6 @@
 --- room.d.ts
 +++ room.d.ts
-@@ -3,13 +3,14 @@
+@@ -3,14 +3,14 @@
  //////////
  // source: role.go
  
@@ -10,11 +10,12 @@
  //////////
  // source: room.go
  
+-export type MembershipList = { [key: string]: Role};
  export interface Room {
 -	DBObj: any /* db.DBObj */;
 +	created_at: string;
 +	updated_at: string;
  	id: string;
--	participants: { [key: string]: Role};
+-	participants: MembershipList;
 +	participants: { [rid: string]: Role };
  }
