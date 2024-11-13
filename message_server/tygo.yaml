@@ -25,6 +25,7 @@ packages:
     type_mappings:
       util.UUID: "string"
       crypto.Pubkey: "string"
+      time.Time: "string"
 
   # ws/chat/*.go
   - path: "wraith.me/message_server/pkg/http_types/ws/chat"

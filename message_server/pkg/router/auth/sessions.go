@@ -4,22 +4,13 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"net/http"
-	"time"
 
+	"wraith.me/message_server/pkg/http_types/response"
 	"wraith.me/message_server/pkg/mw"
 	"wraith.me/message_server/pkg/obj/token"
 	"wraith.me/message_server/pkg/schema/user"
 	"wraith.me/message_server/pkg/util"
 )
-
-// Defines the structure of a session.
-type session struct {
-	IsCurrent bool      `json:"is_current"`
-	Created   time.Time `json:"created"`
-	Expires   time.Time `json:"expires"`
-	IP        string    `json:"ip"`
-	UserAgent string    `json:"string"`
-}
 
 // Handles incoming requests made to `GET /api/auth/sessions`.
 func SessionsRoute(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +19,7 @@ func SessionsRoute(w http.ResponseWriter, r *http.Request) {
 	ptid := r.Header.Get(mw.AuthAccessParentTokID)
 
 	//Collect the tokens into a map; select attributes are added, but not the whole token
-	sessions := make(map[string]session)
+	sessions := make(response.SessionsList)
 	for rtid, tok := range user.Tokens {
 		//Decrypt the current refresh token
 		dtok, err := token.Decrypt(
@@ -46,7 +37,8 @@ func SessionsRoute(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//Add the session
-		sessions[rtid] = session{
+		sessions[rtid] = response.Session{
+			ID:        dtok.ID.String(),
 			IsCurrent: subtle.ConstantTimeCompare([]byte(ptid), []byte(rtid)) == 1,
 			Created:   dtok.Issued,
 			Expires:   dtok.Expiry,

@@ -43,6 +43,7 @@ func AuthRoutes() chi.Router {
 	//Add routes (authenticated)
 	r.Group(func(r chi.Router) {
 		r.Use(mw.NewAuthMiddleware(env))
+		r.Get("/current", CurrentSeshRoute)
 		r.Get("/sessions", SessionsRoute)
 	})
 

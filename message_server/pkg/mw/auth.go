@@ -36,6 +36,9 @@ var (
 
 	//The key of the user object that's passed via `r.Context`.
 	AuthCtxUserKey = obj.CtxKey{S: "ReqUser"}
+
+	//The key of the access token object that's passed via `r.Context`.
+	AuthCtxAccessTokKey = obj.CtxKey{S: "ReqAccessTok"}
 )
 
 // Holds the error messages.
@@ -201,13 +204,15 @@ func (amw authMiddleware) authMWHandler(next http.Handler) http.Handler {
 		//TODO: count access token usages via Redis
 
 		//Add headers to the request (auth subject and token scope)
+		//DEPRECATED: use access token obj instead
 		r.Header.Add(AuthHttpHeaderSubject, tokSubject.String())
 		r.Header.Add(AuthAccessTokID, tokObj.ID.String())
 		r.Header.Add(AuthAccessParentTokID, tokObj.Parent.String())
 
-		//Add the user to the request context
+		//Add the user and access token to the request context
 		//https://go.dev/blog/context#TOC_3.2.
 		ctx := context.WithValue(r.Context(), AuthCtxUserKey, user)
+		ctx = context.WithValue(ctx, AuthCtxAccessTokKey, *tokObj)
 		r = r.WithContext(ctx)
 
 		//Forward the request; authentication passed successfully

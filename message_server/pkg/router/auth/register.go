@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -45,7 +46,7 @@ func RegisterUserRoute(w http.ResponseWriter, r *http.Request) {
 		//Collect the validation errors and report them to the client
 		verrs := make([]error, len(result.Errors()))
 		for i, err := range result.Errors() {
-			verrs[i] = fmt.Errorf(err.Description())
+			verrs[i] = errors.New(err.Description())
 		}
 		util.ErrResponse(http.StatusBadRequest, verrs...).Respond(w)
 		return
