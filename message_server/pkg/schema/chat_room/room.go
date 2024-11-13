@@ -1,6 +1,8 @@
 package chatroom
 
 import (
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/rand"
 	"wraith.me/message_server/pkg/db"
 	"wraith.me/message_server/pkg/util"
 )
@@ -42,6 +44,50 @@ func NewRoom(owner util.UUID, participants ...util.UUID) Room {
 		ID:           util.MustNewUUID7(),
 		Participants: members,
 	}
+}
+
+// Returns whether the room is empty, and thus, safe to remove.
+func (r Room) IsEmpty() bool {
+	return r.Size() < 1
+}
+
+// Removes a member from the room.
+func (r *Room) RemoveMember(participant util.UUID) {
+	//Get the role of the user to remove and the number of people in the room
+	targetRole := r.Participants[participant]
+	countBefore := len(r.Participants)
+
+	//Remove the user from the room
+	delete(r.Participants, participant)
+
+	//Break if the room is now empty
+	countAfter := len(r.Participants)
+	if countAfter == 0 {
+		return
+	}
+
+	//If the count is now different, then continue
+	if countAfter < countBefore {
+		//If the user that left was the owner, then pick a random user to be the owner
+		if targetRole == RoleOWNER {
+			//Pick a winner
+			users := r.Users()
+			newOwner := users[rand.Intn(len(users))]
+
+			//Reassign the role of the picked user
+			r.Participants[newOwner] = RoleOWNER
+		}
+	}
+}
+
+// Gets the number of users in the room.
+func (r Room) Size() int {
+	return len(r.Users())
+}
+
+// Gets the list of users currently in the room.
+func (r Room) Users() []util.UUID {
+	return maps.Keys(r.Participants)
 }
 
 /*
