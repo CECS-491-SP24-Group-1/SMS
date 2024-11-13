@@ -16,15 +16,6 @@ import (
 // UUID represents a UUID as saved in MongoDB.
 type UUID struct{ uuid.UUID }
 
-// NewUUID generates a new MongoDB compatible UUID.
-func NewUUID4() (res UUID, err error) {
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return
-	}
-	return UUID{UUID: id}, nil
-}
-
 // Generates a new version 4 UUID. Panics if an error occurs.
 func MustNewUUID4() UUID {
 	uuid, err := NewUUID4()
@@ -32,6 +23,15 @@ func MustNewUUID4() UUID {
 		panic(err)
 	}
 	return uuid
+}
+
+// NewUUID generates a new MongoDB compatible UUID.
+func NewUUID4() (res UUID, err error) {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return
+	}
+	return UUID{UUID: id}, nil
 }
 
 // NewUUID generates a new MongoDB compatible UUID.
