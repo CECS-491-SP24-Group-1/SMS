@@ -1,8 +1,12 @@
 package chatroom
 
 import (
+	"fmt"
+	"math/big"
+
+	"crypto/rand"
+
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/rand"
 	"wraith.me/message_server/pkg/db"
 	"wraith.me/message_server/pkg/util"
 )
@@ -70,9 +74,17 @@ func (r *Room) RemoveMember(participant util.UUID) {
 	if countAfter < countBefore {
 		//If the user that left was the owner, then pick a random user to be the owner
 		if targetRole == RoleOWNER {
-			//Pick a winner
+			//Get the list of users still in the room
 			users := r.Users()
-			newOwner := users[rand.Intn(len(users))]
+
+			//Generate a secure random number between 0 and max-1
+			n, err := rand.Int(rand.Reader, big.NewInt(int64(len(users))))
+			if err != nil {
+				panic(fmt.Sprintf("RemoveMember::pickAWinner: %s", err))
+			}
+
+			//Pick a winner
+			newOwner := users[n.Int64()]
 
 			//Reassign the role of the picked user
 			r.Participants[newOwner] = RoleOWNER
