@@ -108,6 +108,26 @@ func GenRandString(s int) (string, error) {
 	return base64.URLEncoding.EncodeToString(b), err
 }
 
+// Gets all keys in a map that have a specific value.
+func GetKeysByValue[T comparable, U comparable](m map[T]U, values ...U) []T {
+	//Create the output list
+	var keys []T
+	valueSet := make(map[U]struct{}, len(values))
+
+	//Create a set of values for efficient lookup
+	for _, v := range values {
+		valueSet[v] = struct{}{}
+	}
+
+	//Check each map entry against the set of values
+	for k, v := range m {
+		if _, exists := valueSet[v]; exists {
+			keys = append(keys, k)
+		}
+	}
+	return keys
+}
+
 // Gets the first item in a map.
 func GetSingular[K comparable, V any](mp map[K]V) (*V, error) {
 	if len(mp) > 0 {

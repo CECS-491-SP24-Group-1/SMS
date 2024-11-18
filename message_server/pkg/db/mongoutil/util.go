@@ -2,6 +2,7 @@ package mongoutil
 
 import (
 	"github.com/qiniu/qmgo"
+	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/pkg/util"
 )
 
@@ -20,4 +21,13 @@ func Aggregate2IDArr(agg qmgo.AggregateI) ([]util.UUID, error) {
 		out[i] = uuid["_id"]
 	}
 	return out, nil
+}
+
+// Creates a BSON array out of a slice.
+func Slice2BsonA[T any](slice []T) bson.A {
+	bsonArray := make(bson.A, len(slice))
+	for i, s := range slice {
+		bsonArray[i] = s
+	}
+	return bsonArray
 }

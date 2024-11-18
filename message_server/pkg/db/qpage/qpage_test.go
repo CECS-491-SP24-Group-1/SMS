@@ -12,6 +12,9 @@ import (
 	"github.com/qiniu/qmgo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/exp/maps"
+	"wraith.me/message_server/pkg/db/mongoutil"
+	"wraith.me/message_server/pkg/util"
 )
 
 type todo struct {
@@ -19,6 +22,20 @@ type todo struct {
 	Desc      string             `json:"desc" bson:"desc"`
 	Owner     string             `json:"owner" bson:"owner"`
 	Completed bool               `json:"completed" bson:"completed"`
+}
+
+// Name::IsMale
+var names = map[string]bool{
+	"Furina":      false,
+	"Zhongli":     true,
+	"Xilonen":     false,
+	"Neuvillette": true,
+	"Kazuha":      true,
+	"Bennett":     true,
+	"Navia":       false,
+	"Arlecchino":  false,
+	"Chiori":      false,
+	"Yelan":       false,
 }
 
 func NewTodo(desc, owner string) todo {
@@ -30,9 +47,6 @@ func NewTodo(desc, owner string) todo {
 		desc = fmt.Sprintf("Untitled TODO with ID %s", oid.Hex())
 	}
 	if owner == "" {
-		//Define the names list
-		names := []string{"Furina", "Zhongli", "Xilonen", "Neuvillette", "Kazuha", "Bennett", "Navia", "Arlecchino", "Chiori", "Yelan"}
-
 		//Get a random number
 		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(names))))
 		if err != nil {
@@ -40,7 +54,7 @@ func NewTodo(desc, owner string) todo {
 		}
 
 		//Pick a winner
-		owner = names[n.Int64()]
+		owner = maps.Keys(names)[n.Int64()]
 	}
 
 	//Create the object
@@ -131,6 +145,63 @@ func TestAggregation(t *testing.T) {
 
 	//Perform the query
 	todos := make([]todo, 0)
+	pagination, err := paginate.Aggregate(&todos, ctx, pipeline, params)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for i, doc := range todos {
+		fmt.Printf("Doc #%d: %v\n", i, doc)
+	}
+	fmt.Printf("Total: %+v\n", pagination)
+}
+
+func TestAggregation2NewType(t *testing.T) {
+	//Define the custom type to unmarshal to
+	type customType struct {
+		ID     primitive.ObjectID `json:"id" bson:"_id"`
+		Owner  string             `json:"owner" bson:"owner"`
+		Gender string             `json:"gender" bson:"gender"`
+	}
+
+	//Setup the database
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	coll := connectDB(ctx)
+
+	//Get the list of male and female characters from the input map
+	males := mongoutil.Slice2BsonA(
+		util.GetKeysByValue(names, true),
+	)
+	females := mongoutil.Slice2BsonA(
+		util.GetKeysByValue(names, false),
+	)
+
+	//Setup the aggregation pipeline
+	pipeline := bson.A{
+		bson.D{{"$project", bson.D{{"desc", 0}, {"completed", 0}}}},
+		bson.D{{"$set", bson.D{{"gender", bson.D{{"$switch", bson.D{{"branches", bson.A{
+			bson.D{{"case", bson.D{{"$in", bson.A{"$owner", males}}}}, {"then", "Male"}},
+			bson.D{{"case", bson.D{{"$in", bson.A{"$owner", females}}}}, {"then", "Female"}},
+		}}, {"default", "UNKNOWN"}}}}}}}},
+	}
+
+	//Setup the paginator
+	paginate, err := NewQPage[todo](coll)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//Set the pagination params
+	//skipId, _ := primitive.ObjectIDFromHex("6736b0abbdc1c6abbfd313df")
+	params := Params{
+		Page:         6,
+		ItemsPerPage: 75,
+		//SkipToID:     skipId,
+	}
+
+	//Perform the query
+	todos := make([]customType, 0)
 	pagination, err := paginate.Aggregate(&todos, ctx, pipeline, params)
 	if err != nil {
 		log.Fatal(err)
