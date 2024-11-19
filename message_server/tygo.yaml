@@ -1,4 +1,13 @@
 packages:
+  # db/qpage/*.go
+  - path: "wraith.me/message_server/pkg/db/qpage"
+    output_path: "ts/pagination.d.ts"
+    indent: "\t"
+    preserve_comments: "none"
+    exclude_files:
+      - "obj_int.go"
+      - "qpage.go"
+
   # http_response.go
   - path: "wraith.me/message_server/pkg/util"
     output_path: "ts/http_response.d.ts"
@@ -26,6 +35,9 @@ packages:
       util.UUID: "string"
       crypto.Pubkey: "string"
       time.Time: "string"
+      qpage.Pagination: "Pagination"
+    frontmatter: |
+      import { Pagination } from "./pagination"
 
   # ws/chat/*.go
   - path: "wraith.me/message_server/pkg/http_types/ws/chat"
@@ -52,3 +64,5 @@ packages:
       - "room_collection.go"
       #- "role.go"
       - "role_enum.go"
+
+  
