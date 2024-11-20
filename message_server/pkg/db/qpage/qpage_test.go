@@ -130,7 +130,7 @@ func TestAggregation(t *testing.T) {
 	}
 
 	//Setup the paginator
-	paginate, err := NewQPage[todo](coll)
+	paginate, err := NewQPage(coll)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +187,7 @@ func TestAggregation2NewType(t *testing.T) {
 	}
 
 	//Setup the paginator
-	paginate, err := NewQPage[todo](coll)
+	paginate, err := NewQPage(coll)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +223,7 @@ func TestFind(t *testing.T) {
 	query := bson.D{{Key: "owner", Value: "Furina"}}
 
 	//Setup the paginator
-	paginate, err := NewQPage[todo](coll)
+	paginate, err := NewQPage(coll)
 	if err != nil {
 		t.Fatal(err)
 	}

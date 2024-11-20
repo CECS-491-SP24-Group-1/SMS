@@ -17,7 +17,7 @@ type QPage struct {
 }
 
 // Creates a new `QPage` object.
-func NewQPage[T any](col *qmgo.Collection) (*QPage, error) {
+func NewQPage(col *qmgo.Collection) (*QPage, error) {
 	//Get a pointer to the incoming object
 	//dt := new(T)
 
