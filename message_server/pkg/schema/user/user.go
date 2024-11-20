@@ -65,6 +65,9 @@ type User struct {
 
 	//The user's friends.
 	Friends map[util.UUID]bool `json:"friends" bson:"friends"`
+
+	//Profile picture url
+	//ProfilePictureURL string `json:"profile_picture_url" bson:"profile_picture_url"`
 }
 
 //-- Constructors
@@ -80,6 +83,7 @@ func NewUser(
 	lastIP ip_addr.IPAddr,
 	flags UserFlags,
 	options UserOptions,
+	//profilePictureURL string,
 ) *User {
 	return &User{
 		Entity: obj.Entity{
@@ -98,6 +102,7 @@ func NewUser(
 		Options:     options,
 		Tokens:      make(map[string]UserToken, 0),
 		Friends:     make(map[util.UUID]bool),
+		//ProfilePictureURL: profilePictureURL,
 	}
 }
 
@@ -113,6 +118,9 @@ func NewUserSimple(username string, email string) *User {
 		ip_addr.FromNetIP(net.ParseIP("127.0.0.1")),
 		DefaultUserFlags(),
 		DefaultUserOptions(),
+		// For the profile picture: 
+		//https://graph.facebook.com/[app-scoped-id]/picture"
+		//https://st.depositphotos.com/2218212/2938/i/950/depositphotos_29387653-stock-photo-facebook-profile.jpg
 	)
 }
 
