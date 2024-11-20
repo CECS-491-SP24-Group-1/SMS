@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"crypto/subtle"
 	"net"
 	"time"
@@ -61,6 +62,9 @@ type User struct {
 
 	//The user's refresh tokens, keyed by their IDs in string form.
 	Tokens map[string]UserToken `json:"tokens" bson:"tokens"`
+
+	// The user's friends
+	Friends map[util.UUID]bool `json:"friends" bson:"friends"`
 }
 
 //-- Constructors
@@ -93,6 +97,7 @@ func NewUser(
 		Flags:       flags,
 		Options:     options,
 		Tokens:      make(map[string]UserToken, 0),
+		Friends:     make(map[util.UUID]bool),
 	}
 }
 
@@ -179,6 +184,42 @@ func (u *User) UnmarkPKVerified() {
 	if !u.Flags.ShouldPurge {
 		u.Flags.ShouldPurge = true
 	}
+}
+
+// Query friendship status
+func (u *User) IsFriend(friendID util.UUID) bool {
+	return u.Friends[friendID]
+}
+
+// Add friend mapping
+func (u *User) AddFriend(friend *User) error {
+	if u.ID == friend.ID {
+		return fmt.Errorf("user cannot be friends with themselves")
+	}
+
+	// Check if they are already friends
+	if u.Friends[friend.ID] {
+		return fmt.Errorf("already friends with user %s", friend.Username)
+	}
+
+	// Add the friendship for both users
+	u.Friends[friend.ID] = true
+	friend.Friends[u.ID] = true
+
+	return nil
+}
+
+// Remove friend mapping
+func (u *User) RemoveFriend(friend *User) error {
+	if !u.Friends[friend.ID] {
+		return fmt.Errorf("no friendship exists with user %s", friend.Username)
+	}
+
+	// Remove the friendship for both users
+	delete(u.Friends, friend.ID)
+	delete(friend.Friends, u.ID)
+
+	return nil
 }
 
 //-- Embedded class definitions
