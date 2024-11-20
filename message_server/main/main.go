@@ -18,6 +18,7 @@ import (
 	"wraith.me/message_server/pkg/router"
 	"wraith.me/message_server/pkg/router/auth"
 	"wraith.me/message_server/pkg/router/challenges"
+	"wraith.me/message_server/pkg/router/notifications"
 	"wraith.me/message_server/pkg/router/room"
 	"wraith.me/message_server/pkg/router/user"
 	"wraith.me/message_server/pkg/router/users"
@@ -173,6 +174,9 @@ func setupServer() chi.Router {
 	//User routes
 	apir.Mount("/user", user.UserRoutes())
 	apir.Mount("/users", users.UsersRoutes())
+
+	//Notification routes
+	apir.Mount("/notifications", notifications.NotificationsRoutes())
 
 	//Chat routes
 	apir.Mount("/chat/room", room.RoomRoutes())
