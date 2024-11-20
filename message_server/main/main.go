@@ -127,7 +127,7 @@ func setupServer() chi.Router {
 			"http://*",
 			//cfg.Client.BaseUrl,
 		},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowedHeaders:   []string{"X-PINGOTHER", "Accept", "Authorization", "Content-Type", "X-CSRF-Token", consts.TIMEZONE_OFFSET_HEADER}, // Ensure headers match client requests
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
