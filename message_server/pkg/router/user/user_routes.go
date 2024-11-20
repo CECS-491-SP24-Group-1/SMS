@@ -35,10 +35,29 @@ func UserRoutes() chi.Router {
 	//Add routes (authenticated)
 	r.Group(func(r chi.Router) {
 		r.Use(mw.NewAuthMiddleware(env))
-		r.Patch("/username", ChangeUnameRoute)
+
+		//Info
 		r.Get("/{uid}", HandleInfoRoute)
 		r.Get("/me", HandleMyInfoRoute)
 		r.Get("/", HandleMyInfoRoute)
+
+		//Settings editing
+		r.Patch("/username", ChangeUnameRoute)
+
+		//Add friend request routes (authenticated)
+		frr := chi.NewRouter()
+		frr.Group(func(r chi.Router) {
+			r.Group(func(r chi.Router) {
+				//TODO: impl
+				/*
+					r.Post("/new", e)
+					r.Post("/accept", e)
+					r.Post("/deny", e)
+					r.Get("/list", e)
+				*/
+			})
+		})
+		r.Mount("/friend_request", frr)
 	})
 
 	//Return the router

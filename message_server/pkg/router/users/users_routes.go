@@ -33,6 +33,7 @@ func UsersRoutes() chi.Router {
 	r.Group(func(r chi.Router) {
 		r.Use(mw.NewAuthMiddleware(env))
 		r.Get("/list", UserListRoute)
+		//r.Get("/friends", UserListRoute) //TODO: impl this
 	})
 
 	//Return the router
