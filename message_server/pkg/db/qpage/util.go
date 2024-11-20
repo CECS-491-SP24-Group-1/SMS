@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -36,16 +37,21 @@ func idString(id interface{}) string {
 	switch val := id.(type) {
 	case primitive.ObjectID:
 		return val.Hex()
-	case fmt.Stringer:
-		return val.String()
-	/*
-		case util.UUID:
-			return val.String()
-		case uuid.UUID:
-			return val.String()
-	*/
 	case string:
 		return val
+
+	//This section will be hit for `UUID` types
+	case primitive.Binary:
+		//UUID (old) or UUID (https://bsonspec.org/spec.html)
+		if val.Subtype == 3 || val.Subtype == 4 {
+			uuid, err := uuid.FromBytes(val.Data)
+			if err == nil {
+				return uuid.String()
+			}
+		}
+		return fmt.Sprintf("%v", val)
+
+	//Default fall-through: simply `sprintf` the value
 	default:
 		return fmt.Sprintf("%v", val)
 	}

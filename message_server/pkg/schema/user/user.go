@@ -5,10 +5,21 @@ import (
 	"net"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"wraith.me/message_server/pkg/crypto"
 	"wraith.me/message_server/pkg/obj"
 	"wraith.me/message_server/pkg/obj/ip_addr"
 	"wraith.me/message_server/pkg/util"
+)
+
+var (
+	// An aggregation pipeline stage that retrieves a user's publicly accessible info. This allows for creation of a `response.UInfo` object.
+	PublicQuery = bson.D{{Key: "$project", Value: bson.D{
+		{Key: "_id", Value: 1},
+		{Key: "pubkey", Value: 1},
+		{Key: "username", Value: 1},
+		{Key: "display_name", Value: 1},
+	}}}
 )
 
 //TODO: add an equal function

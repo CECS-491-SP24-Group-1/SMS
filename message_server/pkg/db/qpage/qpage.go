@@ -68,8 +68,8 @@ func (q QPage) Aggregate(dest any, ctx context.Context, pipeline bson.A, params 
 			"metadata": bson.A{bson.M{"$count": "total"}},
 			//Query 2: get only a single page of documents
 			"data": bson.A{
-				bson.M{"$skip": (params.Page - 1) * params.ItemsPerPage}, //Skips x documents in the database
-				bson.M{"$limit": params.ItemsPerPage},                    //Limits the number of documents
+				bson.M{"$skip": (params.Page - 1) * params.PerPage}, //Skips x documents in the database
+				bson.M{"$limit": params.PerPage},                    //Limits the number of documents
 			},
 		}},
 		//Move the total down to the root of the document
@@ -111,11 +111,11 @@ func (q QPage) Find(dest any, ctx context.Context, query interface{}, params Par
 	}
 
 	//Add the skip amount to the cursor based on the page number
-	res.Skip(int64((params.Page - 1) * params.ItemsPerPage))
+	res.Skip(int64((params.Page - 1) * params.PerPage))
 
 	//Get the documents from the database, limiting the count to the max per page
 	var docs []bson.D
-	res.Limit(int64(params.ItemsPerPage)).All(&docs)
+	res.Limit(int64(params.PerPage)).All(&docs)
 
 	//Paginate the results
 	return paginate(dest, docs, count, params)
@@ -131,8 +131,8 @@ func paginate(dest any, docs []bson.D, count int64, params Params) (*Pagination,
 
 	//Calculate the attributes of the entire pagination run
 	paginationInfo := Pagination{
-		PerPage:    params.ItemsPerPage,
-		TotalPages: (count + int64(params.ItemsPerPage) - 1) / int64(params.ItemsPerPage),
+		PerPage:    params.PerPage,
+		TotalPages: (count + int64(params.PerPage) - 1) / int64(params.PerPage),
 		TotalItems: count,
 	}
 
@@ -140,7 +140,7 @@ func paginate(dest any, docs []bson.D, count int64, params Params) (*Pagination,
 	psize := len(docs)
 
 	//Calculate the attributes of the singular page that was just pulled out
-	firstIdx := (params.Page-1)*params.ItemsPerPage + 1
+	firstIdx := (params.Page-1)*params.PerPage + 1
 	pageInfo := Page{
 		Num:  params.Page,
 		Size: psize,

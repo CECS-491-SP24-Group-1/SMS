@@ -12,7 +12,7 @@ type Params struct {
 	//The page to fetch.
 	Page int `json:"page" default:"1"`
 	//The maximum number of items to include on each page.
-	ItemsPerPage int `json:"items_per_page" default:"50"`
+	PerPage int `json:"per_page" default:"50"`
 	//The ID of the document to skip to.
 	SkipToID interface{} `json:"skip_to_id"`
 }
@@ -32,7 +32,7 @@ func ParseQuery(r *http.Request) Params {
 	//Get the query params and attempt to get the page and the items per page
 	queryParams := r.URL.Query()
 	pageNum := queryParams.Get("page")
-	perPage := queryParams.Get("items_per_page")
+	perPage := queryParams.Get("per_page")
 
 	//Attempt to derive uint values from both the page and per page
 	//`err == nil` conditions indicate no errors during conversion
@@ -42,7 +42,7 @@ func ParseQuery(r *http.Request) Params {
 	}
 	ppage, err := strconv.ParseUint(perPage, 10, 0)
 	if err == nil {
-		pagingParms.ItemsPerPage = int(ppage)
+		pagingParms.PerPage = int(ppage)
 	}
 
 	return pagingParms

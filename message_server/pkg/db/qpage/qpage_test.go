@@ -138,8 +138,8 @@ func TestAggregation(t *testing.T) {
 	//Set the pagination params
 	//skipId, _ := primitive.ObjectIDFromHex("6736b0abbdc1c6abbfd313df")
 	params := Params{
-		Page:         6,
-		ItemsPerPage: 75,
+		Page:    6,
+		PerPage: 75,
 		//SkipToID:     skipId,
 	}
 
@@ -195,8 +195,8 @@ func TestAggregation2NewType(t *testing.T) {
 	//Set the pagination params
 	//skipId, _ := primitive.ObjectIDFromHex("6736b0abbdc1c6abbfd313df")
 	params := Params{
-		Page:         6,
-		ItemsPerPage: 75,
+		Page:    6,
+		PerPage: 75,
 		//SkipToID:     skipId,
 	}
 
@@ -231,8 +231,8 @@ func TestFind(t *testing.T) {
 	//Set the pagination params
 	//skipId, _ := primitive.ObjectIDFromHex("6736b0abbdc1c6abbfd313df")
 	params := Params{
-		Page:         3,
-		ItemsPerPage: 75,
+		Page:    3,
+		PerPage: 75,
 		//SkipToID:     skipId,
 	}
 
