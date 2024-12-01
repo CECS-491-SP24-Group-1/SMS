@@ -10,7 +10,7 @@ func (w *Server) handleMessage(s *melody.Session, msg []byte) {
 		return
 	}
 
-	room := w.getRoom(*roomUUID)
+	room := w.GetRoom(*roomUUID)
 	if room != nil && room.HasSession(s) {
 		if isValidMessage(msg) {
 			room.Broadcast(msg, nil)

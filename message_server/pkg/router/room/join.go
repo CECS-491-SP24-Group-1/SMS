@@ -5,41 +5,17 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/qiniu/qmgo"
 	"wraith.me/message_server/pkg/mw"
-	chatroom "wraith.me/message_server/pkg/schema/chat_room"
 	"wraith.me/message_server/pkg/schema/user"
 	"wraith.me/message_server/pkg/util"
 	"wraith.me/message_server/pkg/ws/wschat"
 )
 
-// Handles incoming requests made to `GET /api/chat/room/{roomID}`.
+// Handles incoming requests made to `GET /api/chat/room/{roomID}/join`.
 func JoinRoomRoute(w http.ResponseWriter, r *http.Request) {
-	//Get the ID of the chat room
-	roomID := chi.URLParam(r, "roomID")
-	rid, err := util.ParseUUIDv7(roomID)
-	if err != nil {
-		util.ErrResponse(
-			http.StatusBadRequest,
-			fmt.Errorf("bad room ID format; it must be a UUIDv7"),
-		).Respond(w)
-		fmt.Printf("bad room ID\n")
-		return
-	}
-
-	//Get the room info from the database
-	var room chatroom.Room
-	err = rc.FindID(r.Context(), rid).One(&room)
-	if err != nil {
-		//Handle 404s differently
-		code := http.StatusInternalServerError
-		if qmgo.IsErrNoDocuments(err) {
-			code = http.StatusNotFound
-			err = fmt.Errorf("cannot find chat room with ID %s", rid)
-			fmt.Printf("%s is not a valid room\n", rid)
-		}
-		util.ErrResponse(code, err).Respond(w)
+	//Get the room from the request params
+	room := getRoomFromQuery(w, r)
+	if room == nil {
 		return
 	}
 
@@ -50,18 +26,18 @@ func JoinRoomRoute(w http.ResponseWriter, r *http.Request) {
 			http.StatusForbidden,
 			fmt.Errorf("you are not a member of this room"),
 		).Respond(w)
-		fmt.Printf("user %s denied entry to room %s; not a member\n", requestor.ID, rid)
+		fmt.Printf("user %s denied entry to room %s; not a member\n", requestor.ID, room.ID)
 		return
 	}
 
 	//Create the context object
 	ctx := wschat.Context{
-		RoomID:       rid,
+		RoomID:       room.ID,
 		MemberID:     requestor.ID,
 		Participants: room.Participants,
 	}
 
-	fmt.Printf("user %s attempted to join room %s\n", requestor.ID, rid)
+	fmt.Printf("user %s attempted to join room %s\n", requestor.ID, room.ID)
 
 	//Set the request context and handle the connection
 	r = r.WithContext(context.WithValue(r.Context(), wschat.WSChatCtxObjKey, ctx))

@@ -51,7 +51,8 @@ func RoomRoutes() chi.Router {
 		//Bind routes
 		r.Post("/create", CreateRoomRoute)
 		r.Get("/list", GetRoomsRoute)
-		r.Get("/{roomID}", JoinRoomRoute)
+		r.Get("/{roomID}/members", RoomMembersRoute)
+		r.Get("/{roomID}", JoinRoomRoute) //TODO: add `/join`
 		r.Post("/{roomID}/leave", LeaveRoomRoute)
 	})
 

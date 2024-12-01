@@ -36,6 +36,7 @@ packages:
       crypto.Pubkey: "string"
       time.Time: "string"
       qpage.Pagination: "Pagination"
+      chatroom.Role: "string"
     frontmatter: |
       import { Pagination } from "./pagination"
 

@@ -57,7 +57,7 @@ func (w *Server) handleDisconnect(s *melody.Session) {
 	}
 
 	//Get the room instance and eject the session if it's non-null
-	room := w.getRoom(*roomUUID)
+	room := w.GetRoom(*roomUUID)
 	if room != nil {
 		//Get the number of users currently in the room
 		currentUsers := room.Size()

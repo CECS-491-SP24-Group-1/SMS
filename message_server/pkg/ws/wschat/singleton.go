@@ -63,7 +63,7 @@ func (w *Server) getOrCreateRoom(id util.UUID, participants chatroom.MembershipL
 }
 
 // Gets a room by ID.
-func (w *Server) getRoom(id util.UUID) *WSRoom {
+func (w *Server) GetRoom(id util.UUID) *WSRoom {
 	w.roomMu.RLock()
 	defer w.roomMu.RUnlock()
 
