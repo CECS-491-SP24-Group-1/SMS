@@ -19,15 +19,21 @@ func JoinRoomRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//Ensure the current user is allowed to join the room
+	//Get the requestor's info
 	requestor := r.Context().Value(mw.AuthCtxUserKey).(user.User)
-	if _, ok := room.Participants[requestor.ID]; !ok {
-		util.ErrResponse(
-			http.StatusForbidden,
-			fmt.Errorf("you are not a member of this room"),
-		).Respond(w)
-		fmt.Printf("user %s denied entry to room %s; not a member\n", requestor.ID, room.ID)
-		return
+
+	//Ensure the current user is allowed to join the room
+	//TODO: handle perms for this later; let them anyway
+	if !room.HasMember(requestor.ID) {
+		//Allow entry into the room
+		room.AddMember(requestor.ID)
+
+		//Save the chat room in the database
+		_, err := rc.UpsertId(r.Context(), room.ID, room)
+		if err != nil {
+			util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
+			return
+		}
 	}
 
 	//Create the context object

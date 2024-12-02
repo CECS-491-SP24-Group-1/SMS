@@ -50,6 +50,18 @@ func NewRoom(owner util.UUID, participants ...util.UUID) Room {
 	}
 }
 
+// Adds a member to the chat room.
+func (r *Room) AddMember(participant util.UUID) {
+	//Add the user to the room and give them the member role
+	r.Participants[participant] = RoleMEMBER
+}
+
+// Checks if a user is in the chat room.
+func (r *Room) HasMember(participant util.UUID) bool {
+	_, ok := r.Participants[participant]
+	return ok
+}
+
 // Returns whether the room is empty, and thus, safe to remove.
 func (r Room) IsEmpty() bool {
 	return r.Size() < 1
