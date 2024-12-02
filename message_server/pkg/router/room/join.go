@@ -11,7 +11,7 @@ import (
 	"wraith.me/message_server/pkg/ws/wschat"
 )
 
-// Handles incoming requests made to `GET /api/chat/room/{roomID}/join`.
+// Handles incoming requests made to `GET /api/chat/room/{roomID}`.
 func JoinRoomRoute(w http.ResponseWriter, r *http.Request) {
 	//Get the room from the request params
 	room := getRoomFromQuery(w, r)
@@ -25,25 +25,12 @@ func JoinRoomRoute(w http.ResponseWriter, r *http.Request) {
 	//Ensure the current user is allowed to join the room
 	//TODO: handle perms for this later; let them anywayy
 	if !room.HasMember(requestor.ID) {
-		//Allow entry into the room
-		room.AddMember(requestor.ID)
-
-		//Save the chat room in the database
-		_, err := rc.UpsertId(r.Context(), room.ID, room)
-		if err != nil {
-			util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
-			return
-		}
-
-		//Old method
-		/*
-			util.ErrResponse(
-				http.StatusForbidden,
-				fmt.Errorf("you are not a member of this room"),
-			).Respond(w)
-			fmt.Printf("user %s denied entry to room %s; not a member\n", requestor.ID, room.ID)
-			return
-		*/
+		util.ErrResponse(
+			http.StatusForbidden,
+			fmt.Errorf("you are not a member of this room"),
+		).Respond(w)
+		fmt.Printf("user %s denied entry to room %s; not a member\n", requestor.ID, room.ID)
+		return
 	}
 
 	//Create the context object
