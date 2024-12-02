@@ -23,7 +23,7 @@ func JoinRoomRoute(w http.ResponseWriter, r *http.Request) {
 	requestor := r.Context().Value(mw.AuthCtxUserKey).(user.User)
 
 	//Ensure the current user is allowed to join the room
-	//TODO: handle perms for this later; let them anyway
+	//TODO: handle perms for this later; let them anywayy
 	if !room.HasMember(requestor.ID) {
 		//Allow entry into the room
 		room.AddMember(requestor.ID)
@@ -34,6 +34,16 @@ func JoinRoomRoute(w http.ResponseWriter, r *http.Request) {
 			util.ErrResponse(http.StatusInternalServerError, err).Respond(w)
 			return
 		}
+
+		//Old method
+		/*
+			util.ErrResponse(
+				http.StatusForbidden,
+				fmt.Errorf("you are not a member of this room"),
+			).Respond(w)
+			fmt.Printf("user %s denied entry to room %s; not a member\n", requestor.ID, room.ID)
+			return
+		*/
 	}
 
 	//Create the context object
